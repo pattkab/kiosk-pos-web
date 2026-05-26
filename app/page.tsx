@@ -1,0 +1,23 @@
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+export default function LandingPage() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
+      <h1 className="mb-6 text-5xl font-extrabold tracking-tight lg:text-6xl">
+        Kiosk <span className="text-primary">POS</span>
+      </h1>
+      <p className="mb-10 max-w-2xl text-xl text-muted-foreground">
+        A modern, cloud-based POS and inventory management system designed for scale. Rebuilt with Next.js 15 for lightning-fast performance.
+      </p>
+      <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
+        <Button asChild size="lg">
+          <Link href="/login">Get Started</Link>
+        </Button>
+        <Button asChild variant="outline" size="lg">
+          <Link href="/dashboard">View Demo</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
