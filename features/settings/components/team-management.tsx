@@ -89,9 +89,9 @@ export function TeamManagement() {
               {(invitations.data ?? []).map((invitation: any) => (
                 <div key={invitation.id} className="flex items-center justify-between rounded-lg border p-3">
                   <div>
-                    <p className="font-medium">{invitation.email}</p>
+                    <p className="font-medium">{invitation.name || "Unnamed invite"}</p>
                     <p className="text-sm text-muted-foreground">
-                      {invitation.role} - expires {new Date(invitation.expires_at).toLocaleDateString()}
+                      {invitation.email} - {invitation.role} - expires {new Date(invitation.expires_at).toLocaleDateString()}
                     </p>
                   </div>
                   <RoleBadge role={invitation.role} />

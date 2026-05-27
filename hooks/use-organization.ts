@@ -172,6 +172,7 @@ export function useInviteMember() {
       if (!activeOrganization) throw new Error("No active organization.");
       const { data, error } = await supabase.rpc("invite_organization_member", {
         p_organization_id: activeOrganization.id,
+        p_name: values.name,
         p_email: values.email,
         p_role: values.role,
       });

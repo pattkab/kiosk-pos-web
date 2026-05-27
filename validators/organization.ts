@@ -25,6 +25,7 @@ export const organizationSettingsSchema = z.object({
 });
 
 export const inviteMemberSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters"),
   email: z.string().email(),
   role: z.enum(["admin", "manager", "cashier"]),
 });

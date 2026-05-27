@@ -16,7 +16,7 @@ export function InviteMemberModal() {
   const invite = useInviteMember();
   const form = useForm<InviteMemberValues>({
     resolver: zodResolver(inviteMemberSchema),
-    defaultValues: { email: "", role: "cashier" },
+    defaultValues: { name: "", email: "", role: "cashier" },
   });
 
   return (
@@ -29,6 +29,11 @@ export function InviteMemberModal() {
           className="space-y-4"
           onSubmit={form.handleSubmit((values) => invite.mutate(values, { onSuccess: () => setInviteOpen(false) }))}
         >
+          <div className="space-y-2">
+            <Label>Name</Label>
+            <Input type="text" placeholder="e.g. Adrian Namutebi" {...form.register("name")} />
+            {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
+          </div>
           <div className="space-y-2">
             <Label>Email</Label>
             <Input type="email" {...form.register("email")} />
