@@ -86,7 +86,11 @@ export function useCategories() {
       }
 
       try {
-        let query = supabase.from("categories").select("*").order("name");
+        let query = supabase
+          .from("categories")
+          .select("*")
+          .order("description")
+          .order("name");
         if (activeOrganizationId)
           query = query.eq("organization_id", activeOrganizationId);
         const { data, error } = await query;

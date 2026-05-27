@@ -24,7 +24,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -35,7 +37,7 @@ import {
   useProducts,
 } from "@/hooks/use-inventory";
 import { ImageUpload } from "./image-upload";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOrganizationStore } from "@/store/use-organization-store";
 import { Separator } from "@/components/ui/separator";
@@ -90,6 +92,16 @@ export function ProductForm() {
   const stockCostValue = stockQuantity * costPrice;
   const stockSaleValue = stockQuantity * sellingPrice;
   const hasCategories = (categories?.length ?? 0) > 0;
+  const categoriesByDepartment = useMemo(() => {
+    return (categories ?? []).reduce<Record<string, typeof categories>>(
+      (groups, category) => {
+        const department = category.description?.trim() || "Custom categories";
+        groups[department] = [...(groups[department] ?? []), category];
+        return groups;
+      },
+      {},
+    );
+  }, [categories]);
   const formattedMoney = (value: number) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -263,11 +275,23 @@ export function ProductForm() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {categories?.map((cat) => (
-                                    <SelectItem key={cat.id} value={cat.id}>
-                                      {cat.name}
-                                    </SelectItem>
-                                  ))}
+                                  {Object.entries(categoriesByDepartment).map(
+                                    ([department, items]) => (
+                                      <SelectGroup key={department}>
+                                        <SelectLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                                          {department}
+                                        </SelectLabel>
+                                        {items?.map((cat) => (
+                                          <SelectItem
+                                            key={cat.id}
+                                            value={cat.id}
+                                          >
+                                            {cat.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectGroup>
+                                    ),
+                                  )}
                                 </SelectContent>
                               </Select>
                               {!hasCategories && !categoriesLoading && (
