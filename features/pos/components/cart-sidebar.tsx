@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import {
   Banknote,
   CreditCard,
+  Lock,
   Minus,
   Plus,
   Receipt,
