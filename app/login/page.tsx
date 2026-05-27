@@ -42,7 +42,7 @@ function LoginForm() {
     setIsLoading(true);
     const result = await signIn(values);
     if (result.success) {
-      router.replace("/dashboard");
+      router.replace("/select-organization");
       router.refresh();
       return;
     }

@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
                      request.nextUrl.pathname.startsWith("/register") ||
                      request.nextUrl.pathname.startsWith("/auth") ||
                      request.nextUrl.pathname === "/";
+  const isOrganizationSelectionPage = request.nextUrl.pathname.startsWith("/select-organization");
 
   if (!user && !isAuthPage) {
     const url = request.nextUrl.clone();
@@ -55,24 +56,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
+    const { data: hasMembership } = await supabase.rpc("has_active_organization_membership");
+    const member = Boolean(hasMembership);
 
-    const { data: memberships } = profile
-      ? await supabase
-          .from("organization_members")
-          .select("organization_id")
-          .eq("profile_id", profile.id)
-          .is("removed_at", null)
-          .limit(1)
-      : { data: [] };
-
-    const member = memberships?.[0] ?? null;
-
-    if (!member && !request.nextUrl.pathname.startsWith("/onboarding") && !isAuthPage) {
+    if (!member && !request.nextUrl.pathname.startsWith("/onboarding") && !isAuthPage && !isOrganizationSelectionPage) {
        const url = request.nextUrl.clone();
        url.pathname = "/onboarding";
        return NextResponse.redirect(url);
@@ -80,13 +67,13 @@ export async function updateSession(request: NextRequest) {
 
     if (member && request.nextUrl.pathname.startsWith("/onboarding")) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = "/select-organization";
       return NextResponse.redirect(url);
     }
 
     if (isAuthPage && request.nextUrl.pathname !== "/") {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = member ? "/select-organization" : "/onboarding";
       return NextResponse.redirect(url);
     }
   }

@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createClient } from "@/lib/supabase/client";
+import { useOrganizationStore } from "@/store/use-organization-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const supabase = createClient();
+  const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
 
   const [step, setStep] = useState(1);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export default function OnboardingPage() {
       if (!organizationId) throw new Error("Organization could not be created.");
 
       setOrgId(organizationId as string);
+      setActiveOrganizationId(organizationId as string);
       setStep(2);
       toast.success("Organization created!");
     } catch (error: any) {
@@ -120,6 +123,7 @@ export default function OnboardingPage() {
                  disabled={isNavigating}
                  onClick={() => {
                    setIsNavigating(true);
+                   if (orgId) setActiveOrganizationId(orgId);
                    window.location.assign("/dashboard");
                  }}
                >

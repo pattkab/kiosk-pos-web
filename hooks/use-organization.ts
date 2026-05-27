@@ -29,30 +29,10 @@ export function useOrganizations() {
   return useQuery({
     queryKey: ["organizations"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("auth_user_id", user.id)
-        .maybeSingle();
-      if (profileError) throw profileError;
-      if (!profile) return [];
-
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select("id, role, organizations(*)")
-        .eq("profile_id", profile.id)
-        .is("removed_at", null)
-        .order("created_at", { ascending: true });
+      const { data, error } = await supabase.rpc("list_my_organizations");
       if (error) throw error;
 
-      return (data ?? []).map((member: any) => ({
-        ...(Array.isArray(member.organizations) ? member.organizations[0] : member.organizations),
-        role: member.role,
-        member_id: member.id,
-      })) as OrganizationWithRole[];
+      return (data ?? []) as OrganizationWithRole[];
     },
   });
 }
