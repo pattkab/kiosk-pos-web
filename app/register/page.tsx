@@ -147,11 +147,18 @@ export default function RegisterPage() {
               </Button>
             </form>
           </Form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Sign in
-            </Link>
+          <div className="mt-4 space-y-2 text-center text-sm text-muted-foreground">
+            <p>
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary hover:underline">
+                Sign in
+              </Link>
+            </p>
+            <p>
+              <Link href="/privacy" className="hover:text-foreground">
+                Privacy Policy
+              </Link>
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -18,6 +18,11 @@ export default function LandingPage() {
           <Link href="/login">Sign in</Link>
         </Button>
       </div>
+      <p className="mt-8 text-sm text-muted-foreground">
+        <Link href="/privacy" className="underline hover:text-foreground">
+          Privacy Policy
+        </Link>
+      </p>
     </div>
   );
 }
