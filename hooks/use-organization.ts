@@ -269,6 +269,12 @@ export function useOrganizationSettings() {
         .update(values)
         .eq("id", activeOrganization.id);
       if (error) throw error;
+      if (values.business_type !== activeOrganization.business_type) {
+        await supabase.rpc("seed_default_categories_for_organization", {
+          p_organization_id: activeOrganization.id,
+          p_business_type: values.business_type,
+        });
+      }
       await supabase.rpc("write_audit_log", {
         p_organization_id: activeOrganization.id,
         p_action: "UPDATE_ORGANIZATION",

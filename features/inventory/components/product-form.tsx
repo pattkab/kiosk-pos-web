@@ -46,11 +46,17 @@ import { cn } from "@/lib/utils";
 import { AlertTriangle, CalendarDays, Package, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useActiveOrganization } from "@/hooks/use-organization";
+import {
+  getCategorySeedsForBusinessType,
+  getSeedCategoryKey,
+} from "@/lib/category-taxonomy";
 
 export function ProductForm() {
   const { productModalOpen, closeProductModal, editingProductId } =
     useInventoryStore();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { activeOrganization } = useActiveOrganization();
   const { createProduct, updateProduct } = useProductMutations();
   const { data: products } = useProducts({});
   const activeCurrency = useOrganizationStore((state) => state.activeCurrency);
@@ -62,6 +68,8 @@ export function ProductForm() {
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isSavingCategory, setIsAddingCategoryLoading] = useState(false);
+  const [isCreatingRecommendedCategory, setIsCreatingRecommendedCategory] =
+    useState(false);
 
   const editingProduct = products?.find((p) => p.id === editingProductId);
 
@@ -92,6 +100,17 @@ export function ProductForm() {
   const stockCostValue = stockQuantity * costPrice;
   const stockSaleValue = stockQuantity * sellingPrice;
   const hasCategories = (categories?.length ?? 0) > 0;
+  const recommendedCategories = getCategorySeedsForBusinessType(
+    activeOrganization?.business_type,
+  );
+  const existingCategoryNames = new Set(
+    (categories ?? []).map((category) => category.name.toLowerCase()),
+  );
+  const missingRecommendedCategories = recommendedCategories.filter(
+    (category) => !existingCategoryNames.has(category.name.toLowerCase()),
+  );
+  const hasCategoryOptions =
+    hasCategories || missingRecommendedCategories.length > 0;
   const categoriesByDepartment = useMemo(() => {
     return (categories ?? []).reduce<Record<string, typeof categories>>(
       (groups, category) => {
@@ -135,6 +154,56 @@ export function ProductForm() {
       toast.error(err.message);
     } finally {
       setIsAddingCategoryLoading(false);
+    }
+  };
+
+  const createCategoryFromRecommendation = async (categoryKey: string) => {
+    if (!activeOrganizationId) {
+      toast.error("Select an organization before adding categories.");
+      return;
+    }
+
+    const recommendation = recommendedCategories.find(
+      (category) => getSeedCategoryKey(category) === categoryKey,
+    );
+    if (!recommendation) return;
+
+    const existingCategory = categories?.find(
+      (category) =>
+        category.name.toLowerCase() === recommendation.name.toLowerCase(),
+    );
+    if (existingCategory) {
+      form.setValue("category_id", existingCategory.id, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      return;
+    }
+
+    setIsCreatingRecommendedCategory(true);
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .insert({
+          name: recommendation.name,
+          description: recommendation.department,
+          organization_id: activeOrganizationId,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      form.setValue("category_id", data.id, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      toast.success(`${recommendation.name} category added`);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsCreatingRecommendedCategory(false);
     }
   };
 
@@ -257,19 +326,32 @@ export function ProductForm() {
                           {!isAddingCategory ? (
                             <>
                               <Select
-                                onValueChange={field.onChange}
+                                onValueChange={(value) => {
+                                  if (value.startsWith("recommended:")) {
+                                    createCategoryFromRecommendation(
+                                      value.replace("recommended:", ""),
+                                    );
+                                    return;
+                                  }
+                                  field.onChange(value);
+                                }}
                                 value={field.value || undefined}
-                                disabled={!hasCategories}
+                                disabled={
+                                  !hasCategoryOptions ||
+                                  isCreatingRecommendedCategory
+                                }
                               >
                                 <FormControl>
                                   <SelectTrigger className="h-11">
                                     <SelectValue
                                       placeholder={
-                                        categoriesLoading
-                                          ? "Loading categories..."
-                                          : hasCategories
-                                            ? "Select category"
-                                            : "No categories yet"
+                                        isCreatingRecommendedCategory
+                                          ? "Creating category..."
+                                          : categoriesLoading
+                                            ? "Loading categories..."
+                                            : hasCategoryOptions
+                                              ? "Select category"
+                                              : "No categories yet"
                                       }
                                     />
                                   </SelectTrigger>
@@ -292,12 +374,34 @@ export function ProductForm() {
                                       </SelectGroup>
                                     ),
                                   )}
+                                  {missingRecommendedCategories.length > 0 && (
+                                    <SelectGroup>
+                                      <SelectLabel className="text-xs font-black uppercase tracking-widest text-primary">
+                                        Recommended for this business
+                                      </SelectLabel>
+                                      {missingRecommendedCategories.map(
+                                        (category) => (
+                                          <SelectItem
+                                            key={getSeedCategoryKey(category)}
+                                            value={`recommended:${getSeedCategoryKey(category)}`}
+                                          >
+                                            <span className="flex flex-col">
+                                              <span>{category.name}</span>
+                                              <span className="text-xs text-muted-foreground">
+                                                {category.department}
+                                              </span>
+                                            </span>
+                                          </SelectItem>
+                                        ),
+                                      )}
+                                    </SelectGroup>
+                                  )}
                                 </SelectContent>
                               </Select>
                               {!hasCategories && !categoriesLoading && (
                                 <FormDescription className="text-xs">
-                                  Create a category to group stock and sales
-                                  reports.
+                                  Recommended categories are ready to pick, or
+                                  create your own missing category.
                                 </FormDescription>
                               )}
                             </>
