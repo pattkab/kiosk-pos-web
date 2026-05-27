@@ -55,12 +55,22 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
-    // Check for organization membership
-    const { data: member } = await supabase
-      .from("organization_members")
-      .select("organization_id")
-      .eq("profile_id", (await supabase.from('profiles').select('id').eq('auth_user_id', user.id).single()).data?.id)
-      .single();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    const { data: memberships } = profile
+      ? await supabase
+          .from("organization_members")
+          .select("organization_id")
+          .eq("profile_id", profile.id)
+          .is("removed_at", null)
+          .limit(1)
+      : { data: [] };
+
+    const member = memberships?.[0] ?? null;
 
     if (!member && !request.nextUrl.pathname.startsWith("/onboarding") && !isAuthPage) {
        const url = request.nextUrl.clone();
