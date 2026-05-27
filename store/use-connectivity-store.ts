@@ -9,7 +9,8 @@ interface ConnectivityState {
 }
 
 export const useConnectivityStore = create<ConnectivityState>((set) => ({
-  status: typeof window !== "undefined" && navigator.onLine ? "online" : "offline",
+  // Default to online during SSR/hydration to avoid false offline flash banners.
+  status: typeof window !== "undefined" ? (navigator.onLine ? "online" : "offline") : "online",
   lastChangedAt: new Date().toISOString(),
   setStatus: (status) =>
     set({

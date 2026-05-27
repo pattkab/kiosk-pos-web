@@ -251,20 +251,40 @@ export function useRevokeInvitation() {
   return useMutation({
     mutationFn: async (invitationId: string) => {
       if (!activeOrganization) throw new Error("No active organization.");
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("organization_invitations")
         .update({ cancelled_at: new Date().toISOString() })
+        .select("id")
         .eq("id", invitationId)
         .eq("organization_id", activeOrganization.id)
         .is("accepted_at", null)
-        .is("cancelled_at", null);
+        .is("cancelled_at", null)
+        .maybeSingle();
       if (error) throw error;
+      if (!data?.id) {
+        throw new Error("Invitation was not updated. It may already be revoked.");
+      }
+      return data.id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
+    onMutate: async (invitationId) => {
+      await queryClient.cancelQueries({ queryKey: ["organization-invitations", activeOrganization?.id] });
+      const queryKey = ["organization-invitations", activeOrganization?.id] as const;
+      const previous = queryClient.getQueryData<any[]>(queryKey);
+      queryClient.setQueryData<any[]>(queryKey, (current = []) =>
+        current.filter((entry) => entry.id !== invitationId)
+      );
+      return { previous, queryKey };
+    },
+    onError: (error, _invitationId, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(context.queryKey, context.previous);
+      }
+      toast.error(error.message);
+    },
+    onSuccess: (_id, _invitationId, context) => {
+      queryClient.invalidateQueries({ queryKey: context?.queryKey ?? ["organization-invitations"] });
       toast.success("Invitation revoked");
     },
-    onError: (error) => toast.error(error.message),
   });
 }
 
