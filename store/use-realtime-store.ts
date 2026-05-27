@@ -22,6 +22,7 @@ interface RealtimeState {
   setOnlineUsers: (users: OnlineUser[]) => void;
   upsertNotification: (notification: ActiveRealtimeNotification) => void;
   markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
   setNotifications: (notifications: ActiveRealtimeNotification[]) => void;
   addConflict: (conflict: Omit<RealtimeConflict, "id" | "createdAt" | "resolved">) => void;
   resolveConflict: (id: string) => void;
@@ -55,6 +56,10 @@ export const useRealtimeStore = create<RealtimeState>((set) => ({
       notifications: state.notifications.map((entry) =>
         entry.id === id ? { ...entry, read: true } : entry
       ),
+    })),
+  markAllNotificationsRead: () =>
+    set((state) => ({
+      notifications: state.notifications.map((entry) => ({ ...entry, read: true })),
     })),
   setNotifications: (notifications) => set({ notifications }),
   addConflict: (conflict) =>

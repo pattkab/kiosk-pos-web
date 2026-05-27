@@ -211,5 +211,52 @@ export function useMarkNotificationRead() {
       }
     }
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    queryClient.invalidateQueries({ queryKey: ["alerts"] });
+  };
+}
+
+export function useMarkAllNotificationsRead() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+  const { data: context } = useRealtimeContext();
+  const markAllRealtimeRead = useRealtimeStore((state) => state.markAllNotificationsRead);
+  const markAllLocalRead = useAppStore((state) => state.markAllAsRead);
+
+  return async () => {
+    if (!context?.organizationId) {
+      toast.error("Not signed in.");
+      return;
+    }
+
+    const profileId = context.profile.id;
+    const now = new Date().toISOString();
+
+    markAllRealtimeRead();
+    markAllLocalRead();
+
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .update({ read_at: now })
+      .eq("organization_id", context.organizationId)
+      .or(`recipient_id.is.null,recipient_id.eq.${profileId}`)
+      .is("read_at", null)
+      .is("archived_at", null);
+    if (notificationError) {
+      toast.error(notificationError.message);
+      return;
+    }
+
+    const { error: alertError } = await supabase
+      .from("alerts")
+      .update({ is_read: true })
+      .eq("organization_id", context.organizationId)
+      .eq("is_read", false);
+    if (alertError) {
+      toast.error(alertError.message);
+      return;
+    }
+
+    await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    await queryClient.invalidateQueries({ queryKey: ["alerts"] });
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Bell, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,36 +13,97 @@ import { useAppStore } from "@/store/use-app-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useRealtimeStore } from "@/store/use-realtime-store";
-import { useMarkNotificationRead } from "@/hooks/use-realtime-notifications";
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+} from "@/hooks/use-realtime-notifications";
 import { useNotifications } from "@/hooks/use-notifications";
 import { PriorityBadge } from "@/features/notifications/components/priority-badge";
 
-export function NotificationCenter() {
-  const { notifications: localNotifications, markAsRead } = useAppStore();
-  const notificationQuery = useNotifications();
-  const realtimeNotifications = useRealtimeStore((state) => state.notifications);
-  const markRealtimeRead = useMarkNotificationRead();
-  const notifications = [
-    ...(notificationQuery.data ?? []).map((notification) => ({
+function mergeNotifications(
+  dbNotifications: ReturnType<typeof useNotifications>["data"],
+  realtimeNotifications: ReturnType<typeof useRealtimeStore.getState>["notifications"],
+  localNotifications: ReturnType<typeof useAppStore.getState>["notifications"]
+) {
+  const merged = new Map<
+    string,
+    {
+      id: string;
+      title: string;
+      message: string;
+      read: boolean;
+      createdAt: Date;
+      priority: "low" | "medium" | "high" | "critical";
+    }
+  >();
+
+  const upsert = (entry: {
+    id: string;
+    title: string;
+    message: string;
+    read: boolean;
+    createdAt: Date;
+    priority: "low" | "medium" | "high" | "critical";
+  }) => {
+    const existing = merged.get(entry.id);
+    if (!existing) {
+      merged.set(entry.id, entry);
+      return;
+    }
+    merged.set(entry.id, {
+      ...existing,
+      read: existing.read && entry.read,
+      createdAt: existing.createdAt > entry.createdAt ? existing.createdAt : entry.createdAt,
+    });
+  };
+
+  for (const notification of dbNotifications ?? []) {
+    upsert({
       id: notification.id,
       title: notification.title,
       message: notification.message,
       read: Boolean(notification.read_at),
       createdAt: new Date(notification.created_at ?? new Date()),
       priority: notification.priority,
-    })),
-    ...realtimeNotifications.map((notification) => ({
+    });
+  }
+
+  for (const notification of realtimeNotifications) {
+    upsert({
       id: notification.id,
       title: notification.title,
       message: notification.message,
       read: notification.read,
       createdAt: new Date(notification.createdAt),
       priority: notification.priority ?? "medium",
-    })),
-    ...localNotifications.filter(
-      (notification) => !realtimeNotifications.some((entry) => entry.id === notification.id)
-    ).map((notification) => ({ ...notification, priority: "medium" as const })),
-  ].filter((notification, index, all) => all.findIndex((entry) => entry.id === notification.id) === index);
+    });
+  }
+
+  for (const notification of localNotifications) {
+    if (realtimeNotifications.some((entry) => entry.id === notification.id)) continue;
+    upsert({
+      ...notification,
+      priority: "medium",
+    });
+  }
+
+  return Array.from(merged.values()).sort(
+    (left, right) => right.createdAt.getTime() - left.createdAt.getTime()
+  );
+}
+
+export function NotificationCenter() {
+  const localNotifications = useAppStore((state) => state.notifications);
+  const notificationQuery = useNotifications();
+  const realtimeNotifications = useRealtimeStore((state) => state.notifications);
+  const markNotificationRead = useMarkNotificationRead();
+  const markAllNotificationsRead = useMarkAllNotificationsRead();
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const notifications = mergeNotifications(
+    notificationQuery.data,
+    realtimeNotifications,
+    localNotifications
+  );
   const unreadCount = notifications.filter((notification) => !notification.read).length;
 
   return (
@@ -74,10 +136,7 @@ export function NotificationCenter() {
                     "flex flex-col gap-1 border-b p-4 text-sm transition-colors hover:bg-muted/50",
                     !n.read && "bg-muted/30"
                   )}
-                  onClick={() => {
-                    markAsRead(n.id);
-                    markRealtimeRead(n.id);
-                  }}
+                  onClick={() => markNotificationRead(n.id)}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">{n.title}</span>
@@ -94,15 +153,21 @@ export function NotificationCenter() {
         </ScrollArea>
         <div className="grid grid-cols-2 gap-2 border-t p-2">
           <Button
+            type="button"
             variant="ghost"
             className="w-full text-xs"
             size="sm"
-            onClick={() => notifications.forEach((notification) => {
-              markAsRead(notification.id);
-              markRealtimeRead(notification.id);
-            })}
+            disabled={isMarkingAllRead || notifications.length === 0}
+            onClick={async () => {
+              setIsMarkingAllRead(true);
+              try {
+                await markAllNotificationsRead();
+              } finally {
+                setIsMarkingAllRead(false);
+              }
+            }}
           >
-            Mark all as read
+            {isMarkingAllRead ? "Marking..." : "Mark all as read"}
           </Button>
           <Button variant="ghost" className="w-full gap-1 text-xs" size="sm" asChild>
             <Link href="/notifications">

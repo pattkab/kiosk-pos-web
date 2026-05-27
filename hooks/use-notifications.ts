@@ -159,6 +159,7 @@ export function useAcknowledgeAlert() {
 export function useNotificationActions() {
   const supabase = createClient();
   const queryClient = useQueryClient();
+  const { data: context } = useRealtimeContext();
 
   const markRead = useMutation({
     mutationFn: async (id: string) => {
@@ -173,13 +174,31 @@ export function useNotificationActions() {
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
+      if (!context?.organizationId) throw new Error("Not signed in.");
+      const profileId = context.profile.id;
+      const now = new Date().toISOString();
+
+      const { error: notificationError } = await supabase
         .from("notifications")
-        .update({ read_at: new Date().toISOString() })
-        .is("read_at", null);
-      if (error) throw error;
+        .update({ read_at: now })
+        .eq("organization_id", context.organizationId)
+        .or(`recipient_id.is.null,recipient_id.eq.${profileId}`)
+        .is("read_at", null)
+        .is("archived_at", null);
+      if (notificationError) throw notificationError;
+
+      const { error: alertError } = await supabase
+        .from("alerts")
+        .update({ is_read: true })
+        .eq("organization_id", context.organizationId)
+        .eq("is_read", false);
+      if (alertError) throw alertError;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+    },
+    onError: (error) => toast.error(error.message),
   });
 
   const archive = useMutation({

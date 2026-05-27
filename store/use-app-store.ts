@@ -13,6 +13,7 @@ interface AppState {
   notifications: Notification[];
   addNotification: (notification: Notification) => void;
   markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
   clearNotifications: () => void;
 }
 
@@ -40,6 +41,9 @@ export const useAppStore = create<AppState>()(
       addNotification: (n) => set((state) => ({ notifications: [n, ...state.notifications] })),
       markAsRead: (id) => set((state) => ({
         notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
+      })),
+      markAllAsRead: () => set((state) => ({
+        notifications: state.notifications.map((n) => ({ ...n, read: true })),
       })),
       clearNotifications: () => set({ notifications: [] }),
     }),
