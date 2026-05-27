@@ -1,3 +1,38 @@
+ALTER TABLE organizations
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+ALTER TABLE organization_members
+    ADD COLUMN IF NOT EXISTS removed_at TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS organization_settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID UNIQUE NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    tax_rate DECIMAL(5,2) NOT NULL DEFAULT 0,
+    receipt_header TEXT,
+    receipt_footer TEXT,
+    low_stock_threshold_default INTEGER NOT NULL DEFAULT 5,
+    subscription_plan TEXT NOT NULL DEFAULT 'starter',
+    subscription_status TEXT NOT NULL DEFAULT 'trialing',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE organization_settings ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'organization_settings'
+          AND policyname = 'Members can view organization settings'
+    ) THEN
+        CREATE POLICY "Members can view organization settings"
+            ON organization_settings FOR SELECT
+            USING (organization_id IN (SELECT get_user_organizations()));
+    END IF;
+END $$;
+
 CREATE OR REPLACE FUNCTION create_organization_with_owner(
     p_name TEXT,
     p_slug TEXT,
