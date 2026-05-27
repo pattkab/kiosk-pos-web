@@ -10,9 +10,9 @@ const nav = [
   { href: "/settings", label: "General", icon: Building2 },
   { href: "/settings/team", label: "Team", icon: Users },
   { href: "/settings/roles", label: "Roles", icon: Shield },
+  { href: "/settings/notifications", label: "Notifications", icon: Bell },
   { href: "/settings/receipt", label: "Receipt", icon: Receipt },
   { href: "/settings/tax", label: "Tax", icon: WalletCards },
-  { href: "/notifications/settings", label: "Notifications", icon: Bell },
   { href: "/settings/audit", label: "Audit logs", icon: FileText },
   { href: "/settings/danger", label: "Danger zone", icon: TriangleAlert },
 ];

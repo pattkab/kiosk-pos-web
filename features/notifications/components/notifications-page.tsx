@@ -26,7 +26,7 @@ export function NotificationsPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href="/notifications/settings">
+            <Link href="/settings/notifications">
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Link>

@@ -1,5 +1,5 @@
-import { NotificationSettingsPage } from "@/features/notifications/components/notification-settings-page";
+import { redirect } from "next/navigation";
 
 export default function NotificationSettingsRoutePage() {
-  return <NotificationSettingsPage />;
+  redirect("/settings/notifications");
 }

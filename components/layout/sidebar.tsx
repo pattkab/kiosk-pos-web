@@ -8,7 +8,6 @@ import {
   ShoppingCart,
   Package,
   BarChart3,
-  Bell,
   Users,
   Settings,
   ChevronLeft,
@@ -25,7 +24,6 @@ const navigation = [
   { name: "POS Checkout", href: "/pos", icon: ShoppingCart, module: "pos" },
   { name: "Inventory", href: "/inventory", icon: Package, module: "inventory" },
   { name: "Reports", href: "/reports", icon: BarChart3, module: "reports" },
-  { name: "Notifications", href: "/notifications", icon: Bell, module: "notifications" },
   { name: "Team", href: "/team", icon: Users, module: "team" },
   { name: "Settings", href: "/settings", icon: Settings, module: "settings" },
 ];
