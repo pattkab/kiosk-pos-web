@@ -29,7 +29,24 @@ const TopProducts = dynamic(() => import("@/components/dashboard/top-products").
 });
 
 export default function DashboardPage() {
-  const { data, isLoading } = useAnalytics('month');
+  const { data, isLoading, access } = useAnalytics('month');
+
+  // If we are still determining the organization context, show a consistent loading state
+  if (access.isLoading && !data.kpis.total_revenue) {
+    return (
+      <div className="space-y-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

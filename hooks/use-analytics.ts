@@ -7,8 +7,11 @@ export function useAnalytics(range: "day" | "week" | "month" | "year" = "month")
   const preset = range === "day" ? "today" : range === "week" ? "this_week" : "this_month";
   const reports = useReports(getPresetDateRange(preset));
 
+  const isLoading = reports.isLoading || reports.access.isLoading;
+
   return {
     ...reports,
+    isLoading,
     data: {
       revenue: {
         total: reports.data.kpis.total_revenue,
