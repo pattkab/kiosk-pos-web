@@ -138,7 +138,11 @@ export function InventoryAdjuster() {
                 <FormItem>
                   <FormLabel>Adjustment date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

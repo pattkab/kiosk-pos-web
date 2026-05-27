@@ -267,7 +267,14 @@ export function ProductForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Date of addition</FormLabel>
-                        <FormControl><Input type="date" {...field} disabled={!!editingProductId} /></FormControl>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value ?? ""}
+                            disabled={!!editingProductId}
+                          />
+                        </FormControl>
                         <FormDescription className="text-xs">When was this stock received?</FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -294,7 +301,13 @@ export function ProductForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Expiry date</FormLabel>
-                        <FormControl><Input type="date" value={field.value || ""} onChange={field.onChange} /></FormControl>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value ?? ""}
+                          />
+                        </FormControl>
                         <FormDescription className="text-xs">For perishables or medicine.</FormDescription>
                         <FormMessage />
                       </FormItem>
