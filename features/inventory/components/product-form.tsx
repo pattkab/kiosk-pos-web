@@ -36,7 +36,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOrganizationStore } from "@/store/use-organization-store";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { Plus, X } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function ProductForm() {
   const { productModalOpen, closeProductModal, editingProductId } = useInventoryStore();
