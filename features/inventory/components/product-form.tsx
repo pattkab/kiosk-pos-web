@@ -574,7 +574,6 @@ export function ProductForm() {
                         </FormItem>
                       )}
                     />
-                  </div>
                 </div>
 
                 <Separator />
