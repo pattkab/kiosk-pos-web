@@ -286,7 +286,7 @@ export function ProductForm() {
                       control={form.control}
                       name="name"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="md:col-span-2">
                           <FormLabel className="font-bold">
                             Product Name *
                           </FormLabel>
@@ -303,7 +303,92 @@ export function ProductForm() {
                     />
                     <FormField
                       control={form.control}
-                      name="category_id"
+                      name="cost_price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold">
+                            Unit cost price *
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">{activeCurrency}</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                className="h-11 pl-12 text-lg font-medium"
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormDescription className="text-[10px]">What you paid for 1 unit</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="selling_price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold">
+                            Unit sale price *
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">{activeCurrency}</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                className="h-11 pl-12 text-lg font-black text-primary"
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormDescription className="text-[10px]">Price customer will pay</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-xs font-bold uppercase text-muted-foreground">
+                      Margin
+                    </div>
+                    <div className={cn("mt-1 font-black", margin >= 0 ? "text-emerald-600" : "text-destructive")}>
+                      {sellingPrice > 0
+                        ? `${marginPercent.toFixed(1)}% (${formattedMoney(margin)})`
+                        : "0.0%"}
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-xs font-bold uppercase text-muted-foreground">
+                      Total Cost Value
+                    </div>
+                    <div className="mt-1 font-black text-muted-foreground">
+                      {formattedMoney(stockCostValue)}
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-xs font-bold uppercase text-muted-foreground">
+                      Total Sale Value
+                    </div>
+                    <div className="mt-1 font-black text-primary">
+                      {formattedMoney(stockSaleValue)}
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="category_id"
                       render={({ field }) => (
                         <FormItem>
                           <div className="flex items-center justify-between gap-3">
@@ -596,96 +681,6 @@ export function ProductForm() {
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4 rounded-md border bg-muted/20 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
-                      Pricing ({activeCurrency})
-                    </h3>
-                    <div
-                      className={cn(
-                        "text-sm font-black",
-                        margin >= 0 ? "text-emerald-700" : "text-destructive",
-                      )}
-                    >
-                      {formattedMoney(margin)} per unit
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="cost_price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-bold">
-                            Unit cost price
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              className="h-11 text-lg font-medium"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="selling_price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-bold">
-                            Unit sale price
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              className="h-11 text-lg font-black text-primary"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
-                    <div className="rounded-md border bg-background p-3">
-                      <div className="text-xs font-bold uppercase text-muted-foreground">
-                        Margin
-                      </div>
-                      <div className="mt-1 font-black">
-                        {sellingPrice > 0
-                          ? `${marginPercent.toFixed(1)}%`
-                          : "0.0%"}
-                      </div>
-                    </div>
-                    <div className="rounded-md border bg-background p-3">
-                      <div className="text-xs font-bold uppercase text-muted-foreground">
-                        Cost value
-                      </div>
-                      <div className="mt-1 font-black">
-                        {formattedMoney(stockCostValue)}
-                      </div>
-                    </div>
-                    <div className="rounded-md border bg-background p-3">
-                      <div className="text-xs font-bold uppercase text-muted-foreground">
-                        Sale value
-                      </div>
-                      <div className="mt-1 font-black">
-                        {formattedMoney(stockSaleValue)}
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <Separator />
