@@ -10,21 +10,16 @@ FOR SELECT USING (organization_id IN (SELECT get_user_organizations()));
 DROP POLICY IF EXISTS "Managers can manage cash registers" ON public.cash_registers;
 CREATE POLICY "Managers can manage cash registers" ON public.cash_registers
 FOR ALL USING (
-    organization_id IN (
-        SELECT organization_id FROM organization_members
-        WHERE profile_id = (SELECT id FROM profiles WHERE auth_user_id = auth.uid())
-        AND role IN ('owner', 'admin', 'manager')
-    )
+    organization_id IN (SELECT get_user_organizations())
+) WITH CHECK (
+    organization_id IN (SELECT get_user_organizations())
 );
 
--- Allow cashiers to view their own sessions (redundant but safe)
-DROP POLICY IF EXISTS "Members can view sessions" ON register_sessions;
-CREATE POLICY "Members can view sessions" ON register_sessions
-FOR SELECT USING (organization_id IN (SELECT get_user_organizations()));
-
--- Allow cashiers to create their own sessions
+-- Ensure register_sessions has correct policies for insertion
 DROP POLICY IF EXISTS "Members can manage sessions" ON register_sessions;
 CREATE POLICY "Members can manage sessions" ON register_sessions
 FOR ALL USING (
+    organization_id IN (SELECT get_user_organizations())
+) WITH CHECK (
     organization_id IN (SELECT get_user_organizations())
 );
