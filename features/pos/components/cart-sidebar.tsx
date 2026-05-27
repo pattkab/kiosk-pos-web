@@ -40,7 +40,7 @@ export function CartSidebar() {
     clearCart,
     getTotals,
   } = useCartStore();
-  const { currentSession } = useSessionStore();
+  const { currentSession, setIsOpeningRegister } = useSessionStore();
   const { openPayment } = useCheckoutStore();
   const [discountValue, setDiscountValue] = useState("");
   const totals = getTotals();
@@ -55,18 +55,7 @@ export function CartSidebar() {
     );
   };
 
-  if (!currentSession) {
-    return (
-      <>
-        <RegisterSession />
-        <div className="flex h-full flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-muted-foreground">
-          <Banknote className="mb-4 h-12 w-12 opacity-30" />
-          <h3 className="text-lg font-semibold text-foreground">Register locked</h3>
-          <p className="text-sm">Open a register session to begin checkout.</p>
-        </div>
-      </>
-    );
-  }
+  const isLocked = !currentSession;
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-lg border bg-card shadow-sm">
@@ -78,7 +67,7 @@ export function CartSidebar() {
               Order #{orderNumber}
             </h3>
             <p className="text-xs text-muted-foreground">
-              {currentSession.register_name} - {totals.itemCount} item{totals.itemCount === 1 ? "" : "s"}
+              {isLocked ? "Register Locked" : `${currentSession.register_name} - ${totals.itemCount} items`}
             </p>
           </div>
           <Button
@@ -88,7 +77,7 @@ export function CartSidebar() {
               if (items.length && confirm("Clear the current cart?")) clearCart();
             }}
             className="h-9 text-destructive"
-            disabled={!items.length}
+            disabled={!items.length || isLocked}
           >
             Reset
           </Button>
@@ -103,6 +92,7 @@ export function CartSidebar() {
         </div>
       ) : (
         <ScrollArea className="flex-1">
+          {/* ... items map ... */}
           <div className="space-y-3 p-4">
             {items.map((item) => {
               const lineTotal = item.unit_price * item.quantity;
@@ -258,15 +248,28 @@ export function CartSidebar() {
         </div>
 
         <Button
-          className="mt-4 h-16 w-full rounded-lg text-xl font-black shadow-lg shadow-primary/15 active:scale-[0.99]"
-          onClick={openPayment}
-          disabled={items.length === 0}
+          className={cn(
+            "mt-4 h-16 w-full rounded-lg text-xl font-black shadow-lg active:scale-[0.99]",
+            isLocked ? "bg-amber-600 hover:bg-amber-700 shadow-amber-500/15" : "shadow-primary/15"
+          )}
+          onClick={isLocked ? () => setIsOpeningRegister(true) : openPayment}
+          disabled={!isLocked && items.length === 0}
         >
-          <CreditCard className="mr-2 h-6 w-6" />
-          Pay now
+          {isLocked ? (
+            <>
+              <Lock className="mr-2 h-6 w-6" />
+              Unlock Register
+            </>
+          ) : (
+            <>
+              <CreditCard className="mr-2 h-6 w-6" />
+              Pay now
+            </>
+          )}
         </Button>
       </div>
 
+      <RegisterSession />
       <PaymentModal />
       <ReceiptModal />
     </div>

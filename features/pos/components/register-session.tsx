@@ -11,11 +11,17 @@ import { formatCurrency } from "@/lib/utils";
 import { Banknote, History, Lock, LogOut, Unlock } from "lucide-react";
 
 export function RegisterSession() {
-  const { currentSession, isClosingRegister, setIsClosingRegister } = useSessionStore();
+  const { currentSession, isClosingRegister, setIsClosingRegister, isOpeningRegister, setIsOpeningRegister } = useSessionStore();
   const { openRegister, closeRegister } = useRegisterSession();
   const [openingBalance, setOpeningBalance] = useState("0");
   const [closingBalance, setClosingBalance] = useState("");
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (!currentSession) {
+      setIsOpeningRegister(true);
+    }
+  }, [currentSession, setIsOpeningRegister]);
 
   if (currentSession) {
     return (
@@ -78,8 +84,8 @@ export function RegisterSession() {
   }
 
   return (
-    <Dialog open={!currentSession} onOpenChange={() => undefined}>
-      <DialogContent className="max-w-[440px] p-0" onPointerDownOutside={(event) => event.preventDefault()}>
+    <Dialog open={isOpeningRegister} onOpenChange={setIsOpeningRegister}>
+      <DialogContent className="max-w-[440px] p-0">
         <div className="p-8 text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
             <Lock className="h-10 w-10 text-primary" />
