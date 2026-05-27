@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect } from "react";
 import { useConnectivity } from "@/hooks/use-connectivity";
 import { SyncEngine } from "@/lib/offline/sync-engine";
+import { prefetchOfflineEssentials } from "@/lib/offline/prefetch";
 import { useOfflineQueueStore } from "@/store/use-offline-queue-store";
 import { useOrganizationStore } from "@/store/use-organization-store";
 import { InstallPrompt } from "@/components/layout/install-prompt";
@@ -31,19 +32,21 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loadQueue]);
 
-  // 2. Trigger synchronization on transition to online
+  // 2. Sync queue and refresh local cache when back online
   useEffect(() => {
-    if (connectivity.isOnline) {
-      console.log("[PwaProvider] Network online detected. Triggering queue sync...");
-      SyncEngine.processQueue();
-      SyncEngine.syncProductCatalog();
-    }
+    if (!connectivity.isOnline || !activeOrganizationId) return;
+
+    console.log("[PwaProvider] Network online — syncing queue and refreshing offline cache.");
+    void (async () => {
+      await SyncEngine.processQueue();
+      await prefetchOfflineEssentials(activeOrganizationId);
+    })();
   }, [connectivity.isOnline, activeOrganizationId]);
 
-  // 3. Pre-fetch catalog initially if online
+  // 3. Pre-fetch essentials when organization is selected
   useEffect(() => {
     if (connectivity.isOnline && activeOrganizationId) {
-      SyncEngine.syncProductCatalog();
+      void prefetchOfflineEssentials(activeOrganizationId);
     }
   }, [activeOrganizationId, connectivity.isOnline]);
 

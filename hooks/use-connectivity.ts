@@ -3,18 +3,25 @@
 import { useEffect } from 'react';
 import { useConnectivityStore } from '@/store/use-connectivity-store';
 import { useSyncStore } from '@/store/use-sync-store';
+import { SyncEngine } from '@/lib/offline/sync-engine';
+import { prefetchOfflineEssentials } from '@/lib/offline/prefetch';
 
 export function useConnectivity() {
   const status = useConnectivityStore((state) => state.status);
   const lastChangedAt = useConnectivityStore((state) => state.lastChangedAt);
   const setStatus = useConnectivityStore((state) => state.setStatus);
-  const isOnline = status === "online" || status === "limited-functionality";
+  const isOnline = status === "online" || status === "limited-functionality" || status === "reconnecting";
   const setOnline = useSyncStore((state) => state.setOnline);
 
   useEffect(() => {
     const handleOnline = () => {
       setOnline(true);
-      setStatus("online");
+      setStatus("reconnecting");
+      void (async () => {
+        await SyncEngine.processQueue();
+        await prefetchOfflineEssentials();
+        setStatus("online");
+      })();
     };
     const handleOffline = () => {
       setOnline(false);

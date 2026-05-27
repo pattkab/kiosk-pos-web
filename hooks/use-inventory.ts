@@ -28,43 +28,96 @@ export function useProducts(filters: {
     (state) => state.activeOrganizationId,
   );
 
+  const applyProductFilters = (data: Product[]) => {
+    let filtered = data;
+    if (filters.search?.trim()) {
+      const term = filters.search.trim().toLowerCase();
+      filtered = filtered.filter(
+        (product) =>
+          product.name.toLowerCase().includes(term) ||
+          (product.sku && product.sku.toLowerCase().includes(term)) ||
+          (product.barcode && product.barcode.toLowerCase().includes(term)),
+      );
+    }
+    if (filters.category_id) {
+      filtered = filtered.filter((product) => product.category_id === filters.category_id);
+    }
+    if (filters.status === "active") filtered = filtered.filter((product) => product.is_active);
+    if (filters.status === "inactive") filtered = filtered.filter((product) => !product.is_active);
+    if (filters.stock === "out") {
+      filtered = filtered.filter((product) => Number(product.stock_quantity ?? 0) === 0);
+    }
+    if (filters.stock === "low") {
+      filtered = filtered.filter(
+        (product) =>
+          Number(product.stock_quantity ?? 0) > 0 &&
+          Number(product.stock_quantity ?? 0) <= Number(product.low_stock_threshold ?? 0),
+      );
+    }
+    return filtered;
+  };
+
   return useQuery({
     queryKey: ["products", activeOrganizationId, filters],
     queryFn: async () => {
-      let query = supabase
-        .from("products")
-        .select("*, categories(name)")
-        .order("created_at", { ascending: false });
-      if (activeOrganizationId)
-        query = query.eq("organization_id", activeOrganizationId);
+      const isOnline = useConnectivityStore.getState().status !== "offline";
 
-      if (filters.search) {
-        query = query.or(
-          `name.ilike.%${filters.search}%,sku.ilike.%${filters.search}%,barcode.ilike.%${filters.search}%`,
+      if (!isOnline) {
+        const cached = await getAllFromStore<Product>("products");
+        return applyProductFilters(
+          cached.filter((product) => product.organization_id === activeOrganizationId),
         );
       }
 
-      if (filters.category_id) {
-        query = query.eq("category_id", filters.category_id);
-      }
+      try {
+        let query = supabase
+          .from("products")
+          .select("*, categories(name)")
+          .order("created_at", { ascending: false });
+        if (activeOrganizationId)
+          query = query.eq("organization_id", activeOrganizationId);
 
-      if (filters.status === "active") query = query.eq("is_active", true);
-      if (filters.status === "inactive") query = query.eq("is_active", false);
+        if (filters.search) {
+          query = query.or(
+            `name.ilike.%${filters.search}%,sku.ilike.%${filters.search}%,barcode.ilike.%${filters.search}%`,
+          );
+        }
 
-      if (filters.stock === "out") query = query.eq("stock_quantity", 0);
+        if (filters.category_id) {
+          query = query.eq("category_id", filters.category_id);
+        }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      if (filters.stock === "low") {
-        return data.filter(
-          (product) =>
-            Number(product.stock_quantity ?? 0) > 0 &&
-            Number(product.stock_quantity ?? 0) <=
-              Number(product.low_stock_threshold ?? 0),
+        if (filters.status === "active") query = query.eq("is_active", true);
+        if (filters.status === "inactive") query = query.eq("is_active", false);
+
+        if (filters.stock === "out") query = query.eq("stock_quantity", 0);
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        if (data?.length) {
+          await bulkPutInStore("products", data);
+        }
+
+        if (filters.stock === "low") {
+          return data.filter(
+            (product) =>
+              Number(product.stock_quantity ?? 0) > 0 &&
+              Number(product.stock_quantity ?? 0) <=
+                Number(product.low_stock_threshold ?? 0),
+          );
+        }
+
+        return data;
+      } catch (error) {
+        console.warn("[useProducts] Online fetch failed, using IndexedDB cache:", error);
+        const cached = await getAllFromStore<Product>("products");
+        const filtered = applyProductFilters(
+          cached.filter((product) => product.organization_id === activeOrganizationId),
         );
+        if (filtered.length > 0) return filtered;
+        throw error;
       }
-
-      return data;
     },
   });
 }

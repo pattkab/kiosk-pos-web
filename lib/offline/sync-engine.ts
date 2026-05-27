@@ -18,7 +18,10 @@ export class SyncEngine {
     if (this.isProcessing) return;
 
     const connectivity = useConnectivityStore.getState().status;
-    const isOnline = connectivity === "online" || connectivity === "limited-functionality";
+    const isOnline =
+      connectivity === "online" ||
+      connectivity === "limited-functionality" ||
+      connectivity === "reconnecting";
 
     if (!isOnline) {
       console.log("[SyncEngine] Offline, skipping sync queue processing.");
@@ -45,7 +48,10 @@ export class SyncEngine {
     for (const item of queueItems) {
       // Re-verify network during loop
       const currentConnectivity = useConnectivityStore.getState().status;
-      const currentlyOnline = currentConnectivity === "online" || currentConnectivity === "limited-functionality";
+      const currentlyOnline =
+        currentConnectivity === "online" ||
+        currentConnectivity === "limited-functionality" ||
+        currentConnectivity === "reconnecting";
       if (!currentlyOnline) {
         console.log("[SyncEngine] Network dropped during sync. Halting.");
         break;
@@ -204,7 +210,10 @@ export class SyncEngine {
     this.retryTimeouts[item.id] = setTimeout(() => {
       delete this.retryTimeouts[item.id];
       const connectivity = useConnectivityStore.getState().status;
-      const isOnline = connectivity === "online" || connectivity === "limited-functionality";
+      const isOnline =
+        connectivity === "online" ||
+        connectivity === "limited-functionality" ||
+        connectivity === "reconnecting";
 
       if (isOnline) {
         this.syncItem(item).then((success) => {
@@ -228,7 +237,10 @@ export class SyncEngine {
     if (!activeOrganizationId) return;
 
     const currentConnectivity = useConnectivityStore.getState().status;
-    const isOnline = currentConnectivity === "online" || currentConnectivity === "limited-functionality";
+    const isOnline =
+      currentConnectivity === "online" ||
+      currentConnectivity === "limited-functionality" ||
+      currentConnectivity === "reconnecting";
 
     if (!isOnline) {
       console.log("[SyncEngine] Offline: cannot refresh product catalog.");

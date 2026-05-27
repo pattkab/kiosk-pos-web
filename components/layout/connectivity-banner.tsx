@@ -15,13 +15,22 @@ export function ConnectivityBanner() {
   return (
     <div className={cn(
       "sticky top-0 z-[60] flex w-full items-center justify-between px-4 py-2 text-xs font-bold transition-all",
-      status === "offline" ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
+      status === "offline"
+        ? "bg-destructive text-destructive-foreground"
+        : status === "reconnecting"
+          ? "bg-amber-600 text-white"
+          : "bg-primary text-primary-foreground"
     )}>
       <div className="flex items-center gap-2">
         {status === "offline" ? (
           <>
             <WifiOff className="h-3.5 w-3.5" />
-            <span>YOU ARE OFFLINE. Transactions will be saved locally and synced when connection returns.</span>
+            <span>Offline — sales and changes are saved locally and sync when you reconnect.</span>
+          </>
+        ) : status === "reconnecting" ? (
+          <>
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            <span>Back online — syncing local data...</span>
           </>
         ) : isSyncing ? (
           <>

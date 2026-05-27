@@ -16,6 +16,7 @@ import { LiveActivityFeed } from "@/components/realtime/live-activity-feed";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useConnectivityStore } from "@/store/use-connectivity-store";
 
 // Performance: Lazy load heavy chart and product list components
 const RevenueChart = dynamic(() => import("@/components/dashboard/revenue-chart").then(mod => mod.RevenueChart), {
@@ -30,6 +31,8 @@ const TopProducts = dynamic(() => import("@/components/dashboard/top-products").
 
 export default function DashboardPage() {
   const { data, isLoading, access } = useAnalytics('month');
+  const connectivityStatus = useConnectivityStore((state) => state.status);
+  const isOffline = connectivityStatus === "offline";
 
   // If we are still determining the organization context, show a consistent loading state
   if (access.isLoading) {
@@ -58,6 +61,11 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {isOffline ? (
+            <Badge variant="secondary" className="h-9 px-3">
+              Offline — showing cached data
+            </Badge>
+          ) : null}
           <Badge variant="outline" className="h-9 px-3">
             <Clock className="mr-2 h-4 w-4" />
             Last 30 Days

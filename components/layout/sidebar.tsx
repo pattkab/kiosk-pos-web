@@ -12,6 +12,7 @@ import {
   Settings,
   ChevronLeft,
   X,
+  Pin,
 } from "lucide-react";
 import { useAppStore } from "@/store/use-app-store";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,9 @@ export function Sidebar() {
   const userRole = activeOrganization?.role;
   const permissions = useOrganizationStore((state) => state.permissions);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const isExpanded = sidebarOpen || (isDesktop && isHovered);
 
   const hasModuleAccess = (module: string) => {
     if (!userRole) return true;
@@ -52,13 +56,13 @@ export function Sidebar() {
     return required ? permissions.includes(required) : true;
   };
 
-  // Keep sidebar behavior responsive without rendering flicker.
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 768px)");
     const applyLayout = (desktop: boolean) => {
       setIsDesktop(desktop);
       if (!desktop) {
         setSidebarOpen(false);
+        setIsHovered(false);
       }
     };
 
@@ -74,8 +78,7 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
+      {sidebarOpen && !isDesktop && (
         <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setSidebarOpen(false)}
@@ -83,59 +86,99 @@ export function Sidebar() {
       )}
 
       <aside
+        onMouseEnter={() => isDesktop && setIsHovered(true)}
+        onMouseLeave={() => isDesktop && setIsHovered(false)}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-card shadow-xl transition-all duration-300 md:static md:shadow-none",
-          sidebarOpen
-            ? "w-[82vw] max-w-xs translate-x-0 pointer-events-auto md:w-64"
-            : "w-[82vw] max-w-xs -translate-x-full pointer-events-none md:w-20 md:translate-x-0 md:pointer-events-auto"
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-card transition-[width,transform,box-shadow] duration-200 ease-out",
+          !isDesktop && (sidebarOpen ? "translate-x-0 shadow-xl w-[82vw] max-w-xs" : "-translate-x-full w-[82vw] max-w-xs"),
+          isDesktop && [
+            "static translate-x-0",
+            isExpanded ? "w-64 shadow-lg" : "w-[4.5rem]",
+          ]
         )}
       >
-        <div className="flex h-16 items-center justify-between px-4 border-b">
-          <Link href="/dashboard" className={cn("flex items-center gap-2 font-bold text-primary", !sidebarOpen && "md:mx-auto")}>
-            <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-black">K</div>
-            {sidebarOpen && <span className="text-xl">Kiosk POS</span>}
+        <div
+          className={cn(
+            "flex h-16 shrink-0 items-center border-b px-3",
+            isExpanded ? "justify-between" : "justify-center md:justify-center"
+          )}
+        >
+          <Link
+            href="/dashboard"
+            className={cn(
+              "flex items-center gap-2 overflow-hidden font-bold text-primary",
+              !isExpanded && "md:justify-center"
+            )}
+            title="Kiosk POS"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary font-black text-primary-foreground">
+              K
+            </div>
+            {isExpanded ? <span className="truncate text-xl">Kiosk POS</span> : null}
           </Link>
-          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden"
+            aria-label="Close menu"
+          >
             <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <nav className="flex-1 space-y-1 p-3">
-          {navigation.filter(item => hasModuleAccess(item.module)).map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                  !sidebarOpen && "md:justify-center"
-                )}
-              >
-                <item.icon
+        <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden p-2">
+          {navigation
+            .filter((item) => hasModuleAccess(item.module))
+            .map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  title={!isExpanded ? item.name : undefined}
                   className={cn(
-                    "h-5 w-5 flex-shrink-0 transition-colors",
-                    sidebarOpen && "mr-3",
-                    isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-accent-foreground"
+                    "group flex items-center rounded-lg py-2.5 text-sm font-medium transition-all",
+                    isExpanded ? "px-3" : "justify-center px-0 md:px-0",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
-                />
-                {sidebarOpen && <span>{item.name}</span>}
-              </Link>
-            );
-          })}
+                >
+                  <item.icon
+                    className={cn(
+                      "h-5 w-5 shrink-0",
+                      isExpanded && "mr-3",
+                      isActive
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground group-hover:text-accent-foreground"
+                    )}
+                  />
+                  {isExpanded ? <span className="truncate">{item.name}</span> : null}
+                </Link>
+              );
+            })}
         </nav>
 
-        <div className="hidden border-t p-4 md:block">
+        <div className="hidden shrink-0 border-t p-2 md:block">
           <Button
             variant="ghost"
-            className={cn("w-full justify-start gap-3", !sidebarOpen && "md:justify-center px-0")}
+            className={cn(
+              "w-full gap-3",
+              isExpanded ? "justify-start" : "justify-center px-0"
+            )}
             onClick={toggleSidebar}
+            title={sidebarOpen ? "Collapse sidebar" : "Pin sidebar open"}
           >
-            <ChevronLeft className={cn("h-5 w-5 transition-transform", !sidebarOpen && "rotate-180")} />
-            {sidebarOpen && <span>Collapse</span>}
+            {sidebarOpen ? (
+              <ChevronLeft className="h-5 w-5 shrink-0" />
+            ) : (
+              <Pin className="h-5 w-5 shrink-0" />
+            )}
+            {isExpanded ? (
+              <span>{sidebarOpen ? "Collapse" : "Pin open"}</span>
+            ) : null}
           </Button>
         </div>
       </aside>

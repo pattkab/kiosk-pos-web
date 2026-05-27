@@ -370,11 +370,20 @@ export function useCheckout() {
         throw new Error("You do not have permission to complete checkout.");
       }
 
-      const { data: receiptSettingsRow } = await supabase
-        .from("organization_settings")
-        .select("receipt_header, receipt_footer, receipt_logo_url, receipt_notes")
-        .eq("organization_id", activeContext.organizationId)
-        .maybeSingle();
+      const receiptCacheKey = `receipt-settings-${activeContext.organizationId}`;
+      let receiptSettingsRow = await getMetadata(receiptCacheKey);
+
+      if (isOnline) {
+        const { data } = await supabase
+          .from("organization_settings")
+          .select("receipt_header, receipt_footer, receipt_logo_url, receipt_notes")
+          .eq("organization_id", activeContext.organizationId)
+          .maybeSingle();
+        if (data) {
+          receiptSettingsRow = data;
+          await saveMetadata(receiptCacheKey, data);
+        }
+      }
 
       const receiptBranding = {
         receiptHeader: receiptSettingsRow?.receipt_header ?? null,
