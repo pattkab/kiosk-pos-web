@@ -13,6 +13,7 @@ export const productSchema = z.object({
   expiry_date: z.string().optional().nullable(),
   image_url: z.string().url().optional().nullable(),
   is_active: z.boolean().default(true),
+  addition_date: z.string().optional().nullable(),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;

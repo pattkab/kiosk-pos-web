@@ -101,16 +101,33 @@ export function useProductMutations() {
         .single();
       if (profileError) throw profileError;
 
+      // Extract addition_date from values, don't pass it to products table if it doesn't exist there
+      const { addition_date, ...productData } = values;
+
       const { data, error } = await supabase
         .from("products")
         .insert({
-          ...values,
+          ...productData,
           organization_id: activeOrganizationId,
           created_by: profile.id
         })
         .select()
         .single();
       if (error) throw error;
+
+      // If initial stock is > 0, record an initial 'purchase' transaction
+      if (data.stock_quantity > 0) {
+        await supabase.from('inventory_transactions').insert({
+          organization_id: activeOrganizationId,
+          product_id: data.id,
+          quantity_change: data.stock_quantity,
+          transaction_type: 'purchase',
+          notes: 'Initial stock addition',
+          performed_by: profile.id,
+          created_at: addition_date || new Date().toISOString()
+        });
+      }
+
       return data;
     },
     onSuccess: () => {

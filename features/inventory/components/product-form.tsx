@@ -58,6 +58,8 @@ export function ProductForm() {
       low_stock_threshold: 5,
       is_active: true,
       image_url: null,
+      expiry_date: null,
+      addition_date: new Date().toISOString().split('T')[0],
     },
   });
 
@@ -75,6 +77,8 @@ export function ProductForm() {
         low_stock_threshold: editingProduct.low_stock_threshold,
         is_active: editingProduct.is_active,
         image_url: editingProduct.image_url,
+        expiry_date: editingProduct.expiry_date,
+        addition_date: editingProduct.created_at?.split('T')[0],
       });
     } else {
       form.reset();
@@ -223,8 +227,8 @@ export function ProductForm() {
                     name="cost_price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cost price</FormLabel>
-                        <FormDescription className="text-xs">{activeCurrency}</FormDescription>
+                        <FormLabel>Unit cost price</FormLabel>
+                        <FormDescription className="text-xs">Buying price per unit ({activeCurrency})</FormDescription>
                         <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
@@ -235,8 +239,8 @@ export function ProductForm() {
                     name="selling_price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Selling price</FormLabel>
-                        <FormDescription className="text-xs">{activeCurrency}</FormDescription>
+                        <FormLabel>Unit sale price</FormLabel>
+                        <FormDescription className="text-xs">Selling price per unit ({activeCurrency})</FormDescription>
                         <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
@@ -252,11 +256,26 @@ export function ProductForm() {
                       <FormItem>
                         <FormLabel>Opening Stock</FormLabel>
                         <FormControl><Input type="number" {...field} disabled={!!editingProductId} /></FormControl>
-                        <FormDescription className="text-xs">Use 'Adjustment' for existing products.</FormDescription>
+                        <FormDescription className="text-xs">Initial quantity available.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="addition_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date of addition</FormLabel>
+                        <FormControl><Input type="date" {...field} disabled={!!editingProductId} /></FormControl>
+                        <FormDescription className="text-xs">When was this stock received?</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 border-t pt-4">
                   <FormField
                     control={form.control}
                     name="low_stock_threshold"
@@ -264,6 +283,19 @@ export function ProductForm() {
                       <FormItem>
                         <FormLabel>Low Stock Alert</FormLabel>
                         <FormControl><Input type="number" {...field} /></FormControl>
+                        <FormDescription className="text-xs">Notify when stock hits this level.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="expiry_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Expiry date</FormLabel>
+                        <FormControl><Input type="date" value={field.value || ""} onChange={field.onChange} /></FormControl>
+                        <FormDescription className="text-xs">For perishables or medicine.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
