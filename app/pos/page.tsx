@@ -231,22 +231,30 @@ export default function PosPage() {
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="flex h-full min-h-[420px] flex-col items-center justify-center text-center">
-              <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-                <PackageSearch className="h-10 w-10 text-muted-foreground" />
+            <div className="flex h-full min-h-[420px] flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-3xl bg-muted/20">
+              <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <PackageSearch className="h-12 w-12" />
               </div>
-              <h3 className="text-xl font-bold">No products found</h3>
+              <h3 className="text-2xl font-black mb-2">Welcome to your POS</h3>
               {(!search && !activeCategoryId) ? (
-                <div className="space-y-4">
-                  <p className="mt-1 max-w-sm text-muted-foreground">
-                    Your inventory is currently empty. Add your first products to start selling.
+                <div className="space-y-4 max-w-sm">
+                  <p className="text-muted-foreground text-lg font-medium leading-relaxed">
+                    Your inventory is currently empty. To start selling, you need to add your products first.
                   </p>
-                  <Button asChild variant="outline" className="font-bold border-2">
-                    <Link href="/inventory">Go to Inventory</Link>
+                  <Button asChild size="lg" className="h-14 px-8 rounded-2xl font-black shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+                    <Link href="/inventory">
+                      <Plus className="mr-2 h-6 w-6" />
+                      Add My First Product
+                    </Link>
                   </Button>
                 </div>
               ) : (
-                <p className="mt-1 max-w-sm text-muted-foreground">Try another search term, category, SKU, or barcode.</p>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-lg font-medium">No products match your current search.</p>
+                  <Button variant="ghost" onClick={() => {setSearch(""); setActiveCategoryId(null);}} className="font-bold">
+                    Clear filters
+                  </Button>
+                </div>
               )}
             </div>
           ) : (
