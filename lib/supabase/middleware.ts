@@ -46,10 +46,11 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith("/login") ||
                      request.nextUrl.pathname.startsWith("/register") ||
                      request.nextUrl.pathname.startsWith("/auth");
+  const isPublicLegalPage =
+    request.nextUrl.pathname === "/privacy" ||
+    request.nextUrl.pathname === "/terms";
   const isPublicPage =
-    isAuthPage ||
-    request.nextUrl.pathname === "/" ||
-    request.nextUrl.pathname === "/privacy";
+    isAuthPage || request.nextUrl.pathname === "/" || isPublicLegalPage;
   const isPublicRuntimeAsset = request.nextUrl.pathname === "/sw.js" ||
                                request.nextUrl.pathname === "/offline.html" ||
                                request.nextUrl.pathname === "/manifest.webmanifest";

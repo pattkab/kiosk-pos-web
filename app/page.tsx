@@ -22,6 +22,10 @@ export default function LandingPage() {
         <Link href="/privacy" className="underline hover:text-foreground">
           Privacy Policy
         </Link>
+        {" · "}
+        <Link href="/terms" className="underline hover:text-foreground">
+          Terms and Conditions
+        </Link>
       </p>
     </div>
   );

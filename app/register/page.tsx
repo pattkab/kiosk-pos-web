@@ -158,6 +158,10 @@ export default function RegisterPage() {
               <Link href="/privacy" className="hover:text-foreground">
                 Privacy Policy
               </Link>
+              {" · "}
+              <Link href="/terms" className="hover:text-foreground">
+                Terms and Conditions
+              </Link>
             </p>
           </div>
         </CardContent>
