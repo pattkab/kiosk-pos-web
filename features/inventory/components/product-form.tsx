@@ -33,12 +33,14 @@ import { useCategories, useProductMutations, useProducts } from "@/hooks/use-inv
 import { ImageUpload } from "./image-upload";
 import { useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useOrganizationStore } from "@/store/use-organization-store";
 
 export function ProductForm() {
   const { productModalOpen, closeProductModal, editingProductId } = useInventoryStore();
   const { data: categories } = useCategories();
   const { createProduct, updateProduct } = useProductMutations();
   const { data: products } = useProducts({});
+  const activeCurrency = useOrganizationStore((state) => state.activeCurrency);
 
   const editingProduct = products?.find(p => p.id === editingProductId);
 
@@ -125,6 +127,17 @@ export function ProductForm() {
                   />
                   <FormField
                     control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>Description</FormLabel>
+                        <FormControl><Input placeholder="Optional product notes for staff" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="category_id"
                     render={({ field }) => (
                       <FormItem>
@@ -151,16 +164,28 @@ export function ProductForm() {
                     render={({ field }) => (
                       <FormItem className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
                         <div className="space-y-0.5">
-                          <FormLabel>Active Status</FormLabel>
-                          <FormDescription className="text-xs">Visible in POS</FormDescription>
+                          <FormLabel>POS visibility</FormLabel>
+                          <FormDescription className="text-xs">Inactive products stay in inventory but cannot be sold.</FormDescription>
                         </div>
                         <FormControl>
-                          <Input
-                            type="checkbox"
-                            className="h-4 w-4"
-                            checked={field.value}
-                            onChange={e => field.onChange(e.target.checked)}
-                          />
+                          <div className="flex rounded-md border p-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={field.value ? "default" : "ghost"}
+                              onClick={() => field.onChange(true)}
+                            >
+                              Active
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={!field.value ? "default" : "ghost"}
+                              onClick={() => field.onChange(false)}
+                            >
+                              Hidden
+                            </Button>
+                          </div>
                         </FormControl>
                       </FormItem>
                     )}
@@ -198,7 +223,8 @@ export function ProductForm() {
                     name="cost_price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cost Price ($)</FormLabel>
+                        <FormLabel>Cost price</FormLabel>
+                        <FormDescription className="text-xs">{activeCurrency}</FormDescription>
                         <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
@@ -209,7 +235,8 @@ export function ProductForm() {
                     name="selling_price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Selling Price ($)</FormLabel>
+                        <FormLabel>Selling price</FormLabel>
+                        <FormDescription className="text-xs">{activeCurrency}</FormDescription>
                         <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>

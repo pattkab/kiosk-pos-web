@@ -47,9 +47,12 @@ export async function updateSession(request: NextRequest) {
                      request.nextUrl.pathname.startsWith("/register") ||
                      request.nextUrl.pathname.startsWith("/auth") ||
                      request.nextUrl.pathname === "/";
+  const isPublicRuntimeAsset = request.nextUrl.pathname === "/sw.js" ||
+                               request.nextUrl.pathname === "/offline.html" ||
+                               request.nextUrl.pathname === "/manifest.webmanifest";
   const isOrganizationSelectionPage = request.nextUrl.pathname.startsWith("/select-organization");
 
-  if (!user && !isAuthPage) {
+  if (!user && !isAuthPage && !isPublicRuntimeAsset) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

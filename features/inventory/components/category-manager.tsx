@@ -11,11 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash, Pencil } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useOrganizationStore } from "@/store/use-organization-store";
 
 export function CategoryManager() {
   const { categoryModalOpen, closeCategoryModal } = useInventoryStore();
@@ -24,15 +25,20 @@ export function CategoryManager() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const supabase = createClient();
   const queryClient = useQueryClient();
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
 
   const handleAdd = async () => {
-    if (!newName) return;
+    const name = newName.trim();
+    if (!name) return;
+    if (!activeOrganizationId) {
+      toast.error("Select an organization before adding categories.");
+      return;
+    }
     setIsSubmitting(true);
     try {
-      const { data: org } = await supabase.from('organization_members').select('organization_id').single();
       const { error } = await supabase.from("categories").insert({
-        name: newName,
-        organization_id: org?.organization_id,
+        name,
+        organization_id: activeOrganizationId,
       });
       if (error) throw error;
       toast.success("Category added");
@@ -48,7 +54,9 @@ export function CategoryManager() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure? Products in this category will become uncategorized.")) return;
     try {
-      const { error } = await supabase.from("categories").delete().eq("id", id);
+      let query = supabase.from("categories").delete().eq("id", id);
+      if (activeOrganizationId) query = query.eq("organization_id", activeOrganizationId);
+      const { error } = await query;
       if (error) throw error;
       toast.success("Category deleted");
       queryClient.invalidateQueries({ queryKey: ["categories"] });

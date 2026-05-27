@@ -18,7 +18,7 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function VirtualizedProductTable() {
-  const { searchQuery, categoryFilter, statusFilter, openProductModal } = useInventoryStore();
+  const { searchQuery, categoryFilter, stockFilter, statusFilter, openProductModal, openAdjustmentModal } = useInventoryStore();
 
   const {
     data,
@@ -29,6 +29,7 @@ export function VirtualizedProductTable() {
   } = useInfiniteProducts({
     search: searchQuery,
     categoryId: categoryFilter,
+    stock: stockFilter,
     status: statusFilter,
   });
 
@@ -95,15 +96,18 @@ export function VirtualizedProductTable() {
       {
         id: "actions",
         cell: ({ row }) => (
-          <div className="text-right">
-            <Button variant="ghost" size="icon" onClick={() => openProductModal(row.original.id)}>
+          <div className="flex justify-end gap-1">
+            <Button variant="ghost" size="sm" onClick={() => openAdjustmentModal(row.original.id)}>
+              Adjust
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => openProductModal(row.original.id)} aria-label={`Edit ${row.original.name}`}>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
         ),
       },
     ],
-    [openProductModal]
+    [openAdjustmentModal, openProductModal]
   );
 
   const table = useReactTable({
@@ -140,6 +144,18 @@ export function VirtualizedProductTable() {
 
   if (isLoading) {
     return <div className="space-y-2">{[1,2,3,4,5].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>;
+  }
+
+  if (flatData.length === 0) {
+    return (
+      <div className="flex min-h-[420px] flex-col items-center justify-center rounded-xl border border-dashed bg-card p-8 text-center">
+        <PackageSearch className="mb-4 h-12 w-12 text-muted-foreground/40" />
+        <h3 className="text-lg font-bold">No products match this view</h3>
+        <p className="mt-1 max-w-md text-sm text-muted-foreground">
+          Try clearing filters, scanning another code, or adding a new product.
+        </p>
+      </div>
+    );
   }
 
   return (

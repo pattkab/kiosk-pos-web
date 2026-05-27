@@ -45,6 +45,15 @@ export function CartSidebar() {
   const [discountValue, setDiscountValue] = useState("");
   const totals = getTotals();
   const orderNumber = useMemo(() => Math.floor(100000 + Math.random() * 900000), []);
+  const applyPercentageDiscount = (productId: string, value: string) => {
+    const amount = Number(value);
+    setItemDiscount(
+      productId,
+      value && Number.isFinite(amount)
+        ? { type: "percentage", value: Math.min(Math.max(amount, 0), 100), reason: "Line discount" }
+        : null
+    );
+  };
 
   if (!currentSession) {
     return (
@@ -72,7 +81,15 @@ export function CartSidebar() {
               {currentSession.register_name} - {totals.itemCount} item{totals.itemCount === 1 ? "" : "s"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={clearCart} className="h-9 text-destructive" disabled={!items.length}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (items.length && confirm("Clear the current cart?")) clearCart();
+            }}
+            className="h-9 text-destructive"
+            disabled={!items.length}
+          >
             Reset
           </Button>
         </div>
@@ -164,12 +181,7 @@ export function CartSidebar() {
                         placeholder="% off"
                         value={item.discount?.type === "percentage" ? String(item.discount.value) : ""}
                         onChange={(event) =>
-                          setItemDiscount(
-                            item.product_id,
-                            event.target.value
-                              ? { type: "percentage", value: Number(event.target.value), reason: "Line discount" }
-                              : null
-                          )
+                          applyPercentageDiscount(item.product_id, event.target.value)
                         }
                       />
                       {item.discount && (
@@ -200,10 +212,12 @@ export function CartSidebar() {
               placeholder="Fixed amount"
               value={discountValue}
               onChange={(event) => {
-                setDiscountValue(event.target.value);
+                const value = event.target.value;
+                const amount = Number(value);
+                setDiscountValue(value);
                 setCartDiscount(
-                  event.target.value
-                    ? { type: "fixed", value: Number(event.target.value), reason: "Cart discount" }
+                  value && Number.isFinite(amount)
+                    ? { type: "fixed", value: Math.max(0, amount), reason: "Cart discount" }
                     : null
                 );
               }}

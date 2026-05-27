@@ -1,13 +1,15 @@
 import { CartItem, CartTotals, PosProduct, AppliedDiscount } from "@/types/pos";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+const finiteMoney = (value: number) => (Number.isFinite(value) ? value : 0);
 
 function discountFor(base: number, discount: AppliedDiscount | null) {
   if (!discount) return 0;
-  if (discount.type === "percentage") return roundMoney(base * Math.min(discount.value, 100) / 100);
-  return roundMoney(Math.min(discount.value, base));
+  const value = Math.max(0, finiteMoney(discount.value));
+  if (discount.type === "percentage") return roundMoney(base * Math.min(value, 100) / 100);
+  return roundMoney(Math.min(value, base));
 }
 
 function calculateTotals(items: CartItem[], cartDiscount: AppliedDiscount | null): CartTotals {
@@ -75,6 +77,7 @@ export const useCartStore = create<CartState>()(
 
       addItem: (product) => {
         const stock = Number(product.stock_quantity ?? 0);
+        if (stock <= 0) return;
         const items = get().items;
         const existingItem = items.find((item) => item.product_id === product.id);
 
@@ -154,8 +157,16 @@ export const useCartStore = create<CartState>()(
           ),
         })),
 
-      setTaxRate: (defaultTaxRate) => set({ defaultTaxRate }),
-      setTaxMode: (taxMode) => set({ taxMode }),
+      setTaxRate: (defaultTaxRate) =>
+        set((state) => ({
+          defaultTaxRate,
+          items: state.items.map((item) => ({ ...item, tax_rate: defaultTaxRate })),
+        })),
+      setTaxMode: (taxMode) =>
+        set((state) => ({
+          taxMode,
+          items: state.items.map((item) => ({ ...item, tax_mode: taxMode })),
+        })),
       clearCart: () => set({ items: [], cartDiscount: null, lastAddedProductId: null }),
 
       validateCart: () => {
@@ -178,6 +189,7 @@ export const useCartStore = create<CartState>()(
     {
       name: "pos-cart-storage",
       version: 2,
+      storage: createJSONStorage(() => window.localStorage),
     }
   )
 );

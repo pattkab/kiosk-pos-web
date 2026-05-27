@@ -86,18 +86,27 @@ export function useCategories() {
 export function useProductMutations() {
   const supabase = createClient();
   const queryClient = useQueryClient();
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
 
   const createProduct = useMutation({
     mutationFn: async (values: ProductFormValues) => {
+      if (!activeOrganizationId) throw new Error("Select an organization before creating products.");
       const { data: { user } } = await supabase.auth.getUser();
-      const { data: org } = await supabase.from('organization_members').select('organization_id').single();
+      if (!user) throw new Error("You must be signed in to create products.");
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .single();
+      if (profileError) throw profileError;
 
       const { data, error } = await supabase
         .from("products")
         .insert({
           ...values,
-          organization_id: org?.organization_id,
-          created_by: user?.id
+          organization_id: activeOrganizationId,
+          created_by: profile.id
         })
         .select()
         .single();
@@ -113,7 +122,14 @@ export function useProductMutations() {
 
   const updateProduct = useMutation({
     mutationFn: async ({ id, values }: { id: string, values: ProductFormValues }) => {
-      const { data, error } = await supabase.from("products").update(values).eq("id", id).select().single();
+      if (!activeOrganizationId) throw new Error("Select an organization before updating products.");
+      const { data, error } = await supabase
+        .from("products")
+        .update(values)
+        .eq("id", id)
+        .eq("organization_id", activeOrganizationId)
+        .select()
+        .single();
       if (error) throw error;
       return data;
     },
@@ -126,7 +142,12 @@ export function useProductMutations() {
 
   const deleteProduct = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("products").delete().eq("id", id);
+      if (!activeOrganizationId) throw new Error("Select an organization before deleting products.");
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", id)
+        .eq("organization_id", activeOrganizationId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -141,30 +162,44 @@ export function useProductMutations() {
 export function useInventoryAdjustment() {
   const supabase = createClient();
   const queryClient = useQueryClient();
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
 
   return useMutation({
     mutationFn: async (values: AdjustmentFormValues) => {
+      if (!activeOrganizationId) throw new Error("Select an organization before adjusting stock.");
       const { data: { user } } = await supabase.auth.getUser();
-      const { data: org } = await supabase.from('organization_members').select('organization_id').single();
+      if (!user) throw new Error("You must be signed in to adjust inventory.");
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .single();
+      if (profileError) throw profileError;
 
       // 1. Create transaction
       const { error: txError } = await supabase.from('inventory_transactions').insert({
         ...values,
-        organization_id: org?.organization_id,
-        performed_by: user?.id,
+        organization_id: activeOrganizationId,
+        performed_by: profile.id,
       });
       if (txError) throw txError;
 
       // 2. Update stock (In a real app, use a RPC or trigger for atomic consistency)
       // The trigger we added in migration 20240101000000 handles sales, but we should update
       // stock for other adjustments here or use a dedicated RPC.
-      const { data: product } = await supabase.from('products').select('stock_quantity').eq('id', values.product_id).single();
+      const { data: product } = await supabase
+        .from('products')
+        .select('stock_quantity')
+        .eq('id', values.product_id)
+        .eq('organization_id', activeOrganizationId)
+        .single();
       const newStock = (product?.stock_quantity || 0) + values.quantity_change;
 
       const { error: prodError } = await supabase
         .from('products')
         .update({ stock_quantity: newStock })
-        .eq('id', values.product_id);
+        .eq('id', values.product_id)
+        .eq('organization_id', activeOrganizationId);
 
       if (prodError) throw prodError;
     },

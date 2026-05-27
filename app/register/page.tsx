@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { signUp } from "@/lib/auth/actions";
+import { CheckCircle2, ShieldCheck, Store } from "lucide-react";
 
 const signupSchema = z.object({
   full_name: z.string().min(2, "Full name must be at least 2 characters"),
@@ -46,12 +47,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4">
-      <Card className="w-full max-w-md">
+    <div className="grid min-h-screen bg-background lg:grid-cols-[minmax(420px,1.05fr)_minmax(0,0.95fr)]">
+      <div className="flex items-center justify-center px-4 py-10">
+      <Card className="w-full max-w-md border-0 shadow-none sm:border sm:shadow-sm">
         <CardHeader className="space-y-1">
+          <Link href="/" className="mb-6 flex w-fit items-center gap-2 font-black text-primary lg:hidden">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">K</span>
+            Kiosk POS
+          </Link>
           <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
           <CardDescription>
-            Enter your details to get started with Kiosk POS
+            Start with your profile. You will create or join an organization next.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -64,7 +70,7 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} />
+                      <Input autoComplete="name" placeholder="Jane Doe" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -77,7 +83,7 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="m@example.com" {...field} />
+                      <Input autoComplete="email" placeholder="name@store.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -90,7 +96,7 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input autoComplete="new-password" type="password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -103,14 +109,14 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input autoComplete="new-password" type="password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <Button className="w-full" type="submit" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Sign Up"}
+                {isLoading ? "Creating account..." : "Create account"}
               </Button>
             </form>
           </Form>
@@ -122,6 +128,32 @@ export default function RegisterPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
+      <div className="hidden flex-col justify-between border-l bg-slate-950 p-10 text-white lg:flex">
+        <Link href="/" className="flex w-fit items-center gap-3 text-lg font-black">
+          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-slate-950">K</span>
+          Kiosk POS
+        </Link>
+        <div className="max-w-xl">
+          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-white/10">
+            <Store className="h-8 w-8" />
+          </div>
+          <h1 className="text-4xl font-black tracking-tight">Set up the store before the first sale.</h1>
+          <p className="mt-4 text-lg text-slate-300">
+            After verification, Kiosk POS guides you through organization setup, staff roles, products, and checkout.
+          </p>
+        </div>
+        <div className="grid gap-3 text-sm text-slate-300">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-4 w-4 text-emerald-300" />
+            Secure account verification
+          </div>
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+            Organization setup immediately after sign-in
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

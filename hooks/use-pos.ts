@@ -143,9 +143,11 @@ export function usePosProducts(filters: {
 
 export function useBarcodeLookup() {
   const supabase = createClient();
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
 
   return useMutation({
     mutationFn: async (barcode: string) => {
+      if (!activeOrganizationId) throw new Error("Select an organization before scanning products.");
       const isOnline = useConnectivityStore.getState().status !== "offline";
 
       if (!isOnline) {
@@ -166,6 +168,7 @@ export function useBarcodeLookup() {
         const { data, error } = await supabase
           .from("products")
           .select("*, categories(name)")
+          .eq("organization_id", activeOrganizationId)
           .eq("is_active", true)
           .or(`barcode.eq.${barcode},sku.eq.${barcode}`)
           .limit(1)

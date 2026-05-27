@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createClient } from "@/lib/supabase/client";
@@ -11,12 +11,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
+import { Building2, CheckCircle2, LayoutDashboard, Users } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const onboardingSchema = z.object({
   name: z.string().min(2, "Organization name must be at least 2 characters"),
   slug: z.string().min(2, "Slug must be at least 2 characters").regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
   currency: z.string().min(1, "Currency is required"),
 });
+
+const currencies = ["USD", "UGX", "KES", "TZS", "EUR", "GBP"];
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 
 export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +53,7 @@ export default function OnboardingPage() {
       currency: "USD",
     },
   });
+  const organizationName = useWatch({ control: form.control, name: "name" });
 
   async function onOrgSubmit(values: z.infer<typeof onboardingSchema>) {
     setIsLoading(true);
@@ -81,21 +99,43 @@ export default function OnboardingPage() {
                   <FormField control={form.control} name="name" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Organization Name</FormLabel>
-                      <FormControl><Input placeholder="My Store" {...field} /></FormControl>
+                      <FormControl>
+                        <Input
+                          placeholder="Kampala Corner Store"
+                          {...field}
+                          onChange={(event) => {
+                            field.onChange(event);
+                            if (!form.formState.dirtyFields.slug) {
+                              form.setValue("slug", slugify(event.target.value), { shouldValidate: true });
+                            }
+                          }}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="slug" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL Slug</FormLabel>
-                      <FormControl><Input placeholder="my-store" {...field} /></FormControl>
+                      <FormLabel>Workspace slug</FormLabel>
+                      <FormControl><Input placeholder="kampala-corner-store" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="currency" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Currency</FormLabel>
-                      <FormControl><Input placeholder="USD" {...field} /></FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {currencies.map((currency) => (
+                            <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -109,29 +149,72 @@ export default function OnboardingPage() {
         ) : (
           <>
             <CardHeader>
-              <CardTitle>Invite Team Members</CardTitle>
-              <CardDescription>You can also do this later in settings.</CardDescription>
+              <CardTitle>Workspace ready</CardTitle>
+              <CardDescription>Finish setup now or continue to the dashboard.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-               <div className="p-4 border rounded-md bg-background">
-                 <p className="text-sm text-muted-foreground mb-4">Invite your colleagues to join <strong>{form.getValues('name')}</strong>.</p>
-                 <div className="flex gap-2">
-                   <Input placeholder="email@example.com" disabled />
-                   <Button variant="secondary" disabled>Invite</Button>
-                 </div>
-               </div>
-               <Button
-                 className="w-full"
-                 disabled={isNavigating}
-                 onClick={() => {
-                   setIsNavigating(true);
-                   if (orgId) setActiveOrganizationId(orgId);
-                   setActiveCurrency(form.getValues("currency"));
-                   window.location.assign("/dashboard");
-                 }}
-               >
-                 {isNavigating ? "Opening dashboard..." : "Go to Dashboard"}
-               </Button>
+              <div className="rounded-md border bg-background p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{organizationName || form.getValues("name")} has been created.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Add products first if you are setting up stock, or go to checkout and open a register when you are ready to sell.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button
+                  variant="outline"
+                  className="h-auto justify-start gap-3 p-4 text-left"
+                  onClick={() => {
+                    setIsNavigating(true);
+                    if (orgId) setActiveOrganizationId(orgId);
+                    setActiveCurrency(form.getValues("currency"));
+                    window.location.assign("/settings/team");
+                  }}
+                >
+                  <Users className="h-5 w-5" />
+                  <span>
+                    <span className="block font-bold">Invite team</span>
+                    <span className="block text-xs text-muted-foreground">Set roles and staff access</span>
+                  </span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto justify-start gap-3 p-4 text-left"
+                  onClick={() => {
+                    setIsNavigating(true);
+                    if (orgId) setActiveOrganizationId(orgId);
+                    setActiveCurrency(form.getValues("currency"));
+                    window.location.assign("/inventory");
+                  }}
+                >
+                  <Building2 className="h-5 w-5" />
+                  <span>
+                    <span className="block font-bold">Add products</span>
+                    <span className="block text-xs text-muted-foreground">Create catalog and stock</span>
+                  </span>
+                </Button>
+              </div>
+
+              <Button
+                className="w-full"
+                disabled={isNavigating}
+                onClick={() => {
+                  setIsNavigating(true);
+                  if (orgId) setActiveOrganizationId(orgId);
+                  setActiveCurrency(form.getValues("currency"));
+                  window.location.assign("/dashboard");
+                }}
+              >
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                {isNavigating ? "Opening..." : "Go to dashboard"}
+              </Button>
             </CardContent>
           </>
         )}

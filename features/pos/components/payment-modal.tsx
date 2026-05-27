@@ -64,6 +64,10 @@ export function PaymentModal() {
   };
 
   const addPayment = () => {
+    if (!Number.isFinite(tenderAmount)) {
+      toast.error("Enter a valid payment amount.");
+      return;
+    }
     const amount = method === "cash" ? tenderAmount : Math.min(tenderAmount || remaining, remaining);
     if (amount <= 0) {
       toast.error("Enter a payment amount.");
@@ -130,6 +134,7 @@ export function PaymentModal() {
                 />
                 <Button className="h-16 w-24" onClick={addPayment}>
                   <Plus className="h-5 w-5" />
+                  <span className="sr-only">Add tender</span>
                 </Button>
               </div>
             </div>

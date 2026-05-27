@@ -9,6 +9,7 @@ const PAGE_SIZE = 50;
 export function useInfiniteProducts(filters: {
   search?: string;
   categoryId?: string | null;
+  stock?: 'all' | 'low' | 'out';
   status?: 'all' | 'active' | 'inactive';
 }) {
   const supabase = createClient();
@@ -35,11 +36,20 @@ export function useInfiniteProducts(filters: {
       if (filters.status === 'active') query = query.eq('is_active', true);
       if (filters.status === 'inactive') query = query.eq('is_active', false);
 
+      if (filters.stock === 'out') query = query.eq('stock_quantity', 0);
+
       const { data, error, count } = await query;
       if (error) throw error;
 
+      const filteredData = filters.stock === 'low'
+        ? data.filter((product) =>
+            Number(product.stock_quantity ?? 0) > 0 &&
+            Number(product.stock_quantity ?? 0) <= Number(product.low_stock_threshold ?? 0)
+          )
+        : data;
+
       return {
-        data,
+        data: filteredData,
         nextPage: data.length === PAGE_SIZE ? pageParam + 1 : undefined,
         totalCount: count
       };

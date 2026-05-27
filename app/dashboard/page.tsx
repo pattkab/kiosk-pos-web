@@ -15,6 +15,7 @@ import { formatCurrency } from "@/lib/utils";
 import { LiveActivityFeed } from "@/components/realtime/live-activity-feed";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 // Performance: Lazy load heavy chart and product list components
 const RevenueChart = dynamic(() => import("@/components/dashboard/revenue-chart").then(mod => mod.RevenueChart), {
@@ -40,10 +41,10 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Badge variant="outline" className="h-9 px-3">
             <Clock className="mr-2 h-4 w-4" />
             Last 30 Days
-          </Button>
+          </Badge>
           <Button size="sm" asChild>
             <Link href="/pos">
               <ShoppingCart className="mr-2 h-4 w-4" />

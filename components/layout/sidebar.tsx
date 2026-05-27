@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/store/use-app-store";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect } from "react";
 import { canAccessModule } from "@/lib/auth/permissions";
+import { useActiveOrganization } from "@/hooks/use-organization";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, module: "dashboard" },
@@ -33,26 +33,8 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useAppStore();
-  const [userRole, setUserRole] = useState<any>(null);
-  const supabase = createClient();
-
-  useEffect(() => {
-    async function getRole() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from('profiles').select('id').eq('auth_user_id', user.id).single();
-        if (profile) {
-          const { data: member } = await supabase
-            .from('organization_members')
-            .select('role')
-            .eq('profile_id', profile.id)
-            .single();
-          setUserRole(member?.role);
-        }
-      }
-    }
-    getRole();
-  }, [supabase]);
+  const { activeOrganization } = useActiveOrganization();
+  const userRole = activeOrganization?.role;
 
   // Handle mobile resize
   useEffect(() => {
@@ -71,7 +53,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Overlay */}
-      {!sidebarOpen && (
+      {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setSidebarOpen(false)}

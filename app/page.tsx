@@ -12,10 +12,10 @@ export default function LandingPage() {
       </p>
       <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
         <Button asChild size="lg">
-          <Link href="/login">Get Started</Link>
+          <Link href="/register">Create account</Link>
         </Button>
         <Button asChild variant="outline" size="lg">
-          <Link href="/dashboard">View Demo</Link>
+          <Link href="/login">Sign in</Link>
         </Button>
       </div>
     </div>
