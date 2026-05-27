@@ -17,12 +17,6 @@ export function RegisterSession() {
   const [closingBalance, setClosingBalance] = useState("");
   const [notes, setNotes] = useState("");
 
-  useEffect(() => {
-    if (!currentSession) {
-      setIsOpeningRegister(true);
-    }
-  }, [currentSession, setIsOpeningRegister]);
-
   if (currentSession) {
     return (
       <Dialog open={isClosingRegister} onOpenChange={setIsClosingRegister}>
