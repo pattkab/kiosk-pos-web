@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import {
   hasPermission,
@@ -35,6 +40,37 @@ export type OrganizationWithRole = {
   role: Role;
   member_id: string;
 };
+
+export type OrganizationInvitation = {
+  id: string;
+  organization_id: string;
+  name: string | null;
+  email: string;
+  role: Role;
+  expires_at: string;
+  accepted_at: string | null;
+  cancelled_at: string | null;
+  created_at: string | null;
+  resent_at?: string | null;
+  profiles?:
+    | { email: string | null; full_name: string | null }
+    | Array<{ email: string | null; full_name: string | null }>
+    | null;
+};
+
+const organizationInvitationsKey = (organizationId?: string | null) =>
+  ["organization-invitations", organizationId] as const;
+
+function removeInvitationFromCachedLists(
+  queryClient: QueryClient,
+  invitationId: string,
+) {
+  queryClient.setQueriesData<OrganizationInvitation[]>(
+    { queryKey: ["organization-invitations"] },
+    (current) =>
+      current?.filter((entry) => entry.id !== invitationId) ?? current,
+  );
+}
 
 export function useOrganizations() {
   const supabase = createClient();
@@ -75,13 +111,14 @@ export function useActiveOrganization() {
           .select("role_permissions")
           .eq("organization_id", activeOrganization.id)
           .maybeSingle();
-        rolePermissionMap = (data?.role_permissions ?? null) as RolePermissionMap | null;
+        rolePermissionMap = (data?.role_permissions ??
+          null) as RolePermissionMap | null;
       } catch {
         rolePermissionMap = null;
       }
       setPermissionState(
         activeOrganization.role,
-        resolveRolePermissions(activeOrganization.role, rolePermissionMap)
+        resolveRolePermissions(activeOrganization.role, rolePermissionMap),
       );
     };
 
@@ -90,7 +127,10 @@ export function useActiveOrganization() {
     }
     if (activeOrganization) {
       setActiveCurrency(activeOrganization.currency);
-      setPermissionState(activeOrganization.role, ROLE_PERMISSIONS[activeOrganization.role]);
+      setPermissionState(
+        activeOrganization.role,
+        ROLE_PERMISSIONS[activeOrganization.role],
+      );
       void applyPermissions();
     }
   }, [
@@ -108,7 +148,10 @@ export function useActiveOrganization() {
     setActiveOrganizationId(organizationId);
     setActiveCurrency(organization?.currency);
     if (organization) {
-      setPermissionState(organization.role, ROLE_PERMISSIONS[organization.role]);
+      setPermissionState(
+        organization.role,
+        ROLE_PERMISSIONS[organization.role],
+      );
     }
     queryClient.invalidateQueries();
   };
@@ -163,7 +206,7 @@ export function useOrganizationInvitations() {
   const { activeOrganization } = useActiveOrganization();
 
   return useQuery({
-    queryKey: ["organization-invitations", activeOrganization?.id],
+    queryKey: organizationInvitationsKey(activeOrganization?.id),
     enabled: Boolean(activeOrganization?.id),
     queryFn: async () => {
       const { data, error } = await supabase
@@ -172,9 +215,10 @@ export function useOrganizationInvitations() {
         .eq("organization_id", activeOrganization!.id)
         .is("accepted_at", null)
         .is("cancelled_at", null)
+        .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as OrganizationInvitation[];
     },
   });
 }
@@ -200,7 +244,9 @@ export function useInviteMember() {
       const invitationUrl = invitation?.invitation_url as string | undefined;
 
       if (!invitationId) {
-        throw new Error("Invitation created but invitation id was not returned.");
+        throw new Error(
+          "Invitation created but invitation id was not returned.",
+        );
       }
 
       const response = await fetch("/api/invitations/send-email", {
@@ -224,11 +270,14 @@ export function useInviteMember() {
         emailError:
           response.ok && emailResult.ok
             ? null
-            : emailResult.error ?? "Invitation created but email delivery failed.",
+            : (emailResult.error ??
+              "Invitation created but email delivery failed."),
       };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
+      queryClient.invalidateQueries({
+        queryKey: organizationInvitationsKey(activeOrganization?.id),
+      });
       if (data.emailSent) {
         toast.success("Invitation email sent", {
           description: data.invitationUrl ?? undefined,
@@ -251,30 +300,38 @@ export function useRevokeInvitation() {
   return useMutation({
     mutationFn: async (invitationId: string) => {
       if (!activeOrganization) throw new Error("No active organization.");
-      const { data, error } = await supabase.rpc("revoke_organization_invitation", {
-        p_invitation_id: invitationId,
-      });
+      const { data, error } = await supabase.rpc(
+        "revoke_organization_invitation",
+        {
+          p_invitation_id: invitationId,
+        },
+      );
       if (error) throw error;
       return (data as string) ?? invitationId;
     },
     onMutate: async (invitationId) => {
-      await queryClient.cancelQueries({ queryKey: ["organization-invitations", activeOrganization?.id] });
-      const queryKey = ["organization-invitations", activeOrganization?.id] as const;
-      const previous = queryClient.getQueryData<any[]>(queryKey);
-      queryClient.setQueryData<any[]>(queryKey, (current = []) =>
-        current.filter((entry) => entry.id !== invitationId)
-      );
-      return { queryKey };
+      const queryKey = organizationInvitationsKey(activeOrganization?.id);
+      await queryClient.cancelQueries({ queryKey });
+      const previousLists = queryClient.getQueriesData<
+        OrganizationInvitation[]
+      >({
+        queryKey: ["organization-invitations"],
+      });
+      removeInvitationFromCachedLists(queryClient, invitationId);
+      return { previousLists, queryKey };
     },
     onError: (error, _invitationId, context) => {
-      queryClient.invalidateQueries({
-        queryKey: context?.queryKey ?? ["organization-invitations", activeOrganization?.id],
+      context?.previousLists?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
       });
       toast.error(error.message);
     },
     onSuccess: (_id, _invitationId, context) => {
+      removeInvitationFromCachedLists(queryClient, _invitationId);
       queryClient.invalidateQueries({
-        queryKey: context?.queryKey ?? ["organization-invitations", activeOrganization?.id],
+        queryKey:
+          context?.queryKey ??
+          organizationInvitationsKey(activeOrganization?.id),
       });
       toast.success("Invitation revoked");
     },

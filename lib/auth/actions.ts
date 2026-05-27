@@ -1,7 +1,11 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { loginSchema, signupSchema, type LoginFormValues } from "@/validators/auth";
+import {
+  loginSchema,
+  signupSchema,
+  type LoginFormValues,
+} from "@/validators/auth";
 import { toast } from "sonner";
 
 export async function signIn(data: LoginFormValues) {
@@ -21,10 +25,10 @@ export async function signIn(data: LoginFormValues) {
   return { success: true };
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(next = "/select-organization") {
   const supabase = createClient();
   const { getOAuthCallbackUrl } = await import("@/lib/auth/oauth");
-  const redirectTo = getOAuthCallbackUrl("/select-organization");
+  const redirectTo = getOAuthCallbackUrl(next);
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",

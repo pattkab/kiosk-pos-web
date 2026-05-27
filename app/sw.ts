@@ -10,6 +10,10 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
+  precacheOptions: {
+    navigateFallback: "/offline.html",
+    navigateFallbackDenylist: [/^\/api\//, /^\/auth\//],
+  },
   runtimeCaching: defaultCache,
 });
 

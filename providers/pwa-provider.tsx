@@ -13,7 +13,9 @@ const PwaContext = createContext<any>(null);
 export function PwaProvider({ children }: { children: React.ReactNode }) {
   const connectivity = useConnectivity();
   const loadQueue = useOfflineQueueStore((state) => state.loadQueue);
-  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+  const activeOrganizationId = useOrganizationStore(
+    (state) => state.activeOrganizationId,
+  );
 
   // 1. Load Queue and Register Service Worker on mount
   useEffect(() => {
@@ -24,7 +26,10 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
       navigator.serviceWorker
         .register("/sw.js")
         .then((registration) => {
-          console.log("[PWA] Service Worker registered with scope:", registration.scope);
+          console.log(
+            "[PWA] Service Worker registered with scope:",
+            registration.scope,
+          );
         })
         .catch((error) => {
           console.error("[PWA] Service Worker registration failed:", error);
@@ -34,21 +39,23 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
 
   // 2. Sync queue and refresh local cache when back online
   useEffect(() => {
-    if (!connectivity.isOnline || !activeOrganizationId) return;
+    if (connectivity.status !== "online" || !activeOrganizationId) return;
 
-    console.log("[PwaProvider] Network online — syncing queue and refreshing offline cache.");
+    console.log(
+      "[PwaProvider] Network verified — syncing queue and refreshing offline cache.",
+    );
     void (async () => {
       await SyncEngine.processQueue();
       await prefetchOfflineEssentials(activeOrganizationId);
     })();
-  }, [connectivity.isOnline, activeOrganizationId]);
+  }, [connectivity.status, activeOrganizationId]);
 
   // 3. Pre-fetch essentials when organization is selected
   useEffect(() => {
-    if (connectivity.isOnline && activeOrganizationId) {
+    if (connectivity.status === "online" && activeOrganizationId) {
       void prefetchOfflineEssentials(activeOrganizationId);
     }
-  }, [activeOrganizationId, connectivity.isOnline]);
+  }, [activeOrganizationId, connectivity.status]);
 
   return (
     <PwaContext.Provider value={{ ...connectivity }}>

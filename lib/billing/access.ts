@@ -5,10 +5,12 @@ export type SubscriptionSettings = {
   trial_ends_at?: string | null;
 };
 
-export function hasSubscriptionAccess(settings: SubscriptionSettings | null | undefined) {
+export function hasSubscriptionAccess(
+  settings: SubscriptionSettings | null | undefined,
+) {
   if (!settings) return false;
 
-  if (settings.subscription_status === "active" && settings.stripe_subscription_id) {
+  if (settings.subscription_status === "active") {
     return true;
   }
 
@@ -25,9 +27,11 @@ export function getTrialDaysRemaining(trialEndsAt: string | null | undefined) {
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
-export function isTrialExpired(settings: SubscriptionSettings | null | undefined) {
+export function isTrialExpired(
+  settings: SubscriptionSettings | null | undefined,
+) {
   if (!settings) return true;
-  if (settings.subscription_status === "active" && settings.stripe_subscription_id) {
+  if (settings.subscription_status === "active") {
     return false;
   }
   if (!settings.trial_ends_at) return false;

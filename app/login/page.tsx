@@ -77,7 +77,8 @@ function LoginForm() {
 
   async function onGoogleSignIn() {
     setIsGoogleLoading(true);
-    const result = await signInWithGoogle();
+    const next = searchParams.get("next") ?? "/select-organization";
+    const result = await signInWithGoogle(next);
     if (!result.success) {
       setIsGoogleLoading(false);
     }
@@ -219,14 +220,18 @@ function LoginForm() {
                   onClick={onGoogleSignIn}
                 >
                   <Chrome className="mr-2 h-4 w-4" />
-                  {isGoogleLoading ? "Redirecting to Google..." : "Continue with Google"}
+                  {isGoogleLoading
+                    ? "Redirecting to Google..."
+                    : "Continue with Google"}
                 </Button>
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Or sign in with email</span>
+                    <span className="bg-white px-2 text-muted-foreground">
+                      Or sign in with email
+                    </span>
                   </div>
                 </div>
                 <FormField
