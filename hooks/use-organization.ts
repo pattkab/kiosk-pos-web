@@ -243,6 +243,31 @@ export function useInviteMember() {
   });
 }
 
+export function useRevokeInvitation() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+  const { activeOrganization } = useActiveOrganization();
+
+  return useMutation({
+    mutationFn: async (invitationId: string) => {
+      if (!activeOrganization) throw new Error("No active organization.");
+      const { error } = await supabase
+        .from("organization_invitations")
+        .update({ cancelled_at: new Date().toISOString() })
+        .eq("id", invitationId)
+        .eq("organization_id", activeOrganization.id)
+        .is("accepted_at", null)
+        .is("cancelled_at", null);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
+      toast.success("Invitation revoked");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+}
+
 export function useUpdateMemberRole() {
   const supabase = createClient();
   const queryClient = useQueryClient();

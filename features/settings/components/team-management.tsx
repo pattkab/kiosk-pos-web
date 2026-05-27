@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useOrganizationInvitations, useOrganizationMembers, useRemoveMember, useUpdateMemberRole } from "@/hooks/use-organization";
+import { useOrganizationInvitations, useOrganizationMembers, useRemoveMember, useRevokeInvitation, useUpdateMemberRole } from "@/hooks/use-organization";
 import { Role } from "@/lib/auth/permissions";
 import { useTeamStore } from "@/store/use-team-store";
 import { UserPlus, Trash2 } from "lucide-react";
@@ -16,6 +16,7 @@ export function TeamManagement() {
   const invitations = useOrganizationInvitations();
   const updateRole = useUpdateMemberRole();
   const removeMember = useRemoveMember();
+  const revokeInvitation = useRevokeInvitation();
   const { setInviteOpen } = useTeamStore();
 
   return (
@@ -94,7 +95,20 @@ export function TeamManagement() {
                       {invitation.email} - {invitation.role} - expires {new Date(invitation.expires_at).toLocaleDateString()}
                     </p>
                   </div>
-                  <RoleBadge role={invitation.role} />
+                  <div className="flex items-center gap-2">
+                    <RoleBadge role={invitation.role} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        if (!window.confirm(`Revoke invitation for ${invitation.email}?`)) return;
+                        revokeInvitation.mutate(invitation.id);
+                      }}
+                      disabled={revokeInvitation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
