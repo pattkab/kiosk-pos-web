@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { hasPermission, Permission } from "./permissions";
+import { hasPermission, AnyPermission } from "./permissions";
 import { redirect } from "next/navigation";
 
-export async function checkPermission(permission: Permission) {
+export async function checkPermission(permission: AnyPermission, organizationId?: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -22,13 +22,24 @@ export async function checkPermission(permission: Permission) {
 
   const { data: member } = await supabase
     .from("organization_members")
-    .select("role")
+    .select("role, organization_id")
     .eq("profile_id", profile.id)
-    .single();
+    .maybeSingle();
 
-  if (!member || !hasPermission(member.role, permission)) {
+  let scopedMember = member;
+  if (organizationId) {
+    const { data } = await supabase
+      .from("organization_members")
+      .select("role, organization_id")
+      .eq("profile_id", profile.id)
+      .eq("organization_id", organizationId)
+      .maybeSingle();
+    scopedMember = data;
+  }
+
+  if (!scopedMember || !hasPermission(scopedMember.role, permission)) {
     redirect("/unauthorized");
   }
 
-  return { user, profile, member };
+  return { user, profile, member: scopedMember };
 }

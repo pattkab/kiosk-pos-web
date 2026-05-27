@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - Kiosk POS</title>
+    <style>
+      :root {
+        --background: 240 10% 3.9%;
+        --foreground: 0 0% 98%;
+        --card: 240 10% 3.9%;
+        --card-foreground: 0 0% 98%;
+        --popover: 240 10% 3.9%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 263.4 90% 50.8%;
+        --primary-foreground: 210 20% 98%;
+        --secondary: 240 3.7% 15.9%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 240 3.7% 15.9%;
+        --muted-foreground: 240 5% 64.9%;
+        --accent: 240 3.7% 15.9%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 240 3.7% 15.9%;
+        --input: 240 3.7% 15.9%;
+        --ring: 240 4.9% 83.9%;
+        --radius: 0.5rem;
+      }
+
+      body {
+        background-color: #09090b;
+        color: #f4f4f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px;
+        box-sizing: border-box;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      .container {
+        max-width: 460px;
+        padding: 40px 24px;
+        border-radius: 12px;
+        background-color: #18181b;
+        border: 1px solid #27272a;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        position: relative;
+        z-index: 10;
+      }
+
+      .glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, rgba(124, 58, 237, 0) 70%);
+        transform: translate(-50%, -50%);
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .icon-container {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: rgba(124, 58, 237, 0.1);
+        border: 1px solid rgba(124, 58, 237, 0.2);
+        color: #a78bfa;
+        margin-bottom: 24px;
+        animation: pulse 2s infinite ease-in-out;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.2);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 0 20px 8px rgba(124, 58, 237, 0.1);
+        }
+      }
+
+      h1 {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0 0 12px 0;
+        letter-spacing: -0.025em;
+        color: #ffffff;
+      }
+
+      p {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #a1a1aa;
+        margin: 0 0 28px 0;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 48px;
+        padding: 0 24px;
+        font-weight: 700;
+        font-size: 14px;
+        color: #ffffff;
+        background-color: #7c3aed;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .btn:hover {
+        background-color: #6d28d9;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 9999px;
+        background-color: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #f87171;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 16px;
+      }
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #ef4444;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glow"></div>
+    <div class="container">
+      <div class="badge">
+        <span class="dot"></span>
+        No Connection
+      </div>
+
+      <div class="icon-container">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.5M5 12.5a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.58 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+        </svg>
+      </div>
+
+      <h1>Connection Disconnected</h1>
+      <p>Kiosk POS is currently running offline. You can continue checking out items and generating receipts from the POS interface. Once connection is restored, we'll sync automatically.</p>
+
+      <button class="btn" onclick="checkConnection()">Retry Connection</button>
+    </div>
+
+    <script>
+      function checkConnection() {
+        if (navigator.onLine) {
+          window.location.href = "/pos";
+        } else {
+          const btn = document.querySelector(".btn");
+          btn.textContent = "Still Offline. Retrying...";
+          setTimeout(() => {
+            btn.textContent = "Retry Connection";
+          }, 1500);
+        }
+      }
+
+      // Automatically redirect if connection is restored
+      window.addEventListener("online", () => {
+        window.location.href = "/pos";
+      });
+    </script>
+  </body>
+</html>

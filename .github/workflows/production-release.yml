@@ -1,0 +1,40 @@
+name: Production Release
+
+on:
+  push:
+    branches: [ production ] # Only run on the production branch
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Strict Type Check
+        run: npx tsc --noEmit
+      
+      - name: Run Unit Tests
+        run: npm run test:unit
+      
+      - name: Production Build Check
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Vercel
+        run: echo "Triggering Vercel Production Deployment..."
+        # This is usually handled by Vercel's GitHub Integration
+        # but you can use the Vercel CLI here if manual control is needed.

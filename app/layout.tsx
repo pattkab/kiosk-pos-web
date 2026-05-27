@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
+import { ConflictResolutionModal } from "@/components/realtime/conflict-resolution-modal";
+import { AcknowledgementModal } from "@/features/notifications/components/acknowledgement-modal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,6 +23,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           {children}
+          <ConflictResolutionModal />
+          <AcknowledgementModal />
           <Toaster position="top-right" />
         </Providers>
       </body>

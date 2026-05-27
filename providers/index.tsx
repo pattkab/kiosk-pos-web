@@ -1,7 +1,9 @@
 "use client";
 
 import { QueryProvider } from "./query-provider";
+import { RealtimeProvider } from "./realtime-provider";
 import { ThemeProvider } from "./theme-provider";
+import { PwaProvider } from "./pwa-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +13,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <QueryProvider>{children}</QueryProvider>
+      <QueryProvider>
+        <RealtimeProvider>
+          <PwaProvider>{children}</PwaProvider>
+        </RealtimeProvider>
+      </QueryProvider>
     </ThemeProvider>
   );
 }
+

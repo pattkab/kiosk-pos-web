@@ -1,88 +1,81 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
+import { useOrganizationStore } from "@/store/use-organization-store";
 import { toast } from "sonner";
 
 export default function AcceptInvitePage() {
-  const { token } = useParams();
+  const params = useParams<{ token: string }>();
+  const token = params.token;
   const router = useRouter();
+  const supabase = createClient();
   const [invitation, setInvitation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const supabase = createClient();
+  const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
 
   useEffect(() => {
     async function fetchInvitation() {
       const { data, error } = await supabase
-        .from("invitations")
+        .from("organization_invitations")
         .select("*, organizations(name)")
         .eq("token", token)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         toast.error("Invalid or expired invitation");
         router.push("/login");
-      } else {
-        setInvitation(data);
-      }
-      setLoading(false);
-    }
-    fetchInvitation();
-  }, [token, supabase, router]);
-
-  async function handleAccept() {
-    setProcessing(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push(`/register?next=/invite/${token}`);
         return;
       }
 
-      const { data: profile } = await supabase.from('profiles').select('id').eq('auth_user_id', user.id).single();
-      if (!profile) throw new Error("Profile not found");
-
-      // 1. Add as member
-      const { error: memberError } = await supabase
-        .from("organization_members")
-        .insert({
-          organization_id: invitation.organization_id,
-          profile_id: profile.id,
-          role: invitation.role,
-        });
-
-      if (memberError) throw memberError;
-
-      // 2. Delete invitation
-      await supabase.from("invitations").delete().eq("id", invitation.id);
-
-      toast.success(`Joined ${invitation.organizations.name}!`);
-      router.push("/dashboard");
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setProcessing(false);
+      setInvitation(data);
+      setLoading(false);
     }
+    fetchInvitation();
+  }, [router, supabase, token]);
+
+  async function handleAccept() {
+    setProcessing(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push(`/register?next=/invite/${token}`);
+      return;
+    }
+
+    const { data, error } = await supabase.rpc("accept_organization_invitation", { p_token: token });
+    setProcessing(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    setActiveOrganizationId(data as string);
+    toast.success(`Joined ${invitation.organizations.name}`);
+    router.push("/dashboard");
   }
 
-  if (loading) return <div>Loading invitation...</div>;
+  if (loading) {
+    return <div className="flex min-h-screen items-center justify-center">Loading invitation...</div>;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4">
       <Card className="w-full max-w-md text-center">
         <CardHeader>
-          <CardTitle>Join Organization</CardTitle>
+          <CardTitle>Join organization</CardTitle>
           <CardDescription>
-            You've been invited to join <strong>{invitation.organizations.name}</strong> as a <strong>{invitation.role}</strong>.
+            You have been invited to join <strong>{invitation.organizations.name}</strong> as a{" "}
+            <strong>{invitation.role}</strong>.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button className="w-full" onClick={handleAccept} disabled={processing}>
-            {processing ? "Joining..." : "Accept Invitation"}
+            {processing ? "Joining..." : "Accept invitation"}
           </Button>
         </CardContent>
       </Card>

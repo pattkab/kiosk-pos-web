@@ -14,7 +14,7 @@ CREATE TYPE alert_type AS ENUM ('low_stock', 'expiry', 'failed_transaction');
 
 -- 1. PROFILES
 CREATE TABLE profiles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     auth_user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     full_name TEXT,
     avatar_url TEXT,
@@ -26,7 +26,7 @@ CREATE TABLE profiles (
 
 -- 2. ORGANIZATIONS
 CREATE TABLE organizations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
     logo_url TEXT,
@@ -39,7 +39,7 @@ CREATE TABLE organizations (
 
 -- 3. ORGANIZATION MEMBERS
 CREATE TABLE organization_members (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     role user_role NOT NULL DEFAULT 'cashier',
@@ -50,7 +50,7 @@ CREATE TABLE organization_members (
 
 -- 4. CATEGORIES
 CREATE TABLE categories (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
@@ -60,7 +60,7 @@ CREATE TABLE categories (
 
 -- 5. PRODUCTS
 CREATE TABLE products (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
@@ -83,7 +83,7 @@ CREATE TABLE products (
 
 -- 6. INVENTORY TRANSACTIONS
 CREATE TABLE inventory_transactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     quantity_change INTEGER NOT NULL,
@@ -95,7 +95,7 @@ CREATE TABLE inventory_transactions (
 
 -- 7. CUSTOMERS
 CREATE TABLE customers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     full_name TEXT NOT NULL,
     email TEXT,
@@ -107,7 +107,7 @@ CREATE TABLE customers (
 
 -- 8. CASH REGISTERS
 CREATE TABLE cash_registers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
@@ -117,7 +117,7 @@ CREATE TABLE cash_registers (
 
 -- 9. REGISTER SESSIONS
 CREATE TABLE register_sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     register_id UUID NOT NULL REFERENCES cash_registers(id) ON DELETE CASCADE,
     cashier_id UUID NOT NULL REFERENCES profiles(id),
@@ -132,7 +132,7 @@ CREATE TABLE register_sessions (
 
 -- 10. SALES
 CREATE TABLE sales (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     session_id UUID REFERENCES register_sessions(id),
     cashier_id UUID NOT NULL REFERENCES profiles(id),
@@ -149,7 +149,7 @@ CREATE TABLE sales (
 
 -- 11. SALE ITEMS
 CREATE TABLE sale_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
     product_id UUID REFERENCES products(id) ON DELETE SET NULL,
     product_name_snapshot TEXT NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE sale_items (
 
 -- 12. PAYMENTS
 CREATE TABLE payments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
     payment_method payment_method NOT NULL,
@@ -173,7 +173,7 @@ CREATE TABLE payments (
 
 -- 13. ALERTS
 CREATE TABLE alerts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     type alert_type NOT NULL,
     title TEXT NOT NULL,
@@ -185,7 +185,7 @@ CREATE TABLE alerts (
 
 -- 14. ACTIVITY LOGS
 CREATE TABLE activity_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     profile_id UUID REFERENCES profiles(id),
     action TEXT NOT NULL,
@@ -197,7 +197,7 @@ CREATE TABLE activity_logs (
 
 -- 15. SETTINGS
 CREATE TABLE settings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID UNIQUE NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     receipt_header TEXT,
     receipt_footer TEXT,

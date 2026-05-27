@@ -45,17 +45,27 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Project Structure
+### PWA & Offline Support
 
-- `app/`: Next.js App Router pages and layouts.
-- `components/`: Reusable UI components and layouts.
-- `lib/`: Utility functions and shared library configurations (Supabase, etc.).
-- `hooks/`: Custom React hooks.
-- `store/`: Zustand stores for global state.
-- `types/`: TypeScript definitions.
-- `validators/`: Zod schemas for form validation.
-- `providers/`: React Context providers (Query, Theme, etc.).
-- `features/`: Module-specific components and logic.
+Kiosk POS is a fully capable Progressive Web App. 
+
+#### Setup Icons:
+To make the PWA fully functional with splash screens and icons, add the following files to `public/icons/`:
+- `icon-192x192.png`
+- `icon-512x512.png`
+- `icon-maskable-192x192.png`
+
+#### Features:
+- **Offline Checkout**: Complete sales even with zero internet. Transactions are queued in IndexedDB.
+- **Background Sync**: Automatic reconciliation once internet is restored.
+- **IndexedDB Catalog**: Products and categories are cached locally for instant lookup.
+- **Installable**: Add to Home Screen on iOS, Android, and Desktop.
+
+#### Technical Implementation:
+- **Serwist**: Service Worker management for Next.js 15.
+- **IndexedDB**: Using a robust native implementation via `lib/storage/db.ts`.
+- **Sync Engine**: Atomic RPC-based synchronization in `lib/offline/sync-engine.ts`.
+- **Connectivity Monitoring**: Real-time network status tracking.
 
 ## Deployment
 
