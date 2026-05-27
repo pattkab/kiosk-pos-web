@@ -15,11 +15,13 @@ import { useCartStore } from "@/store/use-cart-store";
 import { useCheckoutStore } from "@/store/use-checkout-store";
 import { useProductSearchStore } from "@/store/use-product-search-store";
 import { useScannerStore } from "@/store/use-scanner-store";
+import { useInventoryStore } from "@/store/use-inventory-store";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Grid2X2, History, Loader2, PackageSearch, Plus, ScanBarcode, Search } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
+import { ProductForm } from "@/features/inventory/components/product-form";
 
 // Performance: Lazy load the heavy barcode scanner only when needed
 const BarcodeScanner = dynamic(() => import("@/features/pos/components/barcode-scanner").then(mod => mod.BarcodeScanner), {
@@ -47,6 +49,7 @@ export default function PosPage() {
   const { addItem, incrementItem, decrementItem, lastAddedProductId } = useCartStore();
   const { openPayment, isPaymentOpen } = useCheckoutStore();
   const { openScanner } = useScannerStore();
+  const { openProductModal } = useInventoryStore();
   const barcodeLookup = useBarcodeLookup();
   const productsQuery = usePosProducts({ search: debouncedSearch, categoryId: activeCategoryId, limit: 90 });
   const products = productsQuery.data ?? [];
@@ -241,11 +244,13 @@ export default function PosPage() {
                   <p className="text-muted-foreground text-lg font-medium leading-relaxed">
                     Your inventory is currently empty. To start selling, you need to add your products first.
                   </p>
-                  <Button asChild size="lg" className="h-14 px-8 rounded-2xl font-black shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-                    <Link href="/inventory">
-                      <Plus className="mr-2 h-6 w-6" />
-                      Add My First Product
-                    </Link>
+                  <Button
+                    size="lg"
+                    className="h-14 px-8 rounded-2xl font-black shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    onClick={() => openProductModal()}
+                  >
+                    <Plus className="mr-2 h-6 w-6" />
+                    Add My First Product
                   </Button>
                 </div>
               ) : (
@@ -319,6 +324,7 @@ export default function PosPage() {
         <CartSidebar />
       </div>
       <BarcodeScanner />
+      <ProductForm />
     </div>
   );
 }
