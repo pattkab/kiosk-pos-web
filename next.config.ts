@@ -4,9 +4,13 @@ import withSerwistInit from "@serwist/next";
 const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
+  disable: process.env.NODE_ENV === "development", // Disable PWA in dev for faster HMR
 });
 
 const nextConfig: NextConfig = {
+  // Turbopack does not yet support custom Webpack configurations required by Serwist.
+  // This project must be built with Webpack.
+
   async headers() {
     return [
       {
