@@ -57,23 +57,29 @@ export function SyncStatusBadge() {
   }
 
   const liveConnected = connectionStatus === "connected";
+  const isConnecting = connectionStatus === "connecting";
+  const hasRealtimeError = connectionStatus === "error";
 
   return (
     <Badge
       variant="secondary"
       className={cn(
         "h-9 gap-2 px-3 font-bold",
-        liveConnected
+        liveConnected || !hasRealtimeError
           ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
           : "border-destructive/20 bg-destructive/10 text-destructive"
       )}
     >
       {liveConnected ? (
         <CheckCircle2 className="h-3.5 w-3.5" />
-      ) : (
+      ) : isConnecting ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : !hasRealtimeError ? (
+        <CheckCircle2 className="h-3.5 w-3.5" />
+      ) : (
+        <CloudAlert className="h-3.5 w-3.5" />
       )}
-      <span>{liveConnected ? "Live" : "Connecting..."}</span>
+      <span>{liveConnected ? "Live" : isConnecting ? "Connecting..." : hasRealtimeError ? "Realtime issue" : "Online"}</span>
     </Badge>
   );
 }

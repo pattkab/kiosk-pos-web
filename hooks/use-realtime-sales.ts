@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRealtimeContext } from "@/hooks/use-realtime-context";
 import { batchInvalidate } from "@/lib/realtime/query-invalidation";
 import { useRealtimeStore } from "@/store/use-realtime-store";
+import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 
 type SalePayload = {
@@ -47,7 +48,7 @@ export function useRealtimeSales() {
             createdAt: new Date().toISOString(),
             metadata: { total: sale.total_amount },
           });
-          toast.success(`New sale completed: ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(sale.total_amount))}`);
+          toast.success(`New sale completed: ${formatCurrency(Number(sale.total_amount))}`);
           markSynced();
         }
       )

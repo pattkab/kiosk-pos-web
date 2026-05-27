@@ -39,7 +39,7 @@ export function useOrganizations() {
 
 export function useActiveOrganization() {
   const organizations = useOrganizations();
-  const { activeOrganizationId, setActiveOrganizationId, setPermissionState } = useOrganizationStore();
+  const { activeOrganizationId, setActiveOrganizationId, setActiveCurrency, setPermissionState } = useOrganizationStore();
   const queryClient = useQueryClient();
   const activeOrganization =
     organizations.data?.find((org) => org.id === activeOrganizationId) ?? organizations.data?.[0] ?? null;
@@ -49,12 +49,18 @@ export function useActiveOrganization() {
       setActiveOrganizationId(activeOrganization.id);
     }
     if (activeOrganization) {
+      setActiveCurrency(activeOrganization.currency);
       setPermissionState(activeOrganization.role, ROLE_PERMISSIONS[activeOrganization.role]);
     }
-  }, [activeOrganization, activeOrganizationId, setActiveOrganizationId, setPermissionState]);
+  }, [activeOrganization, activeOrganizationId, setActiveCurrency, setActiveOrganizationId, setPermissionState]);
 
   const switchOrganization = (organizationId: string) => {
+    const organization = organizations.data?.find((entry) => entry.id === organizationId);
     setActiveOrganizationId(organizationId);
+    setActiveCurrency(organization?.currency);
+    if (organization) {
+      setPermissionState(organization.role, ROLE_PERMISSIONS[organization.role]);
+    }
     queryClient.invalidateQueries();
   };
 

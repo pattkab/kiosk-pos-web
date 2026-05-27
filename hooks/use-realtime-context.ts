@@ -3,10 +3,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useOrganizationStore } from "@/store/use-organization-store";
+import { ROLE_PERMISSIONS } from "@/lib/auth/permissions";
+import { OrganizationWithRole } from "@/hooks/use-organization";
 
 export function useRealtimeContext() {
   const supabase = createClient();
   const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+  const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
+  const setActiveCurrency = useOrganizationStore((state) => state.setActiveCurrency);
+  const setPermissionState = useOrganizationStore((state) => state.setPermissionState);
 
   return useQuery({
     queryKey: ["realtime-context", activeOrganizationId],
@@ -23,20 +28,23 @@ export function useRealtimeContext() {
         .maybeSingle();
       if (!profile) return null;
 
-      let memberQuery = supabase
-        .from("organization_members")
-        .select("organization_id, role")
-        .eq("profile_id", profile.id)
-        .is("removed_at", null);
-      if (activeOrganizationId) memberQuery = memberQuery.eq("organization_id", activeOrganizationId);
-      const { data: member } = await memberQuery.maybeSingle();
-      if (!member) return null;
+      const { data: organizationRows, error } = await supabase.rpc("list_my_organizations");
+      if (error) throw error;
+      const organizations = (organizationRows ?? []) as OrganizationWithRole[];
+
+      const organization =
+        organizations?.find((entry) => entry.id === activeOrganizationId) ?? organizations?.[0] ?? null;
+      if (!organization) return null;
+
+      if (organization.id !== activeOrganizationId) setActiveOrganizationId(organization.id);
+      setActiveCurrency(organization.currency);
+      setPermissionState(organization.role, ROLE_PERMISSIONS[organization.role]);
 
       return {
         user,
         profile,
-        organizationId: member.organization_id,
-        role: member.role,
+        organizationId: organization.id,
+        role: organization.role,
       };
     },
     staleTime: 5 * 60 * 1000,

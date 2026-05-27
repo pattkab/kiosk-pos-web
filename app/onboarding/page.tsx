@@ -23,6 +23,7 @@ export default function OnboardingPage() {
   const [isNavigating, setIsNavigating] = useState(false);
   const supabase = createClient();
   const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
+  const setActiveCurrency = useOrganizationStore((state) => state.setActiveCurrency);
 
   const [step, setStep] = useState(1);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -50,6 +51,7 @@ export default function OnboardingPage() {
 
       setOrgId(organizationId as string);
       setActiveOrganizationId(organizationId as string);
+      setActiveCurrency(values.currency);
       setStep(2);
       toast.success("Organization created!");
     } catch (error: any) {
@@ -124,6 +126,7 @@ export default function OnboardingPage() {
                  onClick={() => {
                    setIsNavigating(true);
                    if (orgId) setActiveOrganizationId(orgId);
+                   setActiveCurrency(form.getValues("currency"));
                    window.location.assign("/dashboard");
                  }}
                >

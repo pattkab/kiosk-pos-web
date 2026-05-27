@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission, AnyPermission } from "./permissions";
 import { redirect } from "next/navigation";
+import { OrganizationWithRole } from "@/hooks/use-organization";
 
 export async function checkPermission(permission: AnyPermission, organizationId?: string) {
   const supabase = await createClient();
@@ -20,22 +21,15 @@ export async function checkPermission(permission: AnyPermission, organizationId?
     redirect("/login");
   }
 
-  const { data: member } = await supabase
-    .from("organization_members")
-    .select("role, organization_id")
-    .eq("profile_id", profile.id)
-    .maybeSingle();
-
-  let scopedMember = member;
-  if (organizationId) {
-    const { data } = await supabase
-      .from("organization_members")
-      .select("role, organization_id")
-      .eq("profile_id", profile.id)
-      .eq("organization_id", organizationId)
-      .maybeSingle();
-    scopedMember = data;
+  const { data: organizationRows, error } = await supabase.rpc("list_my_organizations");
+  if (error) {
+    redirect("/unauthorized");
   }
+  const organizations = (organizationRows ?? []) as OrganizationWithRole[];
+
+  const scopedMember = organizationId
+    ? organizations?.find((organization) => organization.id === organizationId)
+    : organizations?.find((organization) => hasPermission(organization.role, permission));
 
   if (!scopedMember || !hasPermission(scopedMember.role, permission)) {
     redirect("/unauthorized");

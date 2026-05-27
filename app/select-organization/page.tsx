@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Building2, Check, PlusCircle } from "lucide-react";
+import { Building2, Check, PlusCircle, Settings, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,26 +66,48 @@ export default function SelectOrganizationPage() {
               {organizations.map((organization) => {
                 const selected = organization.id === effectiveSelectedId;
                 return (
-                  <button
+                  <div
                     key={organization.id}
-                    type="button"
                     className={cn(
-                      "flex w-full items-center gap-4 rounded-md border bg-background p-4 text-left transition hover:border-primary/60 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                      "rounded-md border bg-background p-4 transition hover:border-primary/60 hover:bg-muted/40",
                       selected && "border-primary bg-primary/5"
                     )}
-                    onClick={() => setSelectedId(organization.id)}
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Building2 className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{organization.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {organization.slug} · <span className="capitalize">{organization.role}</span>
-                      </p>
-                    </div>
-                    <Check className={cn("h-5 w-5 text-primary", selected ? "opacity-100" : "opacity-0")} />
-                  </button>
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-4 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      onClick={() => setSelectedId(organization.id)}
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                        <Building2 className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{organization.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {organization.slug} · <span className="capitalize">{organization.role}</span>
+                        </p>
+                      </div>
+                      <Check className={cn("h-5 w-5 text-primary", selected ? "opacity-100" : "opacity-0")} />
+                    </button>
+                    {selected && ["owner", "admin"].includes(organization.role) ? (
+                      <div className="mt-4 flex flex-wrap gap-2 border-t pt-3">
+                        <Button variant="outline" size="sm" asChild onClick={() => switchOrganization(organization.id)}>
+                          <Link href="/settings">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Edit organization
+                          </Link>
+                        </Button>
+                        {organization.role === "owner" ? (
+                          <Button variant="outline" size="sm" asChild onClick={() => switchOrganization(organization.id)}>
+                            <Link href="/settings/danger">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </Link>
+                          </Button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
                 );
               })}
             </div>

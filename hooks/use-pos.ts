@@ -15,10 +15,15 @@ import {
 } from "@/lib/storage/db";
 import { useConnectivityStore } from "@/store/use-connectivity-store";
 import { useOfflineQueueStore } from "@/store/use-offline-queue-store";
+import { ROLE_PERMISSIONS } from "@/lib/auth/permissions";
+import { OrganizationWithRole } from "@/hooks/use-organization";
 
 export function useCurrentPosContext() {
   const supabase = createClient();
   const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+  const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
+  const setActiveCurrency = useOrganizationStore((state) => state.setActiveCurrency);
+  const setPermissionState = useOrganizationStore((state) => state.setPermissionState);
 
   return useQuery({
     queryKey: ["pos-context", activeOrganizationId],
@@ -46,20 +51,23 @@ export function useCurrentPosContext() {
           .single();
         if (profileError) throw profileError;
 
-        let memberQuery = supabase
-          .from("organization_members")
-          .select("organization_id, role, organizations(id, name, currency, timezone, logo_url)")
-          .eq("profile_id", profile.id)
-          .is("removed_at", null);
-        if (activeOrganizationId) memberQuery = memberQuery.eq("organization_id", activeOrganizationId);
-        const { data: member, error: memberError } = await memberQuery.single();
-        if (memberError) throw memberError;
+        const { data: organizationRows, error: organizationsError } = await supabase.rpc("list_my_organizations");
+        if (organizationsError) throw organizationsError;
+        const organizations = (organizationRows ?? []) as OrganizationWithRole[];
+
+        const organization =
+          organizations?.find((entry) => entry.id === activeOrganizationId) ?? organizations?.[0] ?? null;
+        if (!organization) throw new Error("No active organization found. Select or create an organization first.");
+
+        if (organization.id !== activeOrganizationId) setActiveOrganizationId(organization.id);
+        setActiveCurrency(organization.currency);
+        setPermissionState(organization.role, ROLE_PERMISSIONS[organization.role]);
 
         const result = {
           profile,
-          organization: Array.isArray(member.organizations) ? member.organizations[0] : member.organizations,
-          organizationId: member.organization_id,
-          role: member.role,
+          organization,
+          organizationId: organization.id,
+          role: organization.role,
         };
 
         // Cache the context for offline fallbacks
