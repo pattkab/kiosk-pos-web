@@ -95,19 +95,31 @@ export function useReports(range: ReportDateRange) {
           supabase.rpc("get_register_sessions_report", args),
         ]);
 
-        const firstError = [
-          kpis.error,
-          revenueTrend.error,
-          productPerformance.error,
-          paymentBreakdown.error,
-          cashierPerformance.error,
-          inventoryValuation.error,
-          sales.error,
-          saleItems.error,
-          registerSessions.error,
-        ].find(Boolean);
+        const rpcErrors = [
+          { name: "get_report_kpis", error: kpis.error },
+          { name: "get_revenue_trend", error: revenueTrend.error },
+          { name: "get_product_performance", error: productPerformance.error },
+          { name: "get_payment_breakdown", error: paymentBreakdown.error },
+          { name: "get_cashier_performance", error: cashierPerformance.error },
+          { name: "get_inventory_valuation_report", error: inventoryValuation.error },
+          { name: "get_sales_report", error: sales.error },
+          { name: "get_sale_items_report", error: saleItems.error },
+          { name: "get_register_sessions_report", error: registerSessions.error },
+        ].filter((entry) => Boolean(entry.error));
 
-        if (firstError) throw firstError;
+        // Keep reports usable when one RPC fails (e.g. schema drift in a non-active tab).
+        if (rpcErrors.length > 0) {
+          console.warn(
+            "[useReports] Partial report RPC failure(s):",
+            rpcErrors.map(({ name, error }) => ({
+              rpc: name,
+              message: error?.message ?? String(error),
+            }))
+          );
+        }
+        if (rpcErrors.length === 9) {
+          throw rpcErrors[0].error;
+        }
 
         const reportData: ReportsData = {
           kpis: (kpis.data ?? emptyKpis) as ReportKpis,
