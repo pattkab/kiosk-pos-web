@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { signUp } from "@/lib/auth/actions";
-import { CheckCircle2, ShieldCheck, Store } from "lucide-react";
+import { signInWithGoogle, signUp } from "@/lib/auth/actions";
+import { CheckCircle2, Chrome, ShieldCheck, Store } from "lucide-react";
 
 const signupSchema = z.object({
   full_name: z.string().min(2, "Full name must be at least 2 characters"),
@@ -26,6 +26,7 @@ const signupSchema = z.object({
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -46,6 +47,14 @@ export default function RegisterPage() {
     }
   }
 
+  async function onGoogleSignUp() {
+    setIsGoogleLoading(true);
+    const result = await signInWithGoogle();
+    if (!result.success) {
+      setIsGoogleLoading(false);
+    }
+  }
+
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-[minmax(420px,1.05fr)_minmax(0,0.95fr)]">
       <div className="flex items-center justify-center px-4 py-10">
@@ -63,6 +72,24 @@ export default function RegisterPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <Button
+                variant="outline"
+                className="h-11 w-full font-semibold"
+                type="button"
+                disabled={isGoogleLoading || isLoading}
+                onClick={onGoogleSignUp}
+              >
+                <Chrome className="mr-2 h-4 w-4" />
+                {isGoogleLoading ? "Redirecting to Google..." : "Continue with Google"}
+              </Button>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-muted-foreground">Or create account with email</span>
+                </div>
+              </div>
               <FormField
                 control={form.control}
                 name="full_name"
