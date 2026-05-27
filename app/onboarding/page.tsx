@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +18,8 @@ const onboardingSchema = z.object({
 });
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const supabase = createClient();
 
   const [step, setStep] = useState(1);
@@ -116,11 +115,15 @@ export default function OnboardingPage() {
                    <Button variant="secondary" disabled>Invite</Button>
                  </div>
                </div>
-               <Button className="w-full" onClick={() => {
-                 router.push("/dashboard");
-                 router.refresh();
-               }}>
-                 Go to Dashboard
+               <Button
+                 className="w-full"
+                 disabled={isNavigating}
+                 onClick={() => {
+                   setIsNavigating(true);
+                   window.location.assign("/dashboard");
+                 }}
+               >
+                 {isNavigating ? "Opening dashboard..." : "Go to Dashboard"}
                </Button>
             </CardContent>
           </>
