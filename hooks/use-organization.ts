@@ -7,6 +7,7 @@ import { hasPermission, Permission, ROLE_PERMISSIONS, Role } from "@/lib/auth/pe
 import { useOrganizationStore } from "@/store/use-organization-store";
 import { InviteMemberValues, OrganizationProfileValues, OrganizationSettingsValues } from "@/validators/organization";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export type OrganizationWithRole = {
   id: string;
@@ -288,6 +289,7 @@ export function useAuditLogs() {
 export function useDeleteOrganization() {
   const supabase = createClient();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { activeOrganization } = useActiveOrganization();
   const { clearOrganizationState } = useOrganizationStore();
 
@@ -303,6 +305,7 @@ export function useDeleteOrganization() {
       clearOrganizationState();
       queryClient.invalidateQueries();
       toast.success("Organization deleted");
+      router.push("/select-organization");
     },
     onError: (error) => toast.error(error.message),
   });
