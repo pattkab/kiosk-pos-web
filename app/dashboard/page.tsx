@@ -32,7 +32,7 @@ export default function DashboardPage() {
   const { data, isLoading, access } = useAnalytics('month');
 
   // If we are still determining the organization context, show a consistent loading state
-  if (access.isLoading && !data.kpis.total_revenue) {
+  if (access.isLoading) {
     return (
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
