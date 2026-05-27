@@ -41,10 +41,12 @@ function LoginForm() {
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     const result = await signIn(values);
-    setIsLoading(false);
     if (result.success) {
-      router.push("/dashboard");
+      router.replace("/dashboard");
+      router.refresh();
+      return;
     }
+    setIsLoading(false);
   }
 
   return (

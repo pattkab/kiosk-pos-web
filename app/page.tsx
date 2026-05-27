@@ -8,7 +8,7 @@ export default function LandingPage() {
         Kiosk <span className="text-primary">POS</span>
       </h1>
       <p className="mb-10 max-w-2xl text-xl text-muted-foreground">
-        A modern, cloud-based POS and inventory management system designed for scale. Rebuilt with Next.js 15 for lightning-fast performance.
+        A modern, cloud-based POS and inventory management system designed for scale.
       </p>
       <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
         <Button asChild size="lg">
