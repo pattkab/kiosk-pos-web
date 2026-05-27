@@ -46,7 +46,7 @@ export function OrgSwitcher() {
           role="combobox"
           aria-expanded={open}
           aria-label="Select an organization"
-          className="w-40 justify-between sm:w-[220px]"
+          className="w-[min(44vw,190px)] justify-between sm:w-[220px]"
         >
           <Building2 className="mr-2 h-4 w-4 shrink-0 opacity-60" />
           <span className="truncate">

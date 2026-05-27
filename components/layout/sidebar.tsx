@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/store/use-app-store";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Permission } from "@/lib/auth/permissions";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useOrganizationStore } from "@/store/use-organization-store";
@@ -35,6 +35,7 @@ export function Sidebar() {
   const { activeOrganization } = useActiveOrganization();
   const userRole = activeOrganization?.role;
   const permissions = useOrganizationStore((state) => state.permissions);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const hasModuleAccess = (module: string) => {
     if (!userRole) return true;
@@ -51,19 +52,25 @@ export function Sidebar() {
     return required ? permissions.includes(required) : true;
   };
 
-  // Handle mobile resize
+  // Keep sidebar behavior responsive without rendering flicker.
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const applyLayout = (desktop: boolean) => {
+      setIsDesktop(desktop);
+      if (!desktop) {
         setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true);
       }
     };
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
+
+    applyLayout(mediaQuery.matches);
+    const onChange = (event: MediaQueryListEvent) => applyLayout(event.matches);
+    mediaQuery.addEventListener("change", onChange);
+    return () => mediaQuery.removeEventListener("change", onChange);
   }, [setSidebarOpen]);
+
+  useEffect(() => {
+    if (!isDesktop) setSidebarOpen(false);
+  }, [isDesktop, pathname, setSidebarOpen]);
 
   return (
     <>
@@ -77,8 +84,10 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-card transition-all duration-300 md:static",
-          sidebarOpen ? "w-64" : "w-0 -translate-x-full md:w-20 md:translate-x-0"
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-card shadow-xl transition-all duration-300 md:static md:shadow-none",
+          sidebarOpen
+            ? "w-[82vw] max-w-xs translate-x-0 pointer-events-auto md:w-64"
+            : "w-[82vw] max-w-xs -translate-x-full pointer-events-none md:w-20 md:translate-x-0 md:pointer-events-auto"
         )}
       >
         <div className="flex h-16 items-center justify-between px-4 border-b">
@@ -86,12 +95,7 @@ export function Sidebar() {
             <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-black">K</div>
             {sidebarOpen && <span className="text-xl">Kiosk POS</span>}
           </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className="md:hidden"
-          >
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
             <X className="h-5 w-5" />
           </Button>
         </div>
@@ -124,7 +128,7 @@ export function Sidebar() {
           })}
         </nav>
 
-        <div className="border-t p-4">
+        <div className="hidden border-t p-4 md:block">
           <Button
             variant="ghost"
             className={cn("w-full justify-start gap-3", !sidebarOpen && "md:justify-center px-0")}

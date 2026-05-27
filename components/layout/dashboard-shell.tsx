@@ -15,7 +15,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <ConnectivityBanner />
         <Navbar />
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="mx-auto w-full max-w-screen-2xl p-3 sm:p-5 lg:p-8">
+          <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-8">
             <Breadcrumbs />
             {children}
           </div>

@@ -40,8 +40,8 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <OfflineBanner />
-      <div className="flex min-h-16 items-center justify-between gap-2 px-3 py-2 sm:px-6">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+      <div className="flex min-h-14 items-center justify-between gap-2 px-2 py-2 sm:min-h-16 sm:px-6">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
           <Button
             variant="ghost"
             size="icon"
@@ -83,7 +83,9 @@ export function Navbar() {
             <Search className="h-5 w-5" />
             <span className="sr-only">Search</span>
           </Button>
-          <NotificationCenter />
+          <div className="shrink-0">
+            <NotificationCenter />
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -112,7 +114,7 @@ export function Navbar() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
                 <Avatar className="h-9 w-9">
                   <AvatarImage src="" alt={user?.email || ""} />
                   <AvatarFallback>

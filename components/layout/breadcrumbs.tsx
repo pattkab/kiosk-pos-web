@@ -12,7 +12,7 @@ export function Breadcrumbs() {
   if (pathname === "/" || pathname === "/dashboard") return null;
 
   return (
-    <nav className="flex items-center space-x-1 text-sm text-muted-foreground mb-6">
+    <nav className="mb-4 hidden items-center space-x-1 text-sm text-muted-foreground sm:flex">
       <Link
         href="/dashboard"
         className="flex items-center hover:text-foreground transition-colors"
