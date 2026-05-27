@@ -38,30 +38,16 @@ export default function OnboardingPage() {
   async function onOrgSubmit(values: z.infer<typeof onboardingSchema>) {
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { data: profile } = await supabase.from("profiles").select("id").eq("auth_user_id", user.id).single();
-      if (!profile) throw new Error("Profile not found");
-
-      const { data: org, error: orgError } = await supabase.from("organizations").insert({
-          name: values.name,
-          slug: values.slug,
-          currency: values.currency,
-          owner_id: profile.id,
-        }).select().single();
-
-      if (orgError) throw orgError;
-
-      await supabase.from("organization_members").insert({
-          organization_id: org.id,
-          profile_id: profile.id,
-          role: "owner",
+      const { data: organizationId, error } = await supabase.rpc("create_organization_with_owner", {
+        p_name: values.name,
+        p_slug: values.slug,
+        p_currency: values.currency,
       });
 
-      await supabase.from("settings").insert({ organization_id: org.id });
+      if (error) throw error;
+      if (!organizationId) throw new Error("Organization could not be created.");
 
-      setOrgId(org.id);
+      setOrgId(organizationId as string);
       setStep(2);
       toast.success("Organization created!");
     } catch (error: any) {
