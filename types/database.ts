@@ -398,6 +398,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          business_type: string
           created_at: string | null
           currency: string | null
           id: string
@@ -409,6 +410,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          business_type?: string
           created_at?: string | null
           currency?: string | null
           id?: string
@@ -420,6 +422,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          business_type?: string
           created_at?: string | null
           currency?: string | null
           id?: string

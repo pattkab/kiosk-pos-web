@@ -2,7 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, ChevronsUpDown, PlusCircle, Building2, Settings } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  PlusCircle,
+  Building2,
+  Settings,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -15,14 +21,22 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useActiveOrganization } from "@/hooks/use-organization";
 
 export function OrgSwitcher() {
   const [open, setOpen] = React.useState(false);
-  const { organizations, activeOrganization, switchOrganization, isLoading } = useActiveOrganization();
+  const { organizations, activeOrganization, switchOrganization, isLoading } =
+    useActiveOrganization();
 
-  if (isLoading) return <div className="h-9 w-[220px] animate-pulse rounded-md bg-muted" />;
+  if (isLoading)
+    return (
+      <div className="h-9 w-36 animate-pulse rounded-md bg-muted sm:w-[220px]" />
+    );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -32,14 +46,16 @@ export function OrgSwitcher() {
           role="combobox"
           aria-expanded={open}
           aria-label="Select an organization"
-          className="w-[220px] justify-between"
+          className="w-40 justify-between sm:w-[220px]"
         >
           <Building2 className="mr-2 h-4 w-4 shrink-0 opacity-60" />
-          <span className="truncate">{activeOrganization?.name || "Select organization"}</span>
+          <span className="truncate">
+            {activeOrganization?.name || "Select organization"}
+          </span>
           <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[260px] p-0">
+      <PopoverContent className="w-[min(260px,calc(100vw-1.5rem))] p-0">
         <Command>
           <CommandList>
             <CommandInput placeholder="Search organizations..." />
@@ -57,12 +73,16 @@ export function OrgSwitcher() {
                   <Building2 className="mr-2 h-4 w-4" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate">{organization.name}</p>
-                    <p className="text-xs capitalize text-muted-foreground">{organization.role}</p>
+                    <p className="text-xs capitalize text-muted-foreground">
+                      {organization.role}
+                    </p>
                   </div>
                   <Check
                     className={cn(
                       "ml-auto h-4 w-4",
-                      activeOrganization?.id === organization.id ? "opacity-100" : "opacity-0"
+                      activeOrganization?.id === organization.id
+                        ? "opacity-100"
+                        : "opacity-0",
                     )}
                   />
                 </CommandItem>

@@ -1,8 +1,13 @@
 import { z } from "zod";
+import { businessTypeValues } from "@/lib/business-types";
 
 export const organizationProfileSchema = z.object({
   name: z.string().min(2),
-  slug: z.string().min(2).regex(/^[a-z0-9-]+$/),
+  slug: z
+    .string()
+    .min(2)
+    .regex(/^[a-z0-9-]+$/),
+  business_type: z.enum(businessTypeValues),
   logo_url: z.string().url().optional().or(z.literal("")),
   currency: z.string().min(3).max(3),
   timezone: z.string().min(1),
@@ -24,6 +29,10 @@ export const inviteMemberSchema = z.object({
   role: z.enum(["admin", "manager", "cashier"]),
 });
 
-export type OrganizationProfileValues = z.infer<typeof organizationProfileSchema>;
-export type OrganizationSettingsValues = z.infer<typeof organizationSettingsSchema>;
+export type OrganizationProfileValues = z.infer<
+  typeof organizationProfileSchema
+>;
+export type OrganizationSettingsValues = z.infer<
+  typeof organizationSettingsSchema
+>;
 export type InviteMemberValues = z.infer<typeof inviteMemberSchema>;

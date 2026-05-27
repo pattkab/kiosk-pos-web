@@ -54,21 +54,52 @@ const reportTabs: Array<{ href: string; label: string; kind: ReportKind }> = [
 ];
 
 const titles: Record<ReportKind, { title: string; description: string }> = {
-  overview: { title: "Reports overview", description: "A live operating view of revenue, products, payments, and stock." },
-  sales: { title: "Sales reports", description: "Transaction history, item movement, taxes, discounts, and sales volume." },
-  products: { title: "Product reports", description: "Product revenue, quantities sold, gross profit, and margins." },
-  inventory: { title: "Inventory reports", description: "Inventory valuation, low stock, and expiry exposure." },
-  cashiers: { title: "Cashier reports", description: "Cashier sales totals, average order values, and profit contribution." },
-  payments: { title: "Payment reports", description: "Cash, card, mobile money, and split payment summaries." },
-  profit: { title: "Profit reports", description: "Gross profit trends and product margin analysis." },
-  registers: { title: "Register reports", description: "Session opening balances, cash totals, closing counts, and discrepancies." },
+  overview: {
+    title: "Reports overview",
+    description:
+      "A live operating view of revenue, products, payments, and stock.",
+  },
+  sales: {
+    title: "Sales reports",
+    description:
+      "Transaction history, item movement, taxes, discounts, and sales volume.",
+  },
+  products: {
+    title: "Product reports",
+    description: "Product revenue, quantities sold, gross profit, and margins.",
+  },
+  inventory: {
+    title: "Inventory reports",
+    description: "Inventory valuation, low stock, and expiry exposure.",
+  },
+  cashiers: {
+    title: "Cashier reports",
+    description:
+      "Cashier sales totals, average order values, and profit contribution.",
+  },
+  payments: {
+    title: "Payment reports",
+    description: "Cash, card, mobile money, and split payment summaries.",
+  },
+  profit: {
+    title: "Profit reports",
+    description: "Gross profit trends and product margin analysis.",
+  },
+  registers: {
+    title: "Register reports",
+    description:
+      "Session opening balances, cash totals, closing counts, and discrepancies.",
+  },
 };
 
 function LoadingState() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="h-[360px] animate-pulse rounded-lg bg-muted" />
+        <div
+          key={index}
+          className="h-[360px] animate-pulse rounded-lg bg-muted"
+        />
       ))}
     </div>
   );
@@ -94,14 +125,22 @@ export function ReportsPage({ kind }: { kind: ReportKind }) {
             <h1 className="text-3xl font-bold tracking-tight">{meta.title}</h1>
             <p className="mt-1 text-muted-foreground">{meta.description}</p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row xl:justify-end">
             <ReportDateFilter value={range} onChange={setRange} />
-            <div className="flex gap-2">
-              <Button variant="outline" className="h-10 gap-2" onClick={printReport}>
+            <div className="grid grid-cols-2 gap-2 sm:flex">
+              <Button
+                variant="outline"
+                className="h-10 gap-2"
+                onClick={printReport}
+              >
                 <Printer className="h-4 w-4" />
                 Print
               </Button>
-              <Button variant="outline" className="h-10 gap-2" onClick={() => printReport()}>
+              <Button
+                variant="outline"
+                className="h-10 gap-2"
+                onClick={() => printReport()}
+              >
                 <Download className="h-4 w-4" />
                 PDF
               </Button>
@@ -111,7 +150,12 @@ export function ReportsPage({ kind }: { kind: ReportKind }) {
 
         <div className="flex gap-2 overflow-x-auto pb-1 print:hidden">
           {reportTabs.map((tab) => (
-            <Button key={tab.href} asChild variant={tab.kind === kind ? "default" : "secondary"} className="shrink-0">
+            <Button
+              key={tab.href}
+              asChild
+              variant={tab.kind === kind ? "default" : "secondary"}
+              className="shrink-0"
+            >
               <Link href={tab.href}>{tab.label}</Link>
             </Button>
           ))}
@@ -120,7 +164,9 @@ export function ReportsPage({ kind }: { kind: ReportKind }) {
         {reports.isError && (
           <Card className="border-destructive/40 bg-destructive/10">
             <CardContent className="p-4 text-sm text-destructive">
-              {reports.error instanceof Error ? reports.error.message : "Unable to load reports."}
+              {reports.error instanceof Error
+                ? reports.error.message
+                : "Unable to load reports."}
             </CardContent>
           </Card>
         )}

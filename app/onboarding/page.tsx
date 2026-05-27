@@ -7,11 +7,34 @@ import * as z from "zod";
 import { createClient } from "@/lib/supabase/client";
 import { useOrganizationStore } from "@/store/use-organization-store";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast } from "sonner";
-import { Building2, CheckCircle2, LayoutDashboard, Users } from "lucide-react";
+import {
+  CheckCircle2,
+  LayoutDashboard,
+  PackagePlus,
+  Users,
+} from "lucide-react";
+import {
+  businessTypes,
+  businessTypeValues,
+  getBusinessTypeLabel,
+} from "@/lib/business-types";
 import {
   Select,
   SelectContent,
@@ -22,7 +45,13 @@ import {
 
 const onboardingSchema = z.object({
   name: z.string().min(2, "Organization name must be at least 2 characters"),
-  slug: z.string().min(2, "Slug must be at least 2 characters").regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+  slug: z
+    .string()
+    .min(2, "Slug must be at least 2 characters")
+    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+  business_type: z.enum(businessTypeValues, {
+    required_error: "Business type is required",
+  }),
   currency: z.string().min(1, "Currency is required"),
 });
 
@@ -39,8 +68,12 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const supabase = createClient();
-  const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
-  const setActiveCurrency = useOrganizationStore((state) => state.setActiveCurrency);
+  const setActiveOrganizationId = useOrganizationStore(
+    (state) => state.setActiveOrganizationId,
+  );
+  const setActiveCurrency = useOrganizationStore(
+    (state) => state.setActiveCurrency,
+  );
 
   const [step, setStep] = useState(1);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -50,6 +83,7 @@ export default function OnboardingPage() {
     defaultValues: {
       name: "",
       slug: "",
+      business_type: "supermarket_or_shop",
       currency: "USD",
     },
   });
@@ -58,14 +92,19 @@ export default function OnboardingPage() {
   async function onOrgSubmit(values: z.infer<typeof onboardingSchema>) {
     setIsLoading(true);
     try {
-      const { data: organizationId, error } = await supabase.rpc("create_organization_with_owner", {
-        p_name: values.name,
-        p_slug: values.slug,
-        p_currency: values.currency,
-      });
+      const { data: organizationId, error } = await supabase.rpc(
+        "create_organization_with_owner",
+        {
+          p_name: values.name,
+          p_slug: values.slug,
+          p_business_type: values.business_type,
+          p_currency: values.currency,
+        },
+      );
 
       if (error) throw error;
-      if (!organizationId) throw new Error("Organization could not be created.");
+      if (!organizationId)
+        throw new Error("Organization could not be created.");
 
       setOrgId(organizationId as string);
       setActiveOrganizationId(organizationId as string);
@@ -80,65 +119,125 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/50 px-4">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold">Welcome to Kiosk POS</h1>
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-muted/50 px-4 py-8">
+      <div className="mb-6 text-center sm:mb-8">
+        <h1 className="text-3xl font-bold sm:text-4xl">Welcome to Kiosk POS</h1>
         <p className="text-muted-foreground mt-2">Step {step} of 2</p>
       </div>
 
-      <Card className="w-full max-w-lg">
+      <Card className="w-full max-w-2xl">
         {step === 1 ? (
           <>
             <CardHeader>
               <CardTitle>Organization Details</CardTitle>
-              <CardDescription>Let's set up your business profile.</CardDescription>
+              <CardDescription>
+                Let's set up your business profile.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onOrgSubmit)} className="space-y-6">
-                  <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Organization Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Kampala Corner Store"
-                          {...field}
-                          onChange={(event) => {
-                            field.onChange(event);
-                            if (!form.formState.dirtyFields.slug) {
-                              form.setValue("slug", slugify(event.target.value), { shouldValidate: true });
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="slug" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Workspace slug</FormLabel>
-                      <FormControl><Input placeholder="kampala-corner-store" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="currency" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Currency</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                <form
+                  onSubmit={form.handleSubmit(onOrgSubmit)}
+                  className="space-y-5"
+                >
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Organization Name</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
+                          <Input
+                            placeholder="Kampala Corner Store"
+                            {...field}
+                            onChange={(event) => {
+                              field.onChange(event);
+                              if (!form.formState.dirtyFields.slug) {
+                                form.setValue(
+                                  "slug",
+                                  slugify(event.target.value),
+                                  { shouldValidate: true },
+                                );
+                              }
+                            }}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          {currencies.map((currency) => (
-                            <SelectItem key={currency} value={currency}>{currency}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="slug"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Workspace slug</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="kampala-corner-store"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="business_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Business type</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select business type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {businessTypes.map((type) => (
+                                <SelectItem key={type.value} value={type.value}>
+                                  {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="currency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Currency</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select currency" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {currencies.map((currency) => (
+                                <SelectItem key={currency} value={currency}>
+                                  {currency}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <Button className="w-full" type="submit" disabled={isLoading}>
                     {isLoading ? "Creating..." : "Next Step"}
                   </Button>
@@ -150,7 +249,9 @@ export default function OnboardingPage() {
           <>
             <CardHeader>
               <CardTitle>Workspace ready</CardTitle>
-              <CardDescription>Finish setup now or continue to the dashboard.</CardDescription>
+              <CardDescription>
+                Finish setup now or continue to the dashboard.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="rounded-md border bg-background p-4">
@@ -159,9 +260,17 @@ export default function OnboardingPage() {
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="font-medium">{organizationName || form.getValues("name")} has been created.</p>
+                    <p className="font-medium">
+                      {organizationName || form.getValues("name")} has been
+                      created.
+                    </p>
+                    <p className="mt-0.5 text-sm font-medium text-primary">
+                      {getBusinessTypeLabel(form.getValues("business_type"))} ·{" "}
+                      {form.getValues("currency")}
+                    </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Add products first if you are setting up stock, or go to checkout and open a register when you are ready to sell.
+                      Add products first if you are setting up stock, or go to
+                      checkout and open a register when you are ready to sell.
                     </p>
                   </div>
                 </div>
@@ -181,7 +290,9 @@ export default function OnboardingPage() {
                   <Users className="h-5 w-5" />
                   <span>
                     <span className="block font-bold">Invite team</span>
-                    <span className="block text-xs text-muted-foreground">Set roles and staff access</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Set roles and staff access
+                    </span>
                   </span>
                 </Button>
                 <Button
@@ -194,10 +305,12 @@ export default function OnboardingPage() {
                     window.location.assign("/inventory");
                   }}
                 >
-                  <Building2 className="h-5 w-5" />
+                  <PackagePlus className="h-5 w-5" />
                   <span>
                     <span className="block font-bold">Add products</span>
-                    <span className="block text-xs text-muted-foreground">Create catalog and stock</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Create catalog and stock
+                    </span>
                   </span>
                 </Button>
               </div>

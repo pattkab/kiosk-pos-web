@@ -7,6 +7,9 @@ import { InventoryAdjuster } from "@/features/inventory/components/inventory-adj
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  AlertTriangle,
+  BarChart3,
+  CalendarClock,
   Plus,
   Search,
   Tags,
@@ -15,10 +18,12 @@ import {
   FileUp,
   MoreHorizontal,
   RotateCcw,
-  SlidersHorizontal
+  SlidersHorizontal,
+  PackageX,
 } from "lucide-react";
 import { useInventoryStore } from "@/store/use-inventory-store";
-import { useCategories } from "@/hooks/use-inventory";
+import { useCategories, useProducts } from "@/hooks/use-inventory";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -31,9 +36,15 @@ import {
 import dynamic from "next/dynamic";
 
 // Performance: Lazy load scanner only when needed
-const BarcodeScanner = dynamic(() => import("@/features/inventory/components/barcode-scanner").then(mod => mod.BarcodeScanner), {
-  ssr: false
-});
+const BarcodeScanner = dynamic(
+  () =>
+    import("@/features/inventory/components/barcode-scanner").then(
+      (mod) => mod.BarcodeScanner,
+    ),
+  {
+    ssr: false,
+  },
+);
 
 export default function InventoryPage() {
   const {
@@ -47,10 +58,32 @@ export default function InventoryPage() {
     statusFilter,
     setStatusFilter,
     categoryFilter,
-    setCategoryFilter
+    setCategoryFilter,
   } = useInventoryStore();
 
   const { data: categories } = useCategories();
+  const { data: products } = useProducts({});
+  const lowStockCount =
+    products?.filter(
+      (product) =>
+        Number(product.stock_quantity ?? 0) > 0 &&
+        Number(product.stock_quantity ?? 0) <=
+          Number(product.low_stock_threshold ?? 0),
+    ).length ?? 0;
+  const outOfStockCount =
+    products?.filter((product) => Number(product.stock_quantity ?? 0) === 0)
+      .length ?? 0;
+  const nearExpiryCount =
+    products?.filter((product) => {
+      if (!product.expiry_date) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const expiresAt = new Date(`${product.expiry_date}T00:00:00`);
+      const days = Math.ceil(
+        (expiresAt.getTime() - today.getTime()) / 86_400_000,
+      );
+      return days >= 0 && days <= 30;
+    }).length ?? 0;
 
   const resetFilters = () => {
     setSearchQuery("");
@@ -65,16 +98,80 @@ export default function InventoryPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Inventory</h1>
-          <p className="text-muted-foreground font-medium">Manage products, categories, and track stock movements.</p>
+          <p className="text-muted-foreground font-medium">
+            Manage products, restock quickly, and catch low-stock or expiry
+            issues early.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={openCategoryModal} className="font-bold">
+          <Button variant="outline" size="sm" asChild className="font-bold">
+            <Link href="/reports/inventory">
+              <BarChart3 className="mr-2 h-4 w-4" /> Inventory Report
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openCategoryModal}
+            className="font-bold"
+          >
             <Tags className="mr-2 h-4 w-4" /> Categories
           </Button>
-          <Button size="sm" onClick={() => openProductModal()} className="font-bold">
+          <Button
+            size="sm"
+            onClick={() => openProductModal()}
+            className="font-bold"
+          >
             <Plus className="mr-2 h-4 w-4" /> Add Product
           </Button>
         </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <button
+          type="button"
+          className="flex items-center justify-between rounded-md border bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/40"
+          onClick={() => setStockFilter("low")}
+        >
+          <span>
+            <span className="block text-xs font-black uppercase tracking-widest text-muted-foreground">
+              Low stock alerts
+            </span>
+            <span className="mt-1 block text-2xl font-black">
+              {lowStockCount}
+            </span>
+          </span>
+          <AlertTriangle className="h-8 w-8 text-amber-600" />
+        </button>
+        <button
+          type="button"
+          className="flex items-center justify-between rounded-md border bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/40"
+          onClick={() => setStockFilter("out")}
+        >
+          <span>
+            <span className="block text-xs font-black uppercase tracking-widest text-muted-foreground">
+              Out of stock
+            </span>
+            <span className="mt-1 block text-2xl font-black">
+              {outOfStockCount}
+            </span>
+          </span>
+          <PackageX className="h-8 w-8 text-destructive" />
+        </button>
+        <Link
+          href="/reports/inventory"
+          className="flex items-center justify-between rounded-md border bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/40"
+        >
+          <span>
+            <span className="block text-xs font-black uppercase tracking-widest text-muted-foreground">
+              Near expiry
+            </span>
+            <span className="mt-1 block text-2xl font-black">
+              {nearExpiryCount}
+            </span>
+          </span>
+          <CalendarClock className="h-8 w-8 text-primary" />
+        </Link>
       </div>
 
       {/* Toolbar */}
@@ -103,7 +200,9 @@ export default function InventoryPage() {
               <Button variant="outline" className="h-11 rounded-xl font-bold">
                 <SlidersHorizontal className="mr-2 h-4 w-4" />
                 Filter
-                {(stockFilter !== 'all' || statusFilter !== 'all' || categoryFilter) && (
+                {(stockFilter !== "all" ||
+                  statusFilter !== "all" ||
+                  categoryFilter) && (
                   <span className="ml-2 flex h-2 w-2 rounded-full bg-primary" />
                 )}
               </Button>
@@ -112,20 +211,20 @@ export default function InventoryPage() {
               <DropdownMenuLabel>Stock Level</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
-                checked={stockFilter === 'all'}
-                onCheckedChange={() => setStockFilter('all')}
+                checked={stockFilter === "all"}
+                onCheckedChange={() => setStockFilter("all")}
               >
                 All Items
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
-                checked={stockFilter === 'low'}
-                onCheckedChange={() => setStockFilter('low')}
+                checked={stockFilter === "low"}
+                onCheckedChange={() => setStockFilter("low")}
               >
                 Low Stock
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
-                checked={stockFilter === 'out'}
-                onCheckedChange={() => setStockFilter('out')}
+                checked={stockFilter === "out"}
+                onCheckedChange={() => setStockFilter("out")}
               >
                 Out of Stock
               </DropdownMenuCheckboxItem>
@@ -134,20 +233,20 @@ export default function InventoryPage() {
               <DropdownMenuLabel>Status</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
-                checked={statusFilter === 'all'}
-                onCheckedChange={() => setStatusFilter('all')}
+                checked={statusFilter === "all"}
+                onCheckedChange={() => setStatusFilter("all")}
               >
                 All Status
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
-                checked={statusFilter === 'active'}
-                onCheckedChange={() => setStatusFilter('active')}
+                checked={statusFilter === "active"}
+                onCheckedChange={() => setStatusFilter("active")}
               >
                 Active Only
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
-                checked={statusFilter === 'inactive'}
-                onCheckedChange={() => setStatusFilter('inactive')}
+                checked={statusFilter === "inactive"}
+                onCheckedChange={() => setStatusFilter("inactive")}
               >
                 Inactive Only
               </DropdownMenuCheckboxItem>
@@ -173,13 +272,22 @@ export default function InventoryPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" size="sm" onClick={resetFilters} className="font-bold h-11 px-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetFilters}
+            className="font-bold h-11 px-4"
+          >
             <RotateCcw className="mr-2 h-4 w-4" /> Reset
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-11 w-11 rounded-xl"
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

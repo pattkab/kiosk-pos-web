@@ -3,9 +3,18 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { hasPermission, Permission, ROLE_PERMISSIONS, Role } from "@/lib/auth/permissions";
+import {
+  hasPermission,
+  Permission,
+  ROLE_PERMISSIONS,
+  Role,
+} from "@/lib/auth/permissions";
 import { useOrganizationStore } from "@/store/use-organization-store";
-import { InviteMemberValues, OrganizationProfileValues, OrganizationSettingsValues } from "@/validators/organization";
+import {
+  InviteMemberValues,
+  OrganizationProfileValues,
+  OrganizationSettingsValues,
+} from "@/validators/organization";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -13,6 +22,7 @@ export type OrganizationWithRole = {
   id: string;
   name: string;
   slug: string;
+  business_type?: string | null;
   logo_url: string | null;
   currency: string | null;
   timezone: string | null;
@@ -40,10 +50,17 @@ export function useOrganizations() {
 
 export function useActiveOrganization() {
   const organizations = useOrganizations();
-  const { activeOrganizationId, setActiveOrganizationId, setActiveCurrency, setPermissionState } = useOrganizationStore();
+  const {
+    activeOrganizationId,
+    setActiveOrganizationId,
+    setActiveCurrency,
+    setPermissionState,
+  } = useOrganizationStore();
   const queryClient = useQueryClient();
   const activeOrganization =
-    organizations.data?.find((org) => org.id === activeOrganizationId) ?? organizations.data?.[0] ?? null;
+    organizations.data?.find((org) => org.id === activeOrganizationId) ??
+    organizations.data?.[0] ??
+    null;
 
   useEffect(() => {
     if (activeOrganization && activeOrganization.id !== activeOrganizationId) {
@@ -51,16 +68,30 @@ export function useActiveOrganization() {
     }
     if (activeOrganization) {
       setActiveCurrency(activeOrganization.currency);
-      setPermissionState(activeOrganization.role, ROLE_PERMISSIONS[activeOrganization.role]);
+      setPermissionState(
+        activeOrganization.role,
+        ROLE_PERMISSIONS[activeOrganization.role],
+      );
     }
-  }, [activeOrganization, activeOrganizationId, setActiveCurrency, setActiveOrganizationId, setPermissionState]);
+  }, [
+    activeOrganization,
+    activeOrganizationId,
+    setActiveCurrency,
+    setActiveOrganizationId,
+    setPermissionState,
+  ]);
 
   const switchOrganization = (organizationId: string) => {
-    const organization = organizations.data?.find((entry) => entry.id === organizationId);
+    const organization = organizations.data?.find(
+      (entry) => entry.id === organizationId,
+    );
     setActiveOrganizationId(organizationId);
     setActiveCurrency(organization?.currency);
     if (organization) {
-      setPermissionState(organization.role, ROLE_PERMISSIONS[organization.role]);
+      setPermissionState(
+        organization.role,
+        ROLE_PERMISSIONS[organization.role],
+      );
     }
     queryClient.invalidateQueries();
   };
@@ -83,7 +114,8 @@ export function usePermissions() {
   return {
     role,
     permissions,
-    can: (permission: Permission) => Boolean(role && hasPermission(role, permission)),
+    can: (permission: Permission) =>
+      Boolean(role && hasPermission(role, permission)),
   };
 }
 
@@ -97,7 +129,9 @@ export function useOrganizationMembers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organization_members")
-        .select("id, role, created_at, last_active_at, profiles(id, email, full_name, avatar_url)")
+        .select(
+          "id, role, created_at, last_active_at, profiles(id, email, full_name, avatar_url)",
+        )
         .eq("organization_id", activeOrganization!.id)
         .is("removed_at", null)
         .order("created_at", { ascending: true });
@@ -147,7 +181,10 @@ export function useInviteMember() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
       toast.success("Invitation created", {
-        description: Array.isArray(data) && data[0]?.invitation_url ? data[0].invitation_url : undefined,
+        description:
+          Array.isArray(data) && data[0]?.invitation_url
+            ? data[0].invitation_url
+            : undefined,
       });
     },
     onError: (error) => toast.error(error.message),
@@ -160,7 +197,13 @@ export function useUpdateMemberRole() {
   const { activeOrganization } = useActiveOrganization();
 
   return useMutation({
-    mutationFn: async ({ memberId, role }: { memberId: string; role: Role }) => {
+    mutationFn: async ({
+      memberId,
+      role,
+    }: {
+      memberId: string;
+      role: Role;
+    }) => {
       if (!activeOrganization) throw new Error("No active organization.");
       const { error } = await supabase.rpc("update_member_role", {
         p_organization_id: activeOrganization.id,
@@ -246,7 +289,10 @@ export function useOrganizationSettings() {
       if (!activeOrganization) throw new Error("No active organization.");
       const { error } = await supabase
         .from("organization_settings")
-        .upsert({ organization_id: activeOrganization.id, ...values }, { onConflict: "organization_id" });
+        .upsert(
+          { organization_id: activeOrganization.id, ...values },
+          { onConflict: "organization_id" },
+        );
       if (error) throw error;
       await supabase.rpc("write_audit_log", {
         p_organization_id: activeOrganization.id,

@@ -5,20 +5,38 @@ import Link from "next/link";
 import { Building2, Check, PlusCircle, Settings, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { cn } from "@/lib/utils";
+import { getBusinessTypeLabel } from "@/lib/business-types";
 
 export default function SelectOrganizationPage() {
-  const { organizations, activeOrganization, switchOrganization, isLoading, error, refetch } = useActiveOrganization();
+  const {
+    organizations,
+    activeOrganization,
+    switchOrganization,
+    isLoading,
+    error,
+    refetch,
+  } = useActiveOrganization();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isProceeding, setIsProceeding] = useState(false);
-  const effectiveSelectedId = selectedId ?? activeOrganization?.id ?? organizations[0]?.id ?? null;
+  const effectiveSelectedId =
+    selectedId ?? activeOrganization?.id ?? organizations[0]?.id ?? null;
 
   const selectedOrganization = useMemo(
-    () => organizations.find((organization) => organization.id === effectiveSelectedId) ?? null,
-    [effectiveSelectedId, organizations]
+    () =>
+      organizations.find(
+        (organization) => organization.id === effectiveSelectedId,
+      ) ?? null,
+    [effectiveSelectedId, organizations],
   );
 
   const proceedToDashboard = () => {
@@ -29,11 +47,13 @@ export default function SelectOrganizationPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-10">
+    <div className="flex min-h-dvh items-center justify-center bg-muted/50 px-4 py-8 sm:py-10">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle>Select organization</CardTitle>
-          <CardDescription>Choose the business workspace you want to use.</CardDescription>
+          <CardDescription>
+            Choose the business workspace you want to use.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {isLoading ? (
@@ -45,7 +65,11 @@ export default function SelectOrganizationPage() {
             <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
               <p className="font-medium">Could not load your organizations.</p>
               <p className="mt-1">{error.message}</p>
-              <Button className="mt-4" variant="outline" onClick={() => refetch()}>
+              <Button
+                className="mt-4"
+                variant="outline"
+                onClick={() => refetch()}
+              >
                 Try again
               </Button>
             </div>
@@ -53,7 +77,9 @@ export default function SelectOrganizationPage() {
             <div className="rounded-md border p-5 text-center">
               <Building2 className="mx-auto h-10 w-10 text-muted-foreground" />
               <p className="mt-3 font-medium">No organizations found</p>
-              <p className="mt-1 text-sm text-muted-foreground">Create your first organization to continue.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Create your first organization to continue.
+              </p>
               <Button className="mt-5" asChild>
                 <Link href="/onboarding">
                   <PlusCircle className="mr-2 h-4 w-4" />
@@ -70,7 +96,7 @@ export default function SelectOrganizationPage() {
                     key={organization.id}
                     className={cn(
                       "rounded-md border bg-background p-4 transition hover:border-primary/60 hover:bg-muted/40",
-                      selected && "border-primary bg-primary/5"
+                      selected && "border-primary bg-primary/5",
                     )}
                   >
                     <button
@@ -82,23 +108,47 @@ export default function SelectOrganizationPage() {
                         <Building2 className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{organization.name}</p>
+                        <p className="truncate font-medium">
+                          {organization.name}
+                        </p>
                         <p className="text-sm text-muted-foreground">
-                          {organization.slug} · <span className="capitalize">{organization.role}</span>
+                          {getBusinessTypeLabel(organization.business_type)} ·{" "}
+                          {organization.slug} ·{" "}
+                          <span className="capitalize">
+                            {organization.role}
+                          </span>
                         </p>
                       </div>
-                      <Check className={cn("h-5 w-5 text-primary", selected ? "opacity-100" : "opacity-0")} />
+                      <Check
+                        className={cn(
+                          "h-5 w-5 text-primary",
+                          selected ? "opacity-100" : "opacity-0",
+                        )}
+                      />
                     </button>
-                    {selected && ["owner", "admin"].includes(organization.role) ? (
-                      <div className="mt-4 flex flex-wrap gap-2 border-t pt-3">
-                        <Button variant="outline" size="sm" asChild onClick={() => switchOrganization(organization.id)}>
+                    {selected &&
+                    ["owner", "admin"].includes(organization.role) ? (
+                      <div className="mt-4 grid gap-2 border-t pt-3 sm:flex sm:flex-wrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          onClick={() => switchOrganization(organization.id)}
+                          className="justify-start"
+                        >
                           <Link href="/settings">
                             <Settings className="mr-2 h-4 w-4" />
                             Edit organization
                           </Link>
                         </Button>
                         {organization.role === "owner" ? (
-                          <Button variant="outline" size="sm" asChild onClick={() => switchOrganization(organization.id)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            onClick={() => switchOrganization(organization.id)}
+                            className="justify-start"
+                          >
                             <Link href="/settings/danger">
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
@@ -114,13 +164,17 @@ export default function SelectOrganizationPage() {
           )}
 
           <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-between">
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href="/onboarding">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Create another organization
               </Link>
             </Button>
-            <Button disabled={!selectedOrganization || isProceeding} onClick={proceedToDashboard}>
+            <Button
+              className="w-full sm:w-auto"
+              disabled={!selectedOrganization || isProceeding}
+              onClick={proceedToDashboard}
+            >
               {isProceeding ? "Opening dashboard..." : "Proceed to Dashboard"}
             </Button>
           </div>

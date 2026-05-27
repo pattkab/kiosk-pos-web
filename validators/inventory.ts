@@ -5,7 +5,11 @@ export const productSchema = z.object({
   description: z.string().optional(),
   barcode: z.string().optional(),
   sku: z.string().optional(),
-  category_id: z.string().uuid("Please select a category").optional().nullable(),
+  category_id: z
+    .string()
+    .uuid("Please select a category")
+    .optional()
+    .nullable(),
   cost_price: z.coerce.number().min(0, "Cost price must be positive"),
   selling_price: z.coerce.number().min(0, "Selling price must be positive"),
   stock_quantity: z.coerce.number().int().min(0, "Stock cannot be negative"),
@@ -28,9 +32,17 @@ export type CategoryFormValues = z.infer<typeof categorySchema>;
 export const adjustmentSchema = z.object({
   product_id: z.string().uuid(),
   quantity_change: z.coerce.number(),
-  transaction_type: z.enum(['purchase', 'sale', 'adjustment', 'return', 'damage', 'expiry']),
+  transaction_type: z.enum([
+    "purchase",
+    "sale",
+    "adjustment",
+    "return",
+    "damage",
+    "expiry",
+  ]),
   notes: z.string().optional(),
   adjustment_date: z.string().optional().nullable(),
+  expiry_date: z.string().optional().nullable(),
 });
 
 export type AdjustmentFormValues = z.infer<typeof adjustmentSchema>;
