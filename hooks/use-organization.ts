@@ -253,16 +253,15 @@ export function useRevokeInvitation() {
       if (!activeOrganization) throw new Error("No active organization.");
       const { data, error } = await supabase
         .from("organization_invitations")
-        .update({ cancelled_at: new Date().toISOString() })
+        .delete()
         .select("id")
         .eq("id", invitationId)
         .eq("organization_id", activeOrganization.id)
         .is("accepted_at", null)
-        .is("cancelled_at", null)
         .maybeSingle();
       if (error) throw error;
       if (!data?.id) {
-        throw new Error("Invitation was not updated. It may already be revoked.");
+        throw new Error("Invitation was not deleted. It may already be revoked.");
       }
       return data.id;
     },

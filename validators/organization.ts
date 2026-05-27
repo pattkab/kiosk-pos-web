@@ -32,6 +32,8 @@ export const organizationSettingsSchema = z.object({
       cashier: z.array(z.string()).optional(),
     })
     .optional(),
+  stripe_customer_id: z.string().optional(),
+  stripe_subscription_id: z.string().optional(),
 });
 
 export const inviteMemberSchema = z.object({

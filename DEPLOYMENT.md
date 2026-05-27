@@ -14,6 +14,9 @@ Ensure the following variables are set in the Vercel Dashboard:
 | `DATABASE_URL` | Transaction pooler connection string for Supabase migrations. |
 | `RESEND_API_KEY` | **(SECRET)** API key for invitation email delivery. |
 | `RESEND_FROM_EMAIL` | Verified sender, e.g. `Kiosk POS <noreply@yourdomain.com>`. |
+| `STRIPE_SECRET_KEY` | **(SECRET)** Stripe server key for Checkout + Billing Portal. |
+| `STRIPE_WEBHOOK_SECRET` | **(SECRET)** Stripe webhook signing secret. |
+| `STRIPE_PRICE_20_YEAR` | Optional Stripe Price ID for annual `$20` plan. If omitted, app creates inline annual pricing. |
 
 ### Build Settings
 - **Framework Preset**: Next.js

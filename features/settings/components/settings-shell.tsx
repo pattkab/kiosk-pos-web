@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Building2, Bell, FileText, Receipt, Shield, Users, TriangleAlert, WalletCards } from "lucide-react";
+import { Building2, Bell, FileText, Receipt, Shield, Users, TriangleAlert, WalletCards, CreditCard } from "lucide-react";
 
 const nav = [
   { href: "/settings", label: "General", icon: Building2 },
@@ -13,6 +13,7 @@ const nav = [
   { href: "/settings/notifications", label: "Notifications", icon: Bell },
   { href: "/settings/receipt", label: "Receipt", icon: Receipt },
   { href: "/settings/tax", label: "Tax", icon: WalletCards },
+  { href: "/settings/billing", label: "Billing", icon: CreditCard },
   { href: "/settings/audit", label: "Audit logs", icon: FileText },
   { href: "/settings/danger", label: "Danger zone", icon: TriangleAlert },
 ];
