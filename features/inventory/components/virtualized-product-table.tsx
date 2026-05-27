@@ -9,7 +9,9 @@ import {
   ColumnDef,
 } from "@tanstack/react-table";
 import { useInfiniteProducts } from "@/hooks/use-inventory-optimized";
+import { useCategories } from "@/hooks/use-inventory";
 import { useInventoryStore } from "@/store/use-inventory-store";
+import { getProductCategoryName } from "@/lib/inventory/category-display";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -69,6 +71,7 @@ export function VirtualizedProductTable() {
     openAdjustmentModal,
   } = useInventoryStore();
 
+  const { data: categories } = useCategories();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteProducts({
       search: searchQuery,
@@ -76,6 +79,11 @@ export function VirtualizedProductTable() {
       stock: stockFilter,
       status: statusFilter,
     });
+
+  const categoryNameById = useMemo(
+    () => new Map((categories ?? []).map((category) => [category.id, category.name])),
+    [categories],
+  );
 
   const flatData = useMemo(
     () => data?.pages.flatMap((page) => page.data) ?? [],
@@ -122,7 +130,7 @@ export function VirtualizedProductTable() {
             variant="outline"
             className="max-w-full truncate font-normal uppercase text-[10px]"
           >
-            {row.original.categories?.name || "Uncategorized"}
+            {getProductCategoryName(row.original, categoryNameById)}
           </Badge>
         ),
       },
@@ -235,7 +243,7 @@ export function VirtualizedProductTable() {
         ),
       },
     ],
-    [openAdjustmentModal, openProductModal],
+    [categoryNameById, openAdjustmentModal, openProductModal],
   );
 
   const table = useReactTable({

@@ -56,7 +56,7 @@ export function useInfiniteProducts(filters: {
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 0,
-    staleTime: 30000,
+    staleTime: 0,
     enabled: !!orgId,
   });
 }

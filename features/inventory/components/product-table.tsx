@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  useCategories,
   useProducts,
-  useProductMutations
+  useProductMutations,
 } from "@/hooks/use-inventory";
+import { getProductCategoryName } from "@/lib/inventory/category-display";
 import { useInventoryStore } from "@/store/use-inventory-store";
 import {
   Table,
@@ -47,6 +49,10 @@ export function ProductTable() {
     openAdjustmentModal
   } = useInventoryStore();
 
+  const { data: categories } = useCategories();
+  const categoryNameById = new Map(
+    (categories ?? []).map((category) => [category.id, category.name]),
+  );
   const { data: products, isLoading } = useProducts({
     search: searchQuery,
     category_id: categoryFilter,
@@ -125,7 +131,7 @@ export function ProductTable() {
               </TableCell>
               <TableCell>
                 <Badge variant="secondary" className="font-normal">
-                  {product.categories?.name || "Uncategorized"}
+                  {getProductCategoryName(product, categoryNameById)}
                 </Badge>
               </TableCell>
               <TableCell className="text-muted-foreground text-xs font-mono">

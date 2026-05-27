@@ -10,6 +10,7 @@ import { Database } from "@/types/database";
 import { useOrganizationStore } from "@/store/use-organization-store";
 import { getAllFromStore, bulkPutInStore } from "@/lib/storage/db";
 import { useConnectivityStore } from "@/store/use-connectivity-store";
+import { invalidateInventoryProducts } from "@/lib/inventory/invalidate-products";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -170,7 +171,7 @@ export function useProductMutations() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      invalidateInventoryProducts(queryClient);
       toast.success("Product created successfully");
     },
     onError: (error: any) => toast.error(error.message),
@@ -198,7 +199,7 @@ export function useProductMutations() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      invalidateInventoryProducts(queryClient);
       toast.success("Product updated successfully");
     },
     onError: (error: any) => toast.error(error.message),
@@ -216,7 +217,7 @@ export function useProductMutations() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      invalidateInventoryProducts(queryClient);
       toast.success("Product deleted");
     },
   });
@@ -293,7 +294,7 @@ export function useInventoryAdjustment() {
       if (prodError) throw prodError;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      invalidateInventoryProducts(queryClient);
       queryClient.invalidateQueries({ queryKey: ["inventory-history"] });
       toast.success("Stock adjusted successfully");
     },

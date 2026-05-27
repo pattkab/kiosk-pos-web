@@ -11,8 +11,8 @@ type InvalidationKey =
   | "activity";
 
 const queryKeys: Record<InvalidationKey, string[][]> = {
-  products: [["products"], ["pos-products"]],
-  inventory: [["products"], ["inventory-history"], ["analytics"], ["reports"]],
+  products: [["products"], ["products-infinite"], ["pos-products"]],
+  inventory: [["products"], ["products-infinite"], ["inventory-history"], ["analytics"], ["reports"]],
   sales: [["analytics"], ["reports"], ["active-register-session"]],
   reports: [["reports"], ["analytics"]],
   dashboard: [["analytics"], ["reports"]],

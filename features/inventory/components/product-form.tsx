@@ -411,9 +411,9 @@ export function ProductForm() {
                           {!isAddingCategory ? (
                             <>
                               <Select
-                                onValueChange={(value) => {
+                                onValueChange={async (value) => {
                                   if (value.startsWith("recommended:")) {
-                                    createCategoryFromRecommendation(
+                                    await createCategoryFromRecommendation(
                                       value.replace("recommended:", ""),
                                     );
                                     return;
@@ -744,7 +744,11 @@ export function ProductForm() {
                 type="submit"
                 size="lg"
                 className="rounded-xl h-12 px-8 font-black shadow-xl shadow-primary/20"
-                disabled={createProduct.isPending || updateProduct.isPending}
+                disabled={
+                  createProduct.isPending ||
+                  updateProduct.isPending ||
+                  isCreatingRecommendedCategory
+                }
               >
                 {editingProductId ? "Update product" : "Create product & stock"}
               </Button>
