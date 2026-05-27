@@ -251,19 +251,11 @@ export function useRevokeInvitation() {
   return useMutation({
     mutationFn: async (invitationId: string) => {
       if (!activeOrganization) throw new Error("No active organization.");
-      const { data, error } = await supabase
-        .from("organization_invitations")
-        .delete()
-        .select("id")
-        .eq("id", invitationId)
-        .eq("organization_id", activeOrganization.id)
-        .is("accepted_at", null)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc("revoke_organization_invitation", {
+        p_invitation_id: invitationId,
+      });
       if (error) throw error;
-      if (!data?.id) {
-        throw new Error("Invitation was not deleted. It may already be revoked.");
-      }
-      return data.id;
+      return (data as string) ?? invitationId;
     },
     onMutate: async (invitationId) => {
       await queryClient.cancelQueries({ queryKey: ["organization-invitations", activeOrganization?.id] });
@@ -272,16 +264,18 @@ export function useRevokeInvitation() {
       queryClient.setQueryData<any[]>(queryKey, (current = []) =>
         current.filter((entry) => entry.id !== invitationId)
       );
-      return { previous, queryKey };
+      return { queryKey };
     },
     onError: (error, _invitationId, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(context.queryKey, context.previous);
-      }
+      queryClient.invalidateQueries({
+        queryKey: context?.queryKey ?? ["organization-invitations", activeOrganization?.id],
+      });
       toast.error(error.message);
     },
     onSuccess: (_id, _invitationId, context) => {
-      queryClient.invalidateQueries({ queryKey: context?.queryKey ?? ["organization-invitations"] });
+      queryClient.invalidateQueries({
+        queryKey: context?.queryKey ?? ["organization-invitations", activeOrganization?.id],
+      });
       toast.success("Invitation revoked");
     },
   });

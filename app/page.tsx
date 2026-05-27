@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { OAuthErrorHandler } from "@/components/auth/oauth-error-handler";
 
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
+      <OAuthErrorHandler />
       <h1 className="mb-6 text-5xl font-extrabold tracking-tight lg:text-6xl">
         Kiosk <span className="text-primary">POS</span>
       </h1>

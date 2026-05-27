@@ -23,13 +23,18 @@ export async function signIn(data: LoginFormValues) {
 
 export async function signInWithGoogle() {
   const supabase = createClient();
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL!;
-  const redirectTo = `${origin}/auth/callback?next=/select-organization`;
+  const { getOAuthCallbackUrl } = await import("@/lib/auth/oauth");
+  const redirectTo = getOAuthCallbackUrl("/select-organization");
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo },
+    options: {
+      redirectTo,
+      queryParams: {
+        access_type: "offline",
+        prompt: "consent",
+      },
+    },
   });
 
   if (error) {

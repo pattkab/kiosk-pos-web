@@ -36,17 +36,18 @@ export async function POST(request: Request) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const organizationId = session.metadata?.organizationId;
-      if (organizationId) {
+      if (organizationId && typeof session.subscription === "string") {
+        const subscription = await stripe.subscriptions.retrieve(session.subscription);
+        const normalizedStatus = normalizeSubscriptionStatus(subscription.status);
         await admin
           .from("organization_settings")
           .upsert(
             {
               organization_id: organizationId,
               stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
-              stripe_subscription_id:
-                typeof session.subscription === "string" ? session.subscription : null,
-              subscription_plan: "pro",
-              subscription_status: "active",
+              stripe_subscription_id: subscription.id,
+              subscription_plan: normalizedStatus === "inactive" ? "starter" : "pro",
+              subscription_status: normalizedStatus,
             },
             { onConflict: "organization_id" }
           );
@@ -61,12 +62,13 @@ export async function POST(request: Request) {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId =
         typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
+      const normalizedStatus = normalizeSubscriptionStatus(subscription.status);
       await admin
         .from("organization_settings")
         .update({
           stripe_subscription_id: subscription.id,
-          subscription_status: normalizeSubscriptionStatus(subscription.status),
-          subscription_plan: normalizeSubscriptionStatus(subscription.status) === "active" ? "pro" : "starter",
+          subscription_status: normalizedStatus,
+          subscription_plan: normalizedStatus === "inactive" ? "starter" : "pro",
         })
         .eq("stripe_customer_id", customerId);
     }

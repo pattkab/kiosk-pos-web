@@ -2,7 +2,7 @@
 
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { Moon, Sun, Search, Menu } from "lucide-react";
+import { Moon, Sun, Search, Menu, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -42,13 +42,10 @@ export function Navbar() {
       <OfflineBanner />
       <div className="flex min-h-14 items-center justify-between gap-2 px-2 py-2 sm:min-h-16 sm:px-6">
         <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={toggleSidebar}
-          >
-            <Menu className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+            <Menu className="h-5 w-5 md:hidden" />
+            <PanelLeft className="hidden h-5 w-5 md:block" />
+            <span className="sr-only">Toggle sidebar</span>
           </Button>
           <OrgSwitcher />
         </div>

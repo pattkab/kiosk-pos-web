@@ -33,6 +33,14 @@ Ensure the following variables are set in the Vercel Dashboard:
 - [ ] Set **Site URL** to your production domain.
 - [ ] Add `http://localhost:3000/**` and `https://your-production-domain.com/**` to **Redirect URLs**.
 
+### Google sign-in (OAuth)
+- [ ] In **Google Cloud Console** → APIs & Services → Credentials → OAuth 2.0 Client, set **Authorized redirect URI** to:
+  - `https://<your-supabase-project-ref>.supabase.co/auth/v1/callback`
+- [ ] In **Supabase** → Authentication → Providers → **Google**, paste the same client’s **Client ID** and **Client Secret**.
+- [ ] Ensure production **Redirect URLs** include `https://your-domain.com/**` and the app callback path works (`/auth/callback`).
+- [ ] Set `NEXT_PUBLIC_APP_URL` in Vercel to your live URL (must match the domain users visit).
+- [ ] If sign-in fails with *Unable to exchange external code*, the Google client secret in Supabase does not match Google Cloud, or the redirect URI above is missing.
+
 ### Database Security
 - [ ] Verify all tables have **Row Level Security (RLS)** enabled.
 - [ ] Run `supabase db push` to ensure production schema matches local.

@@ -67,9 +67,13 @@ export default function TermsPage() {
 
       <LegalSection title="4. Subscriptions and billing">
         <p>
-          Paid plans, pricing, and billing intervals are shown at checkout or in your account
-          settings. By subscribing, you authorize us and our payment processor to charge applicable
-          fees on a recurring basis until you cancel in accordance with these Terms.
+          New organizations receive a one-month free trial. After the trial ends, a paid annual
+          subscription is required to continue using the Services. Pricing and billing intervals are
+          shown at checkout or in your account settings.
+        </p>
+        <p>
+          By subscribing, you authorize us and our payment processor to charge applicable fees on a
+          recurring annual basis until you cancel in accordance with these Terms.
         </p>
         <p>
           Payments are processed by third-party providers (such as Stripe). Taxes may apply depending
