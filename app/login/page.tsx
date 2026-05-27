@@ -12,6 +12,7 @@ import {
   BarChart3,
   Boxes,
   Building2,
+  Chrome,
   LockKeyhole,
   ReceiptText,
   Store,
@@ -35,7 +36,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signIn } from "@/lib/auth/actions";
+import { signIn, signInWithGoogle } from "@/lib/auth/actions";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -46,6 +47,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
     const message = searchParams.get("message");
@@ -71,6 +73,14 @@ function LoginForm() {
       return;
     }
     setIsLoading(false);
+  }
+
+  async function onGoogleSignIn() {
+    setIsGoogleLoading(true);
+    const result = await signInWithGoogle();
+    if (!result.success) {
+      setIsGoogleLoading(false);
+    }
   }
 
   return (
@@ -201,6 +211,24 @@ function LoginForm() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
+                <Button
+                  variant="outline"
+                  className="h-11 w-full font-semibold"
+                  type="button"
+                  disabled={isGoogleLoading || isLoading}
+                  onClick={onGoogleSignIn}
+                >
+                  <Chrome className="mr-2 h-4 w-4" />
+                  {isGoogleLoading ? "Redirecting to Google..." : "Continue with Google"}
+                </Button>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-muted-foreground">Or sign in with email</span>
+                  </div>
+                </div>
                 <FormField
                   control={form.control}
                   name="email"

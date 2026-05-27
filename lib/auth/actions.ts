@@ -21,6 +21,25 @@ export async function signIn(data: LoginFormValues) {
   return { success: true };
 }
 
+export async function signInWithGoogle() {
+  const supabase = createClient();
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL!;
+  const redirectTo = `${origin}/auth/callback?next=/select-organization`;
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo },
+  });
+
+  if (error) {
+    toast.error(error.message);
+    return { error: error.message };
+  }
+
+  return { success: true };
+}
+
 export async function signUp(data: any) {
   const supabase = createClient();
 
