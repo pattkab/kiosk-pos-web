@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,6 +19,13 @@ export function InviteMemberModal() {
     resolver: zodResolver(inviteMemberSchema),
     defaultValues: { name: "", email: "", role: "cashier" },
   });
+
+  useEffect(() => {
+    if (!inviteOpen) {
+      invite.reset();
+      form.reset({ name: "", email: "", role: "cashier" });
+    }
+  }, [form, invite, inviteOpen]);
 
   return (
     <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
@@ -51,8 +59,18 @@ export function InviteMemberModal() {
             </Select>
           </div>
           <Button className="h-11 w-full" disabled={invite.isPending}>
-            {invite.isPending ? "Creating invitation..." : "Send invitation"}
+            {invite.isPending ? "Sending invitation..." : "Send invitation"}
           </Button>
+          {invite.isSuccess && invite.data?.emailSent && (
+            <p className="text-sm text-emerald-600">
+              Invitation email sent successfully.
+            </p>
+          )}
+          {invite.isSuccess && !invite.data?.emailSent && (
+            <p className="text-sm text-amber-600">
+              Invitation was created, but email delivery failed. {invite.data?.invitationUrl ?? ""}
+            </p>
+          )}
         </form>
       </DialogContent>
     </Dialog>

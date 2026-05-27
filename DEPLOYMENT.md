@@ -12,6 +12,8 @@ Ensure the following variables are set in the Vercel Dashboard:
 | `SUPABASE_SERVICE_ROLE_KEY` | **(SECRET)** Required for administrative tasks. Never expose to client. |
 | `NEXT_PUBLIC_APP_URL` | The production URL of your app (e.g., `https://pos.yourdomain.com`) |
 | `DATABASE_URL` | Transaction pooler connection string for Supabase migrations. |
+| `RESEND_API_KEY` | **(SECRET)** API key for invitation email delivery. |
+| `RESEND_FROM_EMAIL` | Verified sender, e.g. `Kiosk POS <noreply@yourdomain.com>`. |
 
 ### Build Settings
 - **Framework Preset**: Next.js

@@ -194,15 +194,49 @@ export function useInviteMember() {
         p_role: values.role,
       });
       if (error) throw error;
-      return data;
+
+      const invitation = Array.isArray(data) ? data[0] : null;
+      const invitationId = invitation?.invitation_id as string | undefined;
+      const invitationUrl = invitation?.invitation_url as string | undefined;
+
+      if (!invitationId) {
+        throw new Error("Invitation created but invitation id was not returned.");
+      }
+
+      const response = await fetch("/api/invitations/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invitationId,
+          organizationId: activeOrganization.id,
+        }),
+      });
+
+      const emailResult = (await response.json()) as {
+        ok?: boolean;
+        error?: string;
+      };
+
+      return {
+        invitationId,
+        invitationUrl,
+        emailSent: Boolean(response.ok && emailResult.ok),
+        emailError:
+          response.ok && emailResult.ok
+            ? null
+            : emailResult.error ?? "Invitation created but email delivery failed.",
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["organization-invitations"] });
-      toast.success("Invitation created", {
-        description:
-          Array.isArray(data) && data[0]?.invitation_url
-            ? data[0].invitation_url
-            : undefined,
+      if (data.emailSent) {
+        toast.success("Invitation email sent", {
+          description: data.invitationUrl ?? undefined,
+        });
+        return;
+      }
+      toast.warning("Invitation created, but email failed", {
+        description: data.emailError ?? data.invitationUrl ?? undefined,
       });
     },
     onError: (error) => toast.error(error.message),
