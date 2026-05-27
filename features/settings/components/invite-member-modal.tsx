@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -20,15 +19,16 @@ export function InviteMemberModal() {
     defaultValues: { name: "", email: "", role: "cashier" },
   });
 
-  useEffect(() => {
-    if (!inviteOpen) {
+  const handleOpenChange = (open: boolean) => {
+    setInviteOpen(open);
+    if (!open) {
       invite.reset();
       form.reset({ name: "", email: "", role: "cashier" });
     }
-  }, [form, invite, inviteOpen]);
+  };
 
   return (
-    <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+    <Dialog open={inviteOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-[460px]">
         <DialogHeader>
           <DialogTitle>Invite team member</DialogTitle>
