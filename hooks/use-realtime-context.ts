@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useOrganizationStore } from "@/store/use-organization-store";
-import { ROLE_PERMISSIONS } from "@/lib/auth/permissions";
+import { ROLE_PERMISSIONS, RolePermissionMap, resolveRolePermissions } from "@/lib/auth/permissions";
 import { OrganizationWithRole } from "@/hooks/use-organization";
 
 export function useRealtimeContext() {
@@ -39,6 +39,20 @@ export function useRealtimeContext() {
       if (organization.id !== activeOrganizationId) setActiveOrganizationId(organization.id);
       setActiveCurrency(organization.currency);
       setPermissionState(organization.role, ROLE_PERMISSIONS[organization.role]);
+      try {
+        const { data: settingRow } = await supabase
+          .from("organization_settings")
+          .select("role_permissions")
+          .eq("organization_id", organization.id)
+          .maybeSingle();
+        const rolePermissionMap = (settingRow?.role_permissions ?? null) as RolePermissionMap | null;
+        setPermissionState(
+          organization.role,
+          resolveRolePermissions(organization.role, rolePermissionMap)
+        );
+      } catch {
+        // Keep default permission map when optional role overrides cannot be fetched.
+      }
 
       return {
         user,

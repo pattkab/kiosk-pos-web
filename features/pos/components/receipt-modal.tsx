@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCheckoutStore } from "@/store/use-checkout-store";
 import { formatCurrency } from "@/lib/utils";
 import { CheckCircle2, Printer, ReceiptText } from "lucide-react";
+import Image from "next/image";
 
 export function ReceiptModal() {
   const { receipt, isReceiptOpen, closeReceipt } = useCheckoutStore();
@@ -25,8 +26,22 @@ export function ReceiptModal() {
         <div className="max-h-[72vh] overflow-y-auto p-5">
           <div className="mx-auto w-full max-w-[320px] bg-white p-5 font-mono text-sm text-black shadow-sm print:shadow-none">
             <div className="text-center">
+              {receipt.receiptLogoUrl && (
+                <div className="mb-2 flex justify-center">
+                  <Image
+                    src={receipt.receiptLogoUrl}
+                    alt="Receipt logo"
+                    width={64}
+                    height={64}
+                    className="h-16 w-16 rounded object-contain"
+                  />
+                </div>
+              )}
               <ReceiptText className="mx-auto mb-2 h-7 w-7" />
               <h2 className="text-base font-bold uppercase">{receipt.organizationName}</h2>
+              {receipt.receiptHeader && (
+                <p className="mt-1 text-xs whitespace-pre-line">{receipt.receiptHeader}</p>
+              )}
               <p className="text-xs">Receipt {receipt.receiptNumber}</p>
               {receipt.receiptNumber.startsWith("R-OFF") && (
                 <div className="my-2 inline-block rounded bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600">
@@ -94,7 +109,12 @@ export function ReceiptModal() {
               )}
             </div>
 
-            <p className="mt-5 text-center text-xs uppercase tracking-wide">Thank you</p>
+            {receipt.receiptNotes && (
+              <p className="mt-4 text-center text-[11px] whitespace-pre-line">{receipt.receiptNotes}</p>
+            )}
+            <p className="mt-3 text-center text-xs uppercase tracking-wide">
+              {receipt.receiptFooter || "Thank you"}
+            </p>
           </div>
         </div>
 

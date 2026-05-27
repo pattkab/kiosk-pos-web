@@ -15,7 +15,7 @@ import {
 } from "@/lib/storage/db";
 import { useConnectivityStore } from "@/store/use-connectivity-store";
 import { useOfflineQueueStore } from "@/store/use-offline-queue-store";
-import { ROLE_PERMISSIONS } from "@/lib/auth/permissions";
+import { ROLE_PERMISSIONS, RolePermissionMap, resolveRolePermissions } from "@/lib/auth/permissions";
 import { OrganizationWithRole } from "@/hooks/use-organization";
 
 export function useCurrentPosContext() {
@@ -62,6 +62,20 @@ export function useCurrentPosContext() {
         if (organization.id !== activeOrganizationId) setActiveOrganizationId(organization.id);
         setActiveCurrency(organization.currency);
         setPermissionState(organization.role, ROLE_PERMISSIONS[organization.role]);
+        try {
+          const { data: settingRow } = await supabase
+            .from("organization_settings")
+            .select("role_permissions")
+            .eq("organization_id", organization.id)
+            .maybeSingle();
+          const rolePermissionMap = (settingRow?.role_permissions ?? null) as RolePermissionMap | null;
+          setPermissionState(
+            organization.role,
+            resolveRolePermissions(organization.role, rolePermissionMap)
+          );
+        } catch {
+          // Keep default role permissions when organization overrides are unavailable.
+        }
 
         const result = {
           profile,
@@ -352,6 +366,22 @@ export function useCheckout() {
       if (!activeSession) throw new Error("Open a register before checkout.");
       if (items.length === 0) throw new Error("Cart is empty.");
       if (errors.length > 0) throw new Error(errors[0]);
+      if (!useOrganizationStore.getState().permissions.includes("pos.checkout")) {
+        throw new Error("You do not have permission to complete checkout.");
+      }
+
+      const { data: receiptSettingsRow } = await supabase
+        .from("organization_settings")
+        .select("receipt_header, receipt_footer, receipt_logo_url, receipt_notes")
+        .eq("organization_id", activeContext.organizationId)
+        .maybeSingle();
+
+      const receiptBranding = {
+        receiptHeader: receiptSettingsRow?.receipt_header ?? null,
+        receiptFooter: receiptSettingsRow?.receipt_footer ?? null,
+        receiptLogoUrl: receiptSettingsRow?.receipt_logo_url ?? null,
+        receiptNotes: receiptSettingsRow?.receipt_notes ?? null,
+      };
 
       const paid = payments.reduce((sum, payment) => sum + payment.amount, 0);
       if (paid + 0.01 < totals.total) throw new Error("Payment total is less than amount due.");
@@ -414,6 +444,7 @@ export function useCheckout() {
           totalAmount: totals.total,
           payments,
           changeDue: Math.max(0, payments.reduce((sum, p) => sum + p.amount, 0) - totals.total),
+          ...receiptBranding,
         };
 
         // Save receipt to local store
@@ -467,6 +498,7 @@ export function useCheckout() {
         totalAmount: totals.total,
         payments,
         changeDue: Math.max(0, payments.reduce((sum, payment) => sum + payment.amount, 0) - totals.total),
+        ...receiptBranding,
       };
 
       // Cache completed online receipts locally as well

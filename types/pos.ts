@@ -64,6 +64,10 @@ export interface CompletedReceipt {
   totalAmount: number;
   payments: CheckoutPayment[];
   changeDue: number;
+  receiptHeader?: string | null;
+  receiptFooter?: string | null;
+  receiptLogoUrl?: string | null;
+  receiptNotes?: string | null;
 }
 
 export interface ActiveRegisterSession {

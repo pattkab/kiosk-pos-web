@@ -21,7 +21,17 @@ export const organizationSettingsSchema = z.object({
   tax_rate: z.coerce.number().min(0).max(100),
   receipt_header: z.string().max(500).optional().or(z.literal("")),
   receipt_footer: z.string().max(500).optional().or(z.literal("")),
+  receipt_logo_url: z.string().url().optional().or(z.literal("")).or(z.null()),
+  receipt_notes: z.string().max(2000).optional().or(z.literal("")),
   low_stock_threshold_default: z.coerce.number().int().min(0),
+  role_permissions: z
+    .object({
+      owner: z.array(z.string()).optional(),
+      admin: z.array(z.string()).optional(),
+      manager: z.array(z.string()).optional(),
+      cashier: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 export const inviteMemberSchema = z.object({

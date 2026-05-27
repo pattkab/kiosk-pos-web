@@ -16,8 +16,9 @@ import {
 import { useAppStore } from "@/store/use-app-store";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { canAccessModule } from "@/lib/auth/permissions";
+import { Permission } from "@/lib/auth/permissions";
 import { useActiveOrganization } from "@/hooks/use-organization";
+import { useOrganizationStore } from "@/store/use-organization-store";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, module: "dashboard" },
@@ -33,6 +34,22 @@ export function Sidebar() {
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useAppStore();
   const { activeOrganization } = useActiveOrganization();
   const userRole = activeOrganization?.role;
+  const permissions = useOrganizationStore((state) => state.permissions);
+
+  const hasModuleAccess = (module: string) => {
+    if (!userRole) return true;
+    const modulePermission: Record<string, Permission | null> = {
+      dashboard: null,
+      pos: "pos.access",
+      inventory: "inventory.view",
+      reports: "reports.view",
+      notifications: null,
+      team: "team.manage",
+      settings: "settings.manage",
+    };
+    const required = modulePermission[module];
+    return required ? permissions.includes(required) : true;
+  };
 
   // Handle mobile resize
   useEffect(() => {
@@ -80,7 +97,7 @@ export function Sidebar() {
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
-          {navigation.filter(item => !userRole || canAccessModule(userRole, item.module)).map((item) => {
+          {navigation.filter(item => hasModuleAccess(item.module)).map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link

@@ -7,7 +7,9 @@ import {
   hasPermission,
   Permission,
   ROLE_PERMISSIONS,
+  RolePermissionMap,
   Role,
+  resolveRolePermissions,
 } from "@/lib/auth/permissions";
 import { useOrganizationStore } from "@/store/use-organization-store";
 import {
@@ -63,15 +65,33 @@ export function useActiveOrganization() {
     null;
 
   useEffect(() => {
+    const applyPermissions = async () => {
+      if (!activeOrganization) return;
+      let rolePermissionMap: RolePermissionMap | null = null;
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("organization_settings")
+          .select("role_permissions")
+          .eq("organization_id", activeOrganization.id)
+          .maybeSingle();
+        rolePermissionMap = (data?.role_permissions ?? null) as RolePermissionMap | null;
+      } catch {
+        rolePermissionMap = null;
+      }
+      setPermissionState(
+        activeOrganization.role,
+        resolveRolePermissions(activeOrganization.role, rolePermissionMap)
+      );
+    };
+
     if (activeOrganization && activeOrganization.id !== activeOrganizationId) {
       setActiveOrganizationId(activeOrganization.id);
     }
     if (activeOrganization) {
       setActiveCurrency(activeOrganization.currency);
-      setPermissionState(
-        activeOrganization.role,
-        ROLE_PERMISSIONS[activeOrganization.role],
-      );
+      setPermissionState(activeOrganization.role, ROLE_PERMISSIONS[activeOrganization.role]);
+      void applyPermissions();
     }
   }, [
     activeOrganization,
@@ -88,10 +108,7 @@ export function useActiveOrganization() {
     setActiveOrganizationId(organizationId);
     setActiveCurrency(organization?.currency);
     if (organization) {
-      setPermissionState(
-        organization.role,
-        ROLE_PERMISSIONS[organization.role],
-      );
+      setPermissionState(organization.role, ROLE_PERMISSIONS[organization.role]);
     }
     queryClient.invalidateQueries();
   };
@@ -115,7 +132,7 @@ export function usePermissions() {
     role,
     permissions,
     can: (permission: Permission) =>
-      Boolean(role && hasPermission(role, permission)),
+      Boolean(role && permissions.includes(permission)),
   };
 }
 

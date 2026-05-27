@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { hasPermission, AnyPermission } from "./permissions";
+import { hasPermission, AnyPermission, RolePermissionMap } from "./permissions";
 import { redirect } from "next/navigation";
 import { OrganizationWithRole } from "@/hooks/use-organization";
 
@@ -27,11 +27,35 @@ export async function checkPermission(permission: AnyPermission, organizationId?
   }
   const organizations = (organizationRows ?? []) as OrganizationWithRole[];
 
-  const scopedMember = organizationId
-    ? organizations?.find((organization) => organization.id === organizationId)
-    : organizations?.find((organization) => hasPermission(organization.role, permission));
+  const canInOrganization = async (organization: OrganizationWithRole) => {
+    let rolePermissionMap: RolePermissionMap | null = null;
+    try {
+      const { data } = await supabase
+        .from("organization_settings")
+        .select("role_permissions")
+        .eq("organization_id", organization.id)
+        .maybeSingle();
+      rolePermissionMap = (data?.role_permissions ?? null) as RolePermissionMap | null;
+    } catch {
+      rolePermissionMap = null;
+    }
+    return hasPermission(organization.role, permission, rolePermissionMap);
+  };
 
-  if (!scopedMember || !hasPermission(scopedMember.role, permission)) {
+  let scopedMember: OrganizationWithRole | undefined;
+  if (organizationId) {
+    const explicit = organizations?.find((organization) => organization.id === organizationId);
+    if (explicit && (await canInOrganization(explicit))) scopedMember = explicit;
+  } else {
+    for (const organization of organizations ?? []) {
+      if (await canInOrganization(organization)) {
+        scopedMember = organization;
+        break;
+      }
+    }
+  }
+
+  if (!scopedMember) {
     redirect("/unauthorized");
   }
 

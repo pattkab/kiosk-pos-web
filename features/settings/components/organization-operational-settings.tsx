@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useOrganizationSettings } from "@/hooks/use-organization";
 import { organizationSettingsSchema, OrganizationSettingsValues } from "@/validators/organization";
+import { ImageUpload } from "@/features/inventory/components/image-upload";
 
 export function OrganizationOperationalSettings({ mode }: { mode: "receipt" | "tax" }) {
   const settings = useOrganizationSettings();
@@ -18,6 +19,8 @@ export function OrganizationOperationalSettings({ mode }: { mode: "receipt" | "t
       tax_rate: 0,
       receipt_header: "",
       receipt_footer: "",
+      receipt_logo_url: "",
+      receipt_notes: "",
       low_stock_threshold_default: 5,
     },
   });
@@ -28,6 +31,8 @@ export function OrganizationOperationalSettings({ mode }: { mode: "receipt" | "t
         tax_rate: Number(settings.data.tax_rate ?? 0),
         receipt_header: settings.data.receipt_header ?? "",
         receipt_footer: settings.data.receipt_footer ?? "",
+        receipt_logo_url: settings.data.receipt_logo_url ?? "",
+        receipt_notes: settings.data.receipt_notes ?? "",
         low_stock_threshold_default: Number(settings.data.low_stock_threshold_default ?? 5),
       });
     }
@@ -43,8 +48,25 @@ export function OrganizationOperationalSettings({ mode }: { mode: "receipt" | "t
           {mode === "receipt" ? (
             <>
               <div className="space-y-2">
+                <Label>Receipt logo</Label>
+                <ImageUpload
+                  value={form.watch("receipt_logo_url") || null}
+                  onChange={(value) => form.setValue("receipt_logo_url", value || "", { shouldDirty: true })}
+                  className="items-start"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Receipt header</Label>
                 <Input {...form.register("receipt_header")} />
+              </div>
+              <div className="space-y-2">
+                <Label>Receipt notes (printed above footer)</Label>
+                <textarea
+                  {...form.register("receipt_notes")}
+                  rows={4}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="e.g. Goods sold are not returnable without receipt."
+                />
               </div>
               <div className="space-y-2">
                 <Label>Receipt footer message</Label>

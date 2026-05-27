@@ -20,6 +20,7 @@ export const PERMISSIONS = [
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
+export type RolePermissionMap = Partial<Record<Role, Permission[]>>;
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   owner: [...PERMISSIONS],
@@ -37,6 +38,20 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ],
   cashier: ["pos.access", "pos.checkout"],
 };
+
+const permissionSet = new Set<Permission>(PERMISSIONS);
+
+export function resolveRolePermissions(
+  role: Role,
+  rolePermissionMap?: RolePermissionMap | null
+): Permission[] {
+  const configured = rolePermissionMap?.[role];
+  if (!configured) return ROLE_PERMISSIONS[role];
+  const sanitized = configured.filter((permission): permission is Permission =>
+    permissionSet.has(permission as Permission)
+  );
+  return role === "owner" ? [...PERMISSIONS] : sanitized;
+}
 
 const LEGACY_PERMISSION_MAP = {
   CREATE_SALE: "pos.checkout",
@@ -56,26 +71,30 @@ export function normalizePermission(permission: AnyPermission): Permission {
   return (LEGACY_PERMISSION_MAP as Record<string, Permission>)[permission] ?? (permission as Permission);
 }
 
-export function hasPermission(role: Role, permission: AnyPermission): boolean {
-  return ROLE_PERMISSIONS[role].includes(normalizePermission(permission));
+export function hasPermission(
+  role: Role,
+  permission: AnyPermission,
+  rolePermissionMap?: RolePermissionMap | null
+): boolean {
+  return resolveRolePermissions(role, rolePermissionMap).includes(normalizePermission(permission));
 }
 
-export function canAccessModule(role: Role, module: string): boolean {
+export function canAccessModule(role: Role, module: string, rolePermissionMap?: RolePermissionMap | null): boolean {
   switch (module) {
     case "dashboard":
       return true;
     case "pos":
-      return hasPermission(role, "pos.access");
+      return hasPermission(role, "pos.access", rolePermissionMap);
     case "inventory":
-      return hasPermission(role, "inventory.view");
+      return hasPermission(role, "inventory.view", rolePermissionMap);
     case "reports":
-      return hasPermission(role, "reports.view");
+      return hasPermission(role, "reports.view", rolePermissionMap);
     case "notifications":
       return true;
     case "team":
-      return hasPermission(role, "team.manage");
+      return hasPermission(role, "team.manage", rolePermissionMap);
     case "settings":
-      return hasPermission(role, "settings.manage");
+      return hasPermission(role, "settings.manage", rolePermissionMap);
     default:
       return false;
   }
