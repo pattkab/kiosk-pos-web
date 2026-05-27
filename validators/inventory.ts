@@ -30,6 +30,7 @@ export const adjustmentSchema = z.object({
   quantity_change: z.coerce.number(),
   transaction_type: z.enum(['purchase', 'sale', 'adjustment', 'return', 'damage', 'expiry']),
   notes: z.string().optional(),
+  adjustment_date: z.string().optional().nullable(),
 });
 
 export type AdjustmentFormValues = z.infer<typeof adjustmentSchema>;

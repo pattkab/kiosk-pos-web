@@ -20,7 +20,7 @@ export function useInfiniteProducts(filters: {
     queryFn: async ({ pageParam = 0 }) => {
       let query = supabase
         .from("products")
-        .select("id, name, sku, barcode, selling_price, stock_quantity, low_stock_threshold, is_active, image_url, category_id, categories(name)", { count: 'exact' })
+        .select("id, name, sku, barcode, selling_price, cost_price, stock_quantity, low_stock_threshold, is_active, image_url, category_id, categories(name), expiry_date", { count: 'exact' })
         .eq("organization_id", orgId!)
         .order("name", { ascending: true })
         .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);

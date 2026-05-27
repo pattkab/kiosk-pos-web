@@ -73,10 +73,17 @@ export function VirtualizedProductTable() {
         ),
       },
       {
-        accessorKey: "selling_price",
-        header: () => <div className="text-right">Price</div>,
+        accessorKey: "cost_price",
+        header: () => <div className="text-right">Unit cost</div>,
         cell: ({ row }) => (
-          <div className="text-right font-black">{formatCurrency(row.original.selling_price)}</div>
+          <div className="text-right text-muted-foreground">{formatCurrency(row.original.cost_price)}</div>
+        ),
+      },
+      {
+        accessorKey: "selling_price",
+        header: () => <div className="text-right">Unit sale price</div>,
+        cell: ({ row }) => (
+          <div className="text-right font-black text-primary">{formatCurrency(row.original.selling_price)}</div>
         ),
       },
       {
@@ -90,6 +97,20 @@ export function VirtualizedProductTable() {
                 {row.original.stock_quantity}
               </span>
             </div>
+          );
+        },
+      },
+      {
+        accessorKey: "expiry_date",
+        header: "Expiry",
+        cell: ({ row }) => {
+          const date = row.original.expiry_date;
+          if (!date) return <span className="text-muted-foreground">-</span>;
+          const isExpired = new Date(date) < new Date();
+          return (
+            <Badge variant={isExpired ? "destructive" : "outline"} className="font-mono text-[10px]">
+              {date}
+            </Badge>
           );
         },
       },

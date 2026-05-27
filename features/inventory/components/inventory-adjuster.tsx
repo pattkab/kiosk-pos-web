@@ -45,6 +45,7 @@ export function InventoryAdjuster() {
       quantity_change: 0,
       transaction_type: "adjustment",
       notes: "",
+      adjustment_date: new Date().toISOString().split('T')[0],
     },
   });
 
@@ -55,6 +56,7 @@ export function InventoryAdjuster() {
         quantity_change: 0,
         transaction_type: "adjustment",
         notes: "",
+        adjustment_date: new Date().toISOString().split('T')[0],
       });
     }
   }, [adjustingProductId, form]);
@@ -124,6 +126,19 @@ export function InventoryAdjuster() {
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
                     <Input placeholder="Reason for adjustment" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="adjustment_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adjustment date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

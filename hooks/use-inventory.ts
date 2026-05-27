@@ -194,10 +194,12 @@ export function useInventoryAdjustment() {
       if (profileError) throw profileError;
 
       // 1. Create transaction
+      const { adjustment_date, ...adjustmentData } = values;
       const { error: txError } = await supabase.from('inventory_transactions').insert({
-        ...values,
+        ...adjustmentData,
         organization_id: activeOrganizationId,
         performed_by: profile.id,
+        created_at: adjustment_date || new Date().toISOString()
       });
       if (txError) throw txError;
 
