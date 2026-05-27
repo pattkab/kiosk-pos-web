@@ -1,7 +1,7 @@
-import { defaultCacheOnFrontEnd, defaultCacheOnServer } from "@serwist/next/worker";
+import { defaultCache } from "@serwist/next/worker";
 import { type PrecacheEntry, Serwist } from "serwist";
 
-declare const self: ServiceWorkerGlobalScope & {
+declare const self: typeof globalThis & {
   __SW_MANIFEST: (string | PrecacheEntry)[] | undefined;
 };
 
@@ -10,11 +10,7 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [
-    ...defaultCacheOnFrontEnd,
-    ...defaultCacheOnServer,
-    // Add custom runtime caching rules for Supabase assets or images if needed
-  ],
+  runtimeCaching: defaultCache,
 });
 
 serwist.addEventListeners();

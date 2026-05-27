@@ -21,12 +21,12 @@ export interface QueueItem {
     discount_amount: number;
     tax_amount: number;
     line_total: number;
-    note?: string;
+    note?: string | null;
   }>;
   payments: Array<{
     payment_method: string;
     amount: number;
-    reference?: string;
+    reference?: string | null;
   }>;
   createdAt: string;
   status: "pending" | "syncing" | "synced" | "failed" | "conflict";

@@ -7,10 +7,10 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV === "development", // Disable PWA in dev for faster HMR
 });
 
-const nextConfig: NextConfig = {
-  // Turbopack does not yet support custom Webpack configurations required by Serwist.
-  // This project must be built with Webpack.
+const shouldEnableWebpackServiceWorker =
+  process.env.NEXT_WEBPACK_BUILD === "1" || process.argv.includes("--webpack");
 
+const nextConfig: NextConfig = {
   async headers() {
     return [
       {
@@ -42,4 +42,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSerwist(nextConfig);
+export default shouldEnableWebpackServiceWorker ? withSerwist(nextConfig) : nextConfig;
