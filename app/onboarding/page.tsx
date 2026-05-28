@@ -29,7 +29,9 @@ import {
   CheckCircle2,
   ChevronsUpDown,
   LayoutDashboard,
+  LogOut,
   PackagePlus,
+  Sparkles,
   Users,
 } from "lucide-react";
 import {
@@ -54,6 +56,8 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getCurrencyCodes } from "@/lib/currencies";
+import { useCurrentProfile } from "@/hooks/use-profile";
+import { signOut } from "@/lib/auth/actions";
 
 const onboardingSchema = z
   .object({
@@ -97,7 +101,9 @@ const slugify = (value: string) =>
 export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const supabase = createClient();
+  const { data: profile } = useCurrentProfile();
   const setActiveOrganizationId = useOrganizationStore(
     (state) => state.setActiveOrganizationId,
   );
@@ -173,7 +179,46 @@ export default function OnboardingPage() {
                 Let's set up your business profile.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-2 rounded-md border bg-muted/30 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-muted-foreground">
+                  Signed in as{" "}
+                  <span className="font-semibold text-foreground">
+                    {profile?.email ?? "your account"}
+                  </span>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsNavigating(true);
+                      window.location.assign("/dashboard");
+                    }}
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Proceed without organization
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={isSigningOut}
+                    onClick={async () => {
+                      setIsSigningOut(true);
+                      try {
+                        await signOut();
+                      } finally {
+                        setIsSigningOut(false);
+                      }
+                    }}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {isSigningOut ? "Signing out..." : "Sign out"}
+                  </Button>
+                </div>
+              </div>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onOrgSubmit)}

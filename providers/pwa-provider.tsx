@@ -22,6 +22,21 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
     loadQueue();
 
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      const isDev = process.env.NODE_ENV !== "production";
+
+      // Serwist is disabled in development, so avoid registering stale service workers locally.
+      if (isDev) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((registrations) =>
+            Promise.all(registrations.map((registration) => registration.unregister())),
+          )
+          .catch((error) => {
+            console.warn("[PWA] Failed to unregister service workers in dev:", error);
+          });
+        return;
+      }
+
       // Register service worker
       navigator.serviceWorker
         .register("/sw.js")

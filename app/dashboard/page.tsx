@@ -17,6 +17,9 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useConnectivityStore } from "@/store/use-connectivity-store";
+import { useActiveOrganization } from "@/hooks/use-organization";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 // Performance: Lazy load heavy chart and product list components
 const RevenueChart = dynamic(() => import("@/components/dashboard/revenue-chart").then(mod => mod.RevenueChart), {
@@ -31,6 +34,8 @@ const TopProducts = dynamic(() => import("@/components/dashboard/top-products").
 
 export default function DashboardPage() {
   const { data, isLoading, access } = useAnalytics('month');
+  const { activeOrganization } = useActiveOrganization();
+  const router = useRouter();
   const connectivityStatus = useConnectivityStore((state) => state.status);
   const isOffline = connectivityStatus === "offline";
 
@@ -70,11 +75,25 @@ export default function DashboardPage() {
             <Clock className="mr-2 h-4 w-4" />
             Last 30 Days
           </Badge>
-          <Button size="sm" asChild>
-            <Link href="/pos">
+          <Button
+            size="sm"
+            onClick={() => {
+              if (!activeOrganization) {
+                toast.info("Create an organization to start selling.", {
+                  action: {
+                    label: "Create",
+                    onClick: () => router.push("/onboarding"),
+                  },
+                });
+                return;
+              }
+              router.push("/pos");
+            }}
+          >
+            <span className="inline-flex items-center">
               <ShoppingCart className="mr-2 h-4 w-4" />
               New Sale
-            </Link>
+            </span>
           </Button>
         </div>
       </div>
