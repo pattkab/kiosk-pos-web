@@ -33,29 +33,10 @@ export async function signIn(data: LoginFormValues) {
 }
 
 export async function signInWithGoogle(next = "/select-organization") {
-  const supabase = createClient();
-  const { getOAuthCallbackUrl } = await import("@/lib/auth/oauth");
-  const redirectTo = getOAuthCallbackUrl(next);
-
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo,
-      queryParams: {
-        prompt: "select_account",
-      },
-    },
-  });
-
-  if (error) {
-    const message = getUserErrorMessage(
-      error,
-      "Google sign-in failed. Please try again.",
-    );
-    toast.error(message);
-    return { error: message };
-  }
-
+  const safeNext = next.startsWith("/") ? next : "/select-organization";
+  window.location.assign(
+    `/auth/google?next=${encodeURIComponent(safeNext)}`,
+  );
   return { success: true };
 }
 

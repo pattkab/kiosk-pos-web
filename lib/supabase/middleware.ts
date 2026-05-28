@@ -22,11 +22,23 @@ function isOAuthReturnToRoot(request: NextRequest) {
   );
 }
 
+const AUTH_FLOW_PATHS = new Set(["/auth/callback", "/auth/google"]);
+
+function isAuthFlowPath(pathname: string) {
+  return AUTH_FLOW_PATHS.has(pathname);
+}
+
 export async function updateSession(request: NextRequest) {
   if (isOAuthReturnToRoot(request)) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/callback";
     return NextResponse.redirect(url);
+  }
+
+  // Do not refresh or mutate Supabase auth cookies during OAuth — that can
+  // clear the PKCE code verifier before exchangeCodeForSession runs.
+  if (isAuthFlowPath(request.nextUrl.pathname)) {
+    return NextResponse.next({ request });
   }
 
   let supabaseResponse = NextResponse.next({

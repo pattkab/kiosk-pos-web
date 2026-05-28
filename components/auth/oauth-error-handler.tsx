@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 function getOAuthParams() {
   const params = new URLSearchParams(window.location.search);
@@ -45,8 +44,6 @@ function getOAuthErrorMessage(params: URLSearchParams) {
 }
 
 export function OAuthErrorHandler() {
-  const router = useRouter();
-
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -57,17 +54,19 @@ export function OAuthErrorHandler() {
       !window.location.pathname.startsWith("/auth/callback")
     ) {
       const query = params.toString();
-      router.replace(`/auth/callback${query ? `?${query}` : ""}`);
+      window.location.replace(
+        `/auth/callback${query ? `?${query}` : ""}`,
+      );
       return;
     }
 
     const message = getOAuthErrorMessage(params);
     if (!message) return;
 
-    router.replace(
+    window.location.replace(
       `/auth/auth-code-error?message=${encodeURIComponent(message)}`,
     );
-  }, [router]);
+  }, []);
 
   return null;
 }
