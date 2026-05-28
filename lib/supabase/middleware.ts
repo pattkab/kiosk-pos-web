@@ -61,12 +61,20 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === "/offline.html" ||
     request.nextUrl.pathname === "/manifest.webmanifest";
   const isBillingWebhook = request.nextUrl.pathname === "/api/billing/webhook";
+  const isInvitationActivationApi =
+    request.nextUrl.pathname === "/api/invitations/activate";
   const isOrganizationSelectionPage = request.nextUrl.pathname.startsWith(
     "/select-organization",
   );
   const isExplorePage = request.nextUrl.pathname === "/dashboard";
 
-  if (!user && !isPublicPage && !isPublicRuntimeAsset && !isBillingWebhook) {
+  if (
+    !user &&
+    !isPublicPage &&
+    !isPublicRuntimeAsset &&
+    !isBillingWebhook &&
+    !isInvitationActivationApi
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set(
@@ -87,6 +95,7 @@ export async function updateSession(request: NextRequest) {
       !member &&
       !request.nextUrl.pathname.startsWith("/onboarding") &&
       !isPublicPage &&
+      !isInvitationActivationApi &&
       !isOrganizationSelectionPage &&
       !isExplorePage
     ) {
