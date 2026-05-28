@@ -79,6 +79,8 @@ export function useOrganizations() {
 
   return useQuery({
     queryKey: ["organizations"],
+    staleTime: 0,
+    refetchOnMount: "always",
     queryFn: async () => {
       const { data, error } = await supabase.rpc("list_my_organizations");
       if (error) throw error;
