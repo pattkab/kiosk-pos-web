@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PRODUCTION_APP_URL,
   getConfiguredAppUrl,
+  getOAuthRedirectOrigin,
   resolveRequestAppUrl,
 } from "@/lib/app-url";
 import { getOAuthCallbackUrl } from "@/lib/auth/oauth";
@@ -64,12 +65,29 @@ describe("app URL resolution", () => {
     );
   });
 
-  it("uses the current browser origin for OAuth callbacks", () => {
-    vi.stubEnv("NODE_ENV", "production");
+  it("uses production for OAuth when env is localhost but browser is not", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: {
+        ...window.location,
+        origin: "https://kioskpos.shop",
+        href: "https://kioskpos.shop/login",
+      },
+    });
+
+    expect(getOAuthRedirectOrigin()).toBe("https://kioskpos.shop");
+    expect(getOAuthCallbackUrl("/reports")).toBe(
+      "https://kioskpos.shop/auth/callback?next=%2Freports",
+    );
+  });
+
+  it("never falls back to localhost for OAuth when allowLocalhost is false", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
 
-    expect(getOAuthCallbackUrl("/reports")).toBe(
-      `${window.location.origin}/auth/callback?next=%2Freports`,
+    expect(getConfiguredAppUrl({ allowLocalhost: false })).toBe(
+      PRODUCTION_APP_URL,
     );
+    expect(getOAuthCallbackUrl()).toContain(`${PRODUCTION_APP_URL}/auth/callback`);
   });
 });

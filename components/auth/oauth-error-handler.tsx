@@ -50,7 +50,18 @@ export function OAuthErrorHandler() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const message = getOAuthErrorMessage(getOAuthParams());
+    const params = getOAuthParams();
+
+    if (
+      params.has("code") &&
+      !window.location.pathname.startsWith("/auth/callback")
+    ) {
+      const query = params.toString();
+      router.replace(`/auth/callback${query ? `?${query}` : ""}`);
+      return;
+    }
+
+    const message = getOAuthErrorMessage(params);
     if (!message) return;
 
     router.replace(

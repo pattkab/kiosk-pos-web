@@ -50,6 +50,18 @@ export function getBrowserAppUrl() {
   return getConfiguredAppUrl({ allowLocalhost });
 }
 
+/** Origin used for OAuth/email redirects — never localhost unless the user is on localhost. */
+export function getOAuthRedirectOrigin() {
+  if (typeof window !== "undefined") {
+    const browserOrigin = normalizeAppUrl(window.location.origin);
+    if (browserOrigin && !isLocalAppUrl(browserOrigin)) {
+      return browserOrigin;
+    }
+  }
+
+  return getConfiguredAppUrl({ allowLocalhost: false });
+}
+
 export function resolveRequestAppUrl(
   request: Pick<Request, "headers" | "url">,
   options?: { allowLocalhost?: boolean },
