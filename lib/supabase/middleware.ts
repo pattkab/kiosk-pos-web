@@ -7,7 +7,28 @@ type CookieToSet = {
   options?: Parameters<NextResponse["cookies"]["set"]>[2];
 };
 
+const OAUTH_RETURN_PARAMS = [
+  "code",
+  "error",
+  "error_code",
+  "error_description",
+  "sb",
+];
+
+function isOAuthReturnToRoot(request: NextRequest) {
+  return (
+    request.nextUrl.pathname === "/" &&
+    OAUTH_RETURN_PARAMS.some((key) => request.nextUrl.searchParams.has(key))
+  );
+}
+
 export async function updateSession(request: NextRequest) {
+  if (isOAuthReturnToRoot(request)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
