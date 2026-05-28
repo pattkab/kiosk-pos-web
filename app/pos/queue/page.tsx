@@ -15,6 +15,12 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { putInStore } from "@/lib/storage/db";
+import { exportOfflineBackup } from "@/lib/offline/backup";
+import {
+  formatLastSyncLabel,
+  getOfflineSettings,
+} from "@/lib/offline/offline-metadata";
+import { Download } from "lucide-react";
 
 export default function OfflineQueuePage() {
   const { items, isSyncing, loadQueue, dequeueSale, updateItemStatus } = useOfflineQueueStore();
@@ -24,10 +30,17 @@ export default function OfflineQueuePage() {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [resolutionOpen, setResolutionOpen] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [lastSyncLabel, setLastSyncLabel] = useState("Never synced");
 
   useEffect(() => {
     loadQueue();
   }, [loadQueue]);
+
+  useEffect(() => {
+    getOfflineSettings().then((settings) => {
+      setLastSyncLabel(formatLastSyncLabel(settings.lastSuccessfulSyncAt));
+    });
+  }, [items, isSyncing]);
 
   const handleSyncAll = async () => {
     if (!isOnline) {
@@ -55,9 +68,32 @@ export default function OfflineQueuePage() {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm("Are you sure you want to delete this queued transaction? This cannot be undone and may result in lost sale data.")) {
-      await dequeueSale(id);
-      toast.success("Queued transaction deleted.");
+    const target = items.find((item) => item.id === id);
+    if (!target) return;
+    if (target.status === "pending" || target.status === "failed") {
+      const typed = prompt(
+        "This sale has not synced yet. Type DELETE to remove it from this device (not recommended).",
+      );
+      if (typed !== "DELETE") return;
+    } else if (
+      !confirm(
+        "Remove this queued record from the device? Synced sales are already on the server.",
+      )
+    ) {
+      return;
+    }
+    await dequeueSale(id);
+    toast.success("Queued transaction removed from this device.");
+  };
+
+  const handleExportBackup = async () => {
+    try {
+      await exportOfflineBackup();
+      toast.success("Offline backup downloaded.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not export backup.",
+      );
     }
   };
 
@@ -298,25 +334,45 @@ export default function OfflineQueuePage() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-row gap-2 sm:col-span-2 lg:col-span-1">
-          <Button
-            className="flex-1 h-full gap-2 font-bold text-sm"
-            onClick={handleSyncAll}
-            disabled={isSyncing || !isOnline}
-          >
-            {isSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Sync Queue
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 h-full gap-2 font-bold text-sm"
-            onClick={handleSyncCatalog}
-            disabled={isSyncing || !isOnline}
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh Catalog
-          </Button>
-        </div>
+        <Card className="sm:col-span-2 lg:col-span-3">
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Last successful sync:{" "}
+              <span className="font-semibold text-foreground">{lastSyncLabel}</span>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                className="gap-2 font-bold"
+                onClick={handleSyncAll}
+                disabled={isSyncing || !isOnline}
+              >
+                {isSyncing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Sync now
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 font-bold"
+                onClick={handleSyncCatalog}
+                disabled={isSyncing || !isOnline}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh catalog
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 font-bold"
+                onClick={handleExportBackup}
+              >
+                <Download className="h-4 w-4" />
+                Export backup
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-muted bg-card">

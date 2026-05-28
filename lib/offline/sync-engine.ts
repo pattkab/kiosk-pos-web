@@ -1,11 +1,25 @@
 import { createClient } from "@/lib/supabase/client";
-import { getFromStore, putInStore, deleteFromStore, bulkPutInStore, QueueItem } from "@/lib/storage/db";
+import {
+  getFromStore,
+  putInStore,
+  deleteFromStore,
+  bulkPutInStore,
+  getAllFromStore,
+  QueueItem,
+} from "@/lib/storage/db";
 import { useOfflineQueueStore } from "@/store/use-offline-queue-store";
 import { useConnectivityStore } from "@/store/use-connectivity-store";
 import { useRealtimeStore } from "@/store/use-realtime-store";
 import { useOrganizationStore } from "@/store/use-organization-store";
 import { toast } from "sonner";
 import { CompletedReceipt } from "@/types/pos";
+import { updateOfflineSettings } from "@/lib/offline/offline-metadata";
+import { getDeviceId } from "@/lib/offline/device-id";
+import { cacheCustomersDelta } from "@/lib/offline/customers";
+import { recordSyncConflict } from "@/lib/offline/conflicts";
+import { Database } from "@/types/database";
+
+type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 
 export class SyncEngine {
   private static isProcessing = false;
@@ -36,6 +50,10 @@ export class SyncEngine {
 
     if (queueItems.length === 0) {
       console.log("[SyncEngine] Sync queue is empty.");
+      await updateOfflineSettings({
+        lastSuccessfulSyncAt: new Date().toISOString(),
+        lastSyncError: null,
+      });
       return;
     }
 
@@ -78,9 +96,22 @@ export class SyncEngine {
     this.isProcessing = false;
 
     // Refresh products catalog after transactions sync to reconcile stock quantities
+    const failedCount = useOfflineQueueStore
+      .getState()
+      .items.filter((item) => item.status === "failed" || item.status === "conflict")
+      .length;
+
     if (completedCount > 0) {
-      await this.syncProductCatalog();
-      toast.success(`Successfully synced ${completedCount} offline transactions.`);
+      await Promise.all([this.syncProductCatalog(), this.syncCustomerCatalog()]);
+      toast.success(`Successfully synced ${completedCount} offline sale(s).`);
+      await updateOfflineSettings({
+        lastSuccessfulSyncAt: new Date().toISOString(),
+        lastSyncError: null,
+      });
+    } else if (failedCount > 0) {
+      await updateOfflineSettings({
+        lastSyncError: `${failedCount} sale(s) need attention in the offline queue.`,
+      });
     }
   }
 
@@ -114,19 +145,24 @@ export class SyncEngine {
         reference: p.reference || null,
       }));
 
-      // Call Supabase RPC
+      const idempotencyKey = item.idempotencyKey ?? item.id;
+      const receiptNumber = item.receiptNumber;
+
       const { data: saleId, error } = await supabase.rpc("process_checkout", {
         p_organization_id: item.organizationId,
         p_cashier_id: item.cashierId,
         p_session_id: item.sessionId,
-        p_customer_id: null,
+        p_customer_id: item.customerId ?? null,
         p_subtotal: item.subtotal,
         p_tax_amount: item.taxAmount,
         p_discount_amount: item.discountAmount,
         p_total_amount: item.totalAmount,
         p_items: rpcItems,
         p_payments: rpcPayments,
-      });
+        p_client_sale_id: idempotencyKey,
+        p_receipt_number: receiptNumber ?? null,
+        p_device_id: item.deviceId ?? getDeviceId(),
+      } as never);
 
       if (error) {
         throw error;
@@ -143,7 +179,9 @@ export class SyncEngine {
         const updatedReceipt: CompletedReceipt = {
           ...localReceipt,
           saleId: saleId as string,
-          receiptNumber: `R-${String(saleId).slice(0, 8).toUpperCase()}`,
+          remoteSaleId: saleId as string,
+          receiptNumber: localReceipt.receiptNumber,
+          isOfflinePending: false,
         };
         await putInStore<CompletedReceipt>("receipts", updatedReceipt);
       }
@@ -177,6 +215,14 @@ export class SyncEngine {
           title: "Sync Conflict: " + (errorMsg.includes("stock") ? "Stock Deficiency" : "Checkout Rejected"),
           message: `Sale offline total ${item.totalAmount} failed sync: ${errorMsg}. Please resolve in the Offline Queue.`,
           entityId: item.id,
+        });
+
+        await recordSyncConflict({
+          entityType: errorMsg.includes("stock") ? "inventory" : "sale",
+          entityLocalId: item.id,
+          title: errorMsg.includes("stock") ? "Stock deficiency" : "Checkout rejected",
+          message: errorMsg,
+          details: { totalAmount: item.totalAmount, receiptNumber: item.receiptNumber },
         });
 
         toast.error(`Sync conflict on offline sale: ${errorMsg}`);
@@ -251,17 +297,27 @@ export class SyncEngine {
     const supabase = createClient();
 
     try {
-      // 1. Fetch all active products
-      const { data: products, error: productsError } = await supabase
+      const { getOfflineSettings } = await import("@/lib/offline/offline-metadata");
+      const settings = await getOfflineSettings();
+      const lastSynced = settings.catalogLastSyncedAt;
+
+      let productsQuery = supabase
         .from("products")
         .select("*, categories(name)")
         .eq("organization_id", activeOrganizationId)
-        .eq("is_active", true)
-        .order("name", { ascending: true });
+        .eq("is_active", true);
 
+      if (lastSynced) {
+        productsQuery = productsQuery.or(
+          `updated_at.gte.${lastSynced},created_at.gte.${lastSynced}`,
+        );
+      } else {
+        productsQuery = productsQuery.order("name", { ascending: true });
+      }
+
+      const { data: deltaProducts, error: productsError } = await productsQuery;
       if (productsError) throw productsError;
 
-      // 2. Fetch all categories
       const { data: categories, error: categoriesError } = await supabase
         .from("categories")
         .select("*")
@@ -270,17 +326,94 @@ export class SyncEngine {
 
       if (categoriesError) throw categoriesError;
 
-      // 3. Store in IndexedDB
-      if (products) {
-        await bulkPutInStore("products", products);
+      if (lastSynced && deltaProducts && deltaProducts.length > 0) {
+        for (const product of deltaProducts) {
+          await putInStore("products", product);
+        }
+      } else if (!lastSynced) {
+        const { data: allProducts } = await supabase
+          .from("products")
+          .select("*, categories(name)")
+          .eq("organization_id", activeOrganizationId)
+          .eq("is_active", true)
+          .order("name", { ascending: true });
+        if (allProducts) {
+          await bulkPutInStore("products", allProducts);
+        }
       }
+
       if (categories) {
         await bulkPutInStore("categories", categories);
       }
 
-      console.log(`[SyncEngine] Product catalog sync complete. Cached ${products?.length ?? 0} products.`);
+      const cachedCount = lastSynced
+        ? (deltaProducts?.length ?? 0)
+        : (await getAllFromStore("products")).length;
+
+      await updateOfflineSettings({
+        catalogLastSyncedAt: new Date().toISOString(),
+        lastSyncError: null,
+      });
+
+      console.log(
+        `[SyncEngine] Product catalog sync complete. ${lastSynced ? "Updated" : "Cached"} ${cachedCount} products.`,
+      );
     } catch (error) {
       console.error("[SyncEngine] Failed to refresh local catalog cache:", error);
+    }
+  }
+
+  /**
+   * Delta-sync customers for walk-in lookup during offline checkout.
+   */
+  static async syncCustomerCatalog() {
+    const activeOrganizationId = useOrganizationStore.getState().activeOrganizationId;
+    if (!activeOrganizationId) return;
+
+    const currentConnectivity = useConnectivityStore.getState().status;
+    const isOnline =
+      currentConnectivity === "online" ||
+      currentConnectivity === "limited-functionality" ||
+      currentConnectivity === "reconnecting";
+
+    if (!isOnline) return;
+
+    const supabase = createClient();
+
+    try {
+      const { getOfflineSettings } = await import("@/lib/offline/offline-metadata");
+      const settings = await getOfflineSettings();
+      const lastSynced = settings.customersLastSyncedAt;
+
+      let query = supabase
+        .from("customers")
+        .select("*")
+        .eq("organization_id", activeOrganizationId)
+        .order("full_name", { ascending: true })
+        .limit(5000);
+
+      if (lastSynced) {
+        query = query.or(`updated_at.gte.${lastSynced},created_at.gte.${lastSynced}`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      if (!lastSynced) {
+        await cacheCustomersDelta((data ?? []) as CustomerRow[], true);
+      } else if (data && data.length > 0) {
+        await cacheCustomersDelta(data as CustomerRow[]);
+      } else {
+        await updateOfflineSettings({
+          customersLastSyncedAt: new Date().toISOString(),
+        });
+      }
+
+      console.log(
+        `[SyncEngine] Customer cache sync complete. ${lastSynced ? "Updated" : "Cached"} ${data?.length ?? 0} customers.`,
+      );
+    } catch (error) {
+      console.error("[SyncEngine] Failed to refresh local customer cache:", error);
     }
   }
 }

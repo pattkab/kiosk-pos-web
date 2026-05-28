@@ -55,9 +55,11 @@ export function ReceiptModal() {
                 </p>
               )}
               <p className="text-xs">Receipt {receipt.receiptNumber}</p>
-              {receipt.receiptNumber.startsWith("R-OFF") && (
+              {(receipt.isOfflinePending ||
+                receipt.receiptNumber.startsWith("OFF-") ||
+                receipt.receiptNumber.startsWith("R-OFF")) && (
                 <div className="my-2 inline-block rounded bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600">
-                  Queued Offline Sale
+                  Offline receipt — pending cloud sync
                 </div>
               )}
               <p className="text-xs">

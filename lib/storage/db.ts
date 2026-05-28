@@ -4,7 +4,12 @@ import { Database } from "@/types/database";
 export type Category = Database["public"]["Tables"]["categories"]["Row"];
 
 export interface QueueItem {
-  id: string; // Local temporary UUID
+  id: string; // Local temporary UUID / idempotency key
+  idempotencyKey?: string;
+  deviceId?: string;
+  registerId?: string;
+  receiptNumber?: string;
+  customerId?: string | null;
   organizationId: string;
   cashierId: string;
   sessionId: string;
@@ -36,7 +41,7 @@ export interface QueueItem {
 }
 
 const DB_NAME = "kiosk-pos-offline";
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 
 export function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -76,6 +81,18 @@ export function openDB(): Promise<IDBDatabase> {
       // Metadata Cache (reports, settings, sessions)
       if (!db.objectStoreNames.contains("metadata")) {
         db.createObjectStore("metadata", { keyPath: "key" });
+      }
+
+      if (!db.objectStoreNames.contains("inventory_movements")) {
+        db.createObjectStore("inventory_movements", { keyPath: "id" });
+      }
+
+      if (!db.objectStoreNames.contains("customers")) {
+        db.createObjectStore("customers", { keyPath: "id" });
+      }
+
+      if (!db.objectStoreNames.contains("sync_conflicts")) {
+        db.createObjectStore("sync_conflicts", { keyPath: "id" });
       }
     };
   });

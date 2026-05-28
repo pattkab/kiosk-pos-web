@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useCartStore } from "@/store/use-cart-store";
+import { useCheckoutStore } from "@/store/use-checkout-store";
 import { useSessionStore } from "@/store/use-session-store";
 import { CheckoutPayment, CompletedReceipt, PosProduct } from "@/types/pos";
 import { toast } from "sonner";
@@ -23,6 +24,9 @@ import {
 import { OrganizationWithRole } from "@/hooks/use-organization";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
 import { canUseFeature } from "@/lib/billing/plans";
+import { getDeviceId } from "@/lib/offline/device-id";
+import { generateOfflineReceiptNumber } from "@/lib/offline/receipt-number";
+import { recordLocalInventoryMovement } from "@/lib/offline/inventory-movement";
 
 export function useCurrentPosContext() {
   const supabase = createClient();
@@ -441,6 +445,7 @@ export function useCheckout() {
     mutationFn: async (payments: CheckoutPayment[]) => {
       const session = useSessionStore.getState().currentSession;
       const { items, getTotals, validateCart } = useCartStore.getState();
+      const { selectedCustomerId } = useCheckoutStore.getState();
       const totals = getTotals();
       const errors = validateCart();
 
@@ -527,9 +532,12 @@ export function useCheckout() {
           "[useCheckout] Device offline: intercepting and queuing transaction.",
         );
         const tempSaleId = crypto.randomUUID();
-        const receiptNumber = `R-OFF-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        const deviceId = getDeviceId();
+        const receiptNumber = await generateOfflineReceiptNumber(
+          activeContext.organizationId,
+          activeSession.register_name ?? "REG",
+        );
 
-        // Deduct stock quantities in local IndexedDB product cache
         for (const item of items) {
           const cachedProd = await getFromStore<PosProduct>(
             "products",
@@ -545,11 +553,20 @@ export function useCheckout() {
               stock_quantity: newStock,
             });
           }
+          await recordLocalInventoryMovement({
+            organizationId: activeContext.organizationId,
+            productId: item.product_id,
+            quantityDelta: -item.quantity,
+            movementType: "sale_deduction",
+            source: "offline_sale",
+            saleLocalId: tempSaleId,
+          });
         }
 
         const receipt: CompletedReceipt = {
           saleId: tempSaleId,
           receiptNumber,
+          isOfflinePending: true,
           organizationName: activeContext.organization?.name ?? "Store",
           cashierName:
             activeContext.profile.full_name ?? activeContext.profile.email,
@@ -573,6 +590,11 @@ export function useCheckout() {
         // Queue for background sync
         const queueItem = {
           id: tempSaleId,
+          idempotencyKey: tempSaleId,
+          deviceId,
+          registerId: activeSession.register_id,
+          receiptNumber,
+          customerId: selectedCustomerId,
           organizationId: activeContext.organizationId,
           cashierId: activeContext.profile.id,
           sessionId: activeSession.id,
@@ -587,7 +609,9 @@ export function useCheckout() {
 
         await useOfflineQueueStore.getState().enqueueSale(queueItem);
 
-        toast.info("Offline mode active: Sale completed and queued for sync.");
+        toast.success(
+          "Offline sale saved. It will sync automatically when you are back online.",
+        );
         return receipt;
       }
 
@@ -595,7 +619,7 @@ export function useCheckout() {
         p_organization_id: activeContext.organizationId,
         p_cashier_id: activeContext.profile.id,
         p_session_id: activeSession.id,
-        p_customer_id: null,
+        p_customer_id: selectedCustomerId,
         p_subtotal: totals.subtotal,
         p_tax_amount: totals.taxAmount,
         p_discount_amount: totals.discountTotal,

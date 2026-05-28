@@ -54,6 +54,8 @@ export interface CheckoutPayment {
 export interface CompletedReceipt {
   saleId: string;
   receiptNumber: string;
+  isOfflinePending?: boolean;
+  remoteSaleId?: string | null;
   organizationName: string;
   cashierName: string;
   createdAt: string;

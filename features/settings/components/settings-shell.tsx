@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Bell,
   Building2,
+  Cloud,
   CreditCard,
   FileText,
   Palette,
@@ -26,6 +27,7 @@ const nav = [
   { href: "/settings/receipt", label: "Receipt", icon: Receipt },
   { href: "/settings/tax", label: "Tax", icon: WalletCards },
   { href: "/settings/billing", label: "Billing", icon: CreditCard },
+  { href: "/settings/sync", label: "Offline sync", icon: Cloud },
   { href: "/settings/audit", label: "Audit logs", icon: FileText },
   { href: "/settings/danger", label: "Danger zone", icon: TriangleAlert },
 ];

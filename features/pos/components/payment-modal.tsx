@@ -32,7 +32,7 @@ const makePayment = (method: TenderMethod, amount: number): CheckoutPayment => (
 });
 
 export function PaymentModal() {
-  const { isPaymentOpen, closePayment, setReceipt } = useCheckoutStore();
+  const { isPaymentOpen, closePayment, setReceipt, resetCheckout } = useCheckoutStore();
   const { getTotals, clearCart } = useCartStore();
   const checkout = useCheckout();
   const totals = getTotals();
@@ -83,6 +83,7 @@ export function PaymentModal() {
       const receipt = await checkout.mutateAsync(payments);
       setReceipt(receipt);
       clearCart();
+      resetCheckout();
       closePayment();
       toast.success("Sale completed");
     } catch (error) {

@@ -19,7 +19,10 @@ export async function prefetchOfflineEssentials(
   const status = useConnectivityStore.getState().status;
   if (status === "offline") return;
 
-  await SyncEngine.syncProductCatalog();
+  await Promise.all([
+    SyncEngine.syncProductCatalog(),
+    SyncEngine.syncCustomerCatalog(),
+  ]);
   await Promise.all([
     prefetchDashboardReports(orgId),
     prefetchReceiptSettings(orgId),

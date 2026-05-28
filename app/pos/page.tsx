@@ -38,6 +38,8 @@ import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { ProductForm } from "@/features/inventory/components/product-form";
 import { isLikelyScannerBurst, normalizeScannedCode } from "@/lib/barcode";
+import { CartRecoveryBanner } from "@/components/offline/cart-recovery-banner";
+import { CatalogStaleBanner } from "@/components/offline/catalog-stale-banner";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
 import { canUseFeature } from "@/lib/billing/plans";
 
@@ -293,7 +295,12 @@ export default function PosPage() {
   };
 
   return (
-    <div className="flex h-[calc(100dvh-104px)] gap-4 overflow-hidden lg:h-[calc(100dvh-120px)] lg:gap-6">
+    <div className="flex h-[calc(100dvh-104px)] flex-col gap-3 overflow-hidden lg:h-[calc(100dvh-120px)]">
+      <div className="shrink-0 space-y-2">
+        <CatalogStaleBanner />
+        <CartRecoveryBanner />
+      </div>
+      <div className="flex min-h-0 flex-1 gap-4 lg:gap-6">
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <div className="rounded-lg border bg-card p-3 shadow-sm">
           <div className="flex items-center gap-3">
@@ -521,6 +528,7 @@ export default function PosPage() {
             Review
           </Button>
         </div>
+      </div>
       </div>
       <Dialog open={mobileCartOpen} onOpenChange={setMobileCartOpen}>
         <DialogContent className="inset-x-2 top-4 flex h-[calc(100dvh-2rem)] max-w-none translate-x-0 translate-y-0 flex-col p-0 sm:left-[50%] sm:max-w-lg sm:-translate-x-1/2">

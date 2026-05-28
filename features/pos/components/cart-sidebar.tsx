@@ -28,6 +28,7 @@ import {
 import { PaymentModal } from "./payment-modal";
 import { RegisterSession } from "./register-session";
 import { ReceiptModal } from "./receipt-modal";
+import { OfflineCustomerPicker } from "@/components/offline/customer-picker";
 
 export function CartSidebar() {
   const {
@@ -84,6 +85,8 @@ export function CartSidebar() {
           </Button>
         </div>
       </div>
+
+      <OfflineCustomerPicker disabled={isLocked} />
 
       {items.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center p-8 text-center text-muted-foreground">
