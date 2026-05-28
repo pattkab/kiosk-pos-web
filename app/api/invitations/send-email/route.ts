@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createClient } from "@/lib/supabase/server";
 import { buildInvitationEmailTemplate } from "@/lib/email/invitation-template";
-import { resolveRequestAppUrl } from "@/lib/app-url";
+import { getConfiguredAppUrl } from "@/lib/app-url";
 
 const MAX_EMAIL_RETRIES = 3;
 
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         .maybeSingle(),
     ]);
 
-    const baseUrl = resolveRequestAppUrl(request);
+    const baseUrl = getConfiguredAppUrl({ allowLocalhost: false });
     const inviteUrl = `${baseUrl}/invite/${invitation.token}`;
     const inviterName = inviter?.full_name || inviter?.email || null;
 

@@ -34,11 +34,11 @@ describe("app URL resolution", () => {
     );
   });
 
-  it("normalizes the old www host to the canonical bare domain", () => {
+  it("preserves configured production host exactly", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://www.kioskpos.shop");
 
     expect(getConfiguredAppUrl({ allowLocalhost: false })).toBe(
-      PRODUCTION_APP_URL,
+      "https://www.kioskpos.shop",
     );
   });
 
@@ -64,12 +64,12 @@ describe("app URL resolution", () => {
     );
   });
 
-  it("uses the canonical production URL for OAuth callbacks when localhost is configured", () => {
+  it("uses the current browser origin for OAuth callbacks", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
 
     expect(getOAuthCallbackUrl("/reports")).toBe(
-      `${PRODUCTION_APP_URL}/auth/callback?next=%2Freports`,
+      `${window.location.origin}/auth/callback?next=%2Freports`,
     );
   });
 });

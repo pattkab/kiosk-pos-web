@@ -50,8 +50,12 @@ export async function updateSession(request: NextRequest) {
   const isPublicLegalPage =
     request.nextUrl.pathname === "/privacy" ||
     request.nextUrl.pathname === "/terms";
+  const isInvitationPage = request.nextUrl.pathname.startsWith("/invite/");
   const isPublicPage =
-    isAuthPage || request.nextUrl.pathname === "/" || isPublicLegalPage;
+    isAuthPage ||
+    request.nextUrl.pathname === "/" ||
+    isPublicLegalPage ||
+    isInvitationPage;
   const isPublicRuntimeAsset =
     request.nextUrl.pathname === "/sw.js" ||
     request.nextUrl.pathname === "/offline.html" ||
