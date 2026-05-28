@@ -26,24 +26,6 @@ type InvitationRecord = {
   organizations: { name: string } | Array<{ name: string }> | null;
 };
 
-type ActivateInvitationResponse = {
-  ok?: boolean;
-  error?: string;
-  email?: string;
-  organizationId?: string;
-};
-
-async function parseApiJson<T>(response: Response): Promise<T | null> {
-  const text = await response.text();
-  if (!text) return null;
-
-  try {
-    return JSON.parse(text) as T;
-  } catch {
-    return null;
-  }
-}
-
 export default function AcceptInvitePage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
@@ -129,6 +111,7 @@ export default function AcceptInvitePage() {
   async function handleSetPasswordAndContinue() {
     if (!invitation) return;
     setErrorMessage(null);
+    const email = invitation.email.toLowerCase();
 
     if (fullName.trim().length < 2) {
       toast.error("Full name must be at least 2 characters.");
@@ -145,42 +128,55 @@ export default function AcceptInvitePage() {
 
     setProcessing(true);
     try {
-      const response = await fetch("/api/invitations/activate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          fullName: fullName.trim(),
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email,
           password,
-        }),
-      });
+          options: {
+            data: {
+              full_name: fullName.trim(),
+            },
+            emailRedirectTo: `${window.location.origin}/invite/${token}`,
+          },
+        });
 
-      const result =
-        (await parseApiJson<ActivateInvitationResponse>(response)) ?? {};
-
-      if (
-        !response.ok ||
-        !result.ok ||
-        !result.email ||
-        !result.organizationId
-      ) {
-        throw new Error(
-          result.error ??
-            (response.ok
-              ? "Failed to activate invitation."
-              : `Invitation activation failed (${response.status}).`),
-        );
+      if (signUpError) {
+        if (
+          !/already registered|already been registered|already exists/i.test(
+            signUpError.message,
+          )
+        ) {
+          throw signUpError;
+        }
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: result.email,
-        password,
-      });
-      if (signInError) throw signInError;
+      if (!signUpData.session) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) throw signInError;
+      }
 
-      setActiveOrganizationId(result.organizationId);
-      toast.success(`Joined ${organizationName ?? "organization"}`);
-      router.push("/dashboard");
+      let accepted = false;
+      let lastError: Error | null = null;
+      for (let attempt = 1; attempt <= 5; attempt += 1) {
+        await supabase.rpc("ensure_profile_for_current_user");
+        try {
+          await acceptInvitation();
+          accepted = true;
+          break;
+        } catch (error) {
+          lastError =
+            error instanceof Error
+              ? error
+              : new Error("Failed to accept invitation.");
+          await new Promise((resolve) => setTimeout(resolve, attempt * 200));
+        }
+      }
+      if (!accepted) {
+        throw lastError ?? new Error("Failed to accept invitation.");
+      }
     } catch (error) {
       const message = getUserErrorMessage(
         error,
