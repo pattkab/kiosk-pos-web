@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createStripeClient } from "@/lib/stripe/client";
-
-function resolveAppUrl(request: NextRequest) {
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
-  if (forwardedHost) return `${forwardedProto}://${forwardedHost}`;
-  return process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-}
+import { resolveRequestAppUrl } from "@/lib/app-url";
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = createStripeClient();
-    const appUrl = resolveAppUrl(request);
+    const appUrl = resolveRequestAppUrl(request);
     const portal = await stripe.billingPortal.sessions.create({
       customer: settings.stripe_customer_id,
       return_url: `${appUrl.replace(/\/$/, "")}/settings/billing`,

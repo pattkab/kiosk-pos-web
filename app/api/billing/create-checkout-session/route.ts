@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createStripeClient } from "@/lib/stripe/client";
-
-function resolveAppUrl(request: NextRequest) {
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
-  if (forwardedHost) return `${forwardedProto}://${forwardedHost}`;
-  return process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-}
+import { resolveRequestAppUrl } from "@/lib/app-url";
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,19 +73,17 @@ export async function POST(request: NextRequest) {
         metadata: { organizationId: org.id },
       });
       customerId = customer.id;
-      await supabase
-        .from("organization_settings")
-        .upsert(
-          {
-            organization_id: org.id,
-            stripe_customer_id: customer.id,
-            subscription_plan: "starter",
-          },
-          { onConflict: "organization_id" },
-        );
+      await supabase.from("organization_settings").upsert(
+        {
+          organization_id: org.id,
+          stripe_customer_id: customer.id,
+          subscription_plan: "starter",
+        },
+        { onConflict: "organization_id" },
+      );
     }
 
-    const appUrl = resolveAppUrl(request);
+    const appUrl = resolveRequestAppUrl(request);
     const normalizedAppUrl = appUrl.replace(/\/$/, "");
     const priceId = process.env.STRIPE_PRICE_20_YEAR;
 

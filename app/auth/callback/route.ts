@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { resolveRequestAppUrl } from "@/lib/app-url";
 
 type CookieToSet = {
   name: string;
@@ -8,25 +9,16 @@ type CookieToSet = {
   options?: Parameters<Awaited<ReturnType<typeof cookies>>["set"]>[2];
 };
 
-function resolveRedirectOrigin(request: Request) {
-  const { origin } = new URL(request.url);
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const isLocalEnv = process.env.NODE_ENV === "development";
-
-  if (isLocalEnv) return origin;
-  if (forwardedHost) return `https://${forwardedHost}`;
-  return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || origin;
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/select-organization";
-  const origin = resolveRedirectOrigin(request);
+  const origin = resolveRequestAppUrl(request);
   const safeNext = next.startsWith("/") ? next : "/select-organization";
 
   if (!code) {
-    const message = searchParams.get("error_description") ?? searchParams.get("error");
+    const message =
+      searchParams.get("error_description") ?? searchParams.get("error");
     const query = message ? `?message=${encodeURIComponent(message)}` : "";
     return NextResponse.redirect(`${origin}/auth/auth-code-error${query}`);
   }
@@ -50,7 +42,7 @@ export async function GET(request: Request) {
           });
         },
       },
-    }
+    },
   );
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);

@@ -3,22 +3,24 @@
 ## 1. Vercel Deployment
 
 ### Environment Variables
+
 Ensure the following variables are set in the Vercel Dashboard:
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anonymous key |
-| `SUPABASE_SERVICE_ROLE_KEY` | **(SECRET)** Required for administrative tasks. Never expose to client. |
-| `NEXT_PUBLIC_APP_URL` | The production URL of your app (e.g., `https://pos.yourdomain.com`) |
-| `DATABASE_URL` | Transaction pooler connection string for Supabase migrations. |
-| `RESEND_API_KEY` | **(SECRET)** API key for invitation email delivery. |
-| `RESEND_FROM_EMAIL` | Verified sender, e.g. `Kiosk POS <noreply@yourdomain.com>`. |
-| `STRIPE_SECRET_KEY` | **(SECRET)** Stripe server key for Checkout + Billing Portal. |
-| `STRIPE_WEBHOOK_SECRET` | **(SECRET)** Stripe webhook signing secret. |
-| `STRIPE_PRICE_20_YEAR` | Optional Stripe Price ID for annual `$20` plan. If omitted, app creates inline annual pricing. |
+| Variable                        | Description                                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL                                                                      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anonymous key                                                                    |
+| `SUPABASE_SERVICE_ROLE_KEY`     | **(SECRET)** Required for administrative tasks. Never expose to client.                        |
+| `NEXT_PUBLIC_APP_URL`           | The canonical production URL of your app. For this deployment use `https://www.kioskpos.shop`. |
+| `DATABASE_URL`                  | Transaction pooler connection string for Supabase migrations.                                  |
+| `RESEND_API_KEY`                | **(SECRET)** API key for invitation email delivery.                                            |
+| `RESEND_FROM_EMAIL`             | Verified sender, e.g. `Kiosk POS <noreply@yourdomain.com>`.                                    |
+| `STRIPE_SECRET_KEY`             | **(SECRET)** Stripe server key for Checkout + Billing Portal.                                  |
+| `STRIPE_WEBHOOK_SECRET`         | **(SECRET)** Stripe webhook signing secret.                                                    |
+| `STRIPE_PRICE_20_YEAR`          | Optional Stripe Price ID for annual `$20` plan. If omitted, app creates inline annual pricing. |
 
 ### Build Settings
+
 - **Framework Preset**: Next.js
 - **Root Directory**: `./`
 - **Build Command**: `npm run build`
@@ -29,30 +31,37 @@ Ensure the following variables are set in the Vercel Dashboard:
 ## 2. Supabase Production Hardening
 
 ### Authentication
+
 - [ ] Go to **Authentication > Providers** and disable "Confirm Email" if using Magic Links only, OR ensure SMTP is configured.
-- [ ] Set **Site URL** to your production domain.
-- [ ] Add `http://localhost:3000/**` and `https://your-production-domain.com/**` to **Redirect URLs**.
+- [ ] Set **Site URL** to `https://www.kioskpos.shop`.
+- [ ] Add `https://www.kioskpos.shop/**`, `https://kioskpos.shop/**`, and `http://localhost:3000/**` to **Redirect URLs**.
 
 ### Google sign-in (OAuth)
+
 - [ ] In **Google Cloud Console** → APIs & Services → Credentials → OAuth 2.0 Client, set **Authorized redirect URI** to:
   - `https://<your-supabase-project-ref>.supabase.co/auth/v1/callback`
 - [ ] In **Supabase** → Authentication → Providers → **Google**, paste the same client’s **Client ID** and **Client Secret**.
-- [ ] Ensure production **Redirect URLs** include `https://your-domain.com/**` and the app callback path works (`/auth/callback`).
-- [ ] Set `NEXT_PUBLIC_APP_URL` in Vercel to your live URL (must match the domain users visit).
-- [ ] If sign-in fails with *Unable to exchange external code*, the Google client secret in Supabase does not match Google Cloud, or the redirect URI above is missing.
+- [ ] Ensure production **Redirect URLs** include both `https://www.kioskpos.shop/**` and `https://kioskpos.shop/**`; the app callback path is `/auth/callback`.
+- [ ] Set `NEXT_PUBLIC_APP_URL` in Vercel to `https://www.kioskpos.shop`.
+- [ ] Remove `http://localhost:3000` from production **Site URL**. Keep localhost only in **Redirect URLs** for local development.
+- [ ] If sign-in fails with _Unable to exchange external code_, the Google client secret in Supabase does not match Google Cloud, the Supabase callback URI above is missing in Google, or Supabase is still using a localhost Site URL.
 
 ### Database Security
+
 - [ ] Verify all tables have **Row Level Security (RLS)** enabled.
 - [ ] Run `supabase db push` to ensure production schema matches local.
 - [ ] Enable **Point-in-Time Recovery (PITR)** if on a Pro plan.
 
 ### Storage
+
 - [ ] Ensure the `product-images` bucket is private and only accessible via RLS policies.
 
 ---
 
 ## 3. Security Headers
+
 The application is pre-configured with the following headers in `next.config.ts`:
+
 - `X-Frame-Options: DENY`
 - `X-Content-Type-Options: nosniff`
 - `Referrer-Policy: strict-origin-when-cross-origin`
@@ -61,6 +70,7 @@ The application is pre-configured with the following headers in `next.config.ts`
 ---
 
 ## 4. Backup & Disaster Recovery
+
 1. **Daily Backups**: Supabase performs daily backups automatically.
 2. **Manual Export**: Use the "Export CSV" functionality in the Inventory module for critical stock data.
 3. **Offline Recovery**: In case of a sync failure, use the **Offline Queue** UI to manually retry or resolve conflicts.
@@ -68,6 +78,7 @@ The application is pre-configured with the following headers in `next.config.ts`
 ---
 
 ## 5. Release Checklist
+
 - [ ] **Typecheck**: Run `npx tsc --noEmit`
 - [ ] **Lint**: Run `npm run lint`
 - [ ] **Tests**: Run `npm run test:unit` and `npm run test:e2e`
