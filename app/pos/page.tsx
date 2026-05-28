@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,7 @@ import {
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { ProductForm } from "@/features/inventory/components/product-form";
+import { isLikelyScannerBurst, normalizeScannedCode } from "@/lib/barcode";
 
 // Performance: Lazy load the heavy barcode scanner only when needed
 const BarcodeScanner = dynamic(
@@ -52,7 +53,10 @@ export default function PosPage() {
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const barcodeBufferRef = useRef("");
+  const barcodeFirstKeyAtRef = useRef(0);
+  const barcodeLastKeyAtRef = useRef(0);
   const barcodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scanQueueRef = useRef(Promise.resolve());
   const { data: categories } = useCategories();
   const { activeSession } = useRegisterSession();
   const {
@@ -87,6 +91,36 @@ export default function PosPage() {
   const selectedProduct = products[selectedIndex];
   const cartTotals = getTotals();
 
+  const resetBarcodeBuffer = useCallback(() => {
+    barcodeBufferRef.current = "";
+    barcodeFirstKeyAtRef.current = 0;
+    barcodeLastKeyAtRef.current = 0;
+    if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
+  }, []);
+
+  const handleScannedBarcode = useCallback(
+    (rawCode: string) => {
+      const barcode = normalizeScannedCode(rawCode);
+      if (!barcode) return;
+
+      scanQueueRef.current = scanQueueRef.current
+        .catch(() => undefined)
+        .then(async () => {
+          try {
+            const product = await barcodeLookup.mutateAsync(barcode);
+            addItem(product);
+            rememberProduct(product);
+            toast.success(`${product.name} added`);
+          } catch (error) {
+            toast.error(
+              error instanceof Error ? error.message : "Barcode lookup failed.",
+            );
+          }
+        });
+    },
+    [addItem, barcodeLookup, rememberProduct],
+  );
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 120);
     return () => clearTimeout(timer);
@@ -99,8 +133,11 @@ export default function PosPage() {
   useEffect(() => {
     const handleKeyDown = async (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
+      const isSearchInput = target === searchInputRef.current;
       const isTyping =
-        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA";
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable;
 
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -132,33 +169,50 @@ export default function PosPage() {
         return;
       }
 
+      const canCaptureScannerInput = !isTyping || isSearchInput;
       if (
+        canCaptureScannerInput &&
         event.key.length === 1 &&
         !event.metaKey &&
         !event.ctrlKey &&
         !event.altKey
       ) {
-        barcodeBufferRef.current += event.key;
-        if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
-        barcodeTimerRef.current = setTimeout(() => {
+        const now = Date.now();
+        if (now - barcodeLastKeyAtRef.current > 220) {
           barcodeBufferRef.current = "";
-        }, 70);
+          barcodeFirstKeyAtRef.current = now;
+        }
+        if (!barcodeBufferRef.current) barcodeFirstKeyAtRef.current = now;
+        barcodeBufferRef.current += event.key;
+        barcodeLastKeyAtRef.current = now;
+        if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
+        barcodeTimerRef.current = setTimeout(resetBarcodeBuffer, 260);
       }
 
-      if (event.key === "Enter" && barcodeBufferRef.current.length >= 6) {
+      if (
+        canCaptureScannerInput &&
+        (event.key === "Enter" || event.key === "Tab") &&
+        barcodeBufferRef.current
+      ) {
+        const submittedAt = Date.now();
         const barcode = barcodeBufferRef.current;
-        barcodeBufferRef.current = "";
-        try {
-          const product = await barcodeLookup.mutateAsync(barcode);
-          addItem(product);
-          rememberProduct(product);
-          toast.success(`${product.name} added`);
-        } catch (error) {
-          toast.error(
-            error instanceof Error ? error.message : "Barcode lookup failed.",
-          );
+        const scannerBurst = isLikelyScannerBurst({
+          code: barcode,
+          firstKeyAt: barcodeFirstKeyAtRef.current,
+          lastKeyAt: barcodeLastKeyAtRef.current,
+          submittedAt,
+        });
+
+        if (scannerBurst) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (isSearchInput) setSearch("");
+          resetBarcodeBuffer();
+          handleScannedBarcode(barcode);
+          return;
         }
-        return;
+
+        resetBarcodeBuffer();
       }
 
       if (event.key === "Enter" && selectedProduct && !isPaymentOpen) {
@@ -186,11 +240,13 @@ export default function PosPage() {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      resetBarcodeBuffer();
+    };
   }, [
-    addItem,
-    barcodeLookup,
     decrementItem,
+    handleScannedBarcode,
     incrementItem,
     isPaymentOpen,
     lastAddedProductId,
@@ -198,7 +254,9 @@ export default function PosPage() {
     openPayment,
     products,
     rememberProduct,
+    resetBarcodeBuffer,
     selectedProduct,
+    setSearch,
   ]);
 
   const visibleRecentProducts = useMemo(

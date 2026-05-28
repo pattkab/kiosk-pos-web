@@ -102,7 +102,6 @@ export function GeneralSettings() {
           {[
             ["name", "Name"],
             ["slug", "Slug"],
-            ["logo_url", "Logo URL"],
             ["currency", "Currency"],
             ["timezone", "Timezone"],
             ["address", "Address"],

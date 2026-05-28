@@ -15,15 +15,27 @@ import {
 } from "@/lib/storage/db";
 import { useConnectivityStore } from "@/store/use-connectivity-store";
 import { useOfflineQueueStore } from "@/store/use-offline-queue-store";
-import { ROLE_PERMISSIONS, RolePermissionMap, resolveRolePermissions } from "@/lib/auth/permissions";
+import {
+  ROLE_PERMISSIONS,
+  RolePermissionMap,
+  resolveRolePermissions,
+} from "@/lib/auth/permissions";
 import { OrganizationWithRole } from "@/hooks/use-organization";
 
 export function useCurrentPosContext() {
   const supabase = createClient();
-  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
-  const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
-  const setActiveCurrency = useOrganizationStore((state) => state.setActiveCurrency);
-  const setPermissionState = useOrganizationStore((state) => state.setPermissionState);
+  const activeOrganizationId = useOrganizationStore(
+    (state) => state.activeOrganizationId,
+  );
+  const setActiveOrganizationId = useOrganizationStore(
+    (state) => state.setActiveOrganizationId,
+  );
+  const setActiveCurrency = useOrganizationStore(
+    (state) => state.setActiveCurrency,
+  );
+  const setPermissionState = useOrganizationStore(
+    (state) => state.setPermissionState,
+  );
 
   return useQuery({
     queryKey: ["pos-context", activeOrganizationId],
@@ -51,27 +63,39 @@ export function useCurrentPosContext() {
           .single();
         if (profileError) throw profileError;
 
-        const { data: organizationRows, error: organizationsError } = await supabase.rpc("list_my_organizations");
+        const { data: organizationRows, error: organizationsError } =
+          await supabase.rpc("list_my_organizations");
         if (organizationsError) throw organizationsError;
-        const organizations = (organizationRows ?? []) as OrganizationWithRole[];
+        const organizations = (organizationRows ??
+          []) as OrganizationWithRole[];
 
         const organization =
-          organizations?.find((entry) => entry.id === activeOrganizationId) ?? organizations?.[0] ?? null;
-        if (!organization) throw new Error("No active organization found. Select or create an organization first.");
+          organizations?.find((entry) => entry.id === activeOrganizationId) ??
+          organizations?.[0] ??
+          null;
+        if (!organization)
+          throw new Error(
+            "No active organization found. Select or create an organization first.",
+          );
 
-        if (organization.id !== activeOrganizationId) setActiveOrganizationId(organization.id);
+        if (organization.id !== activeOrganizationId)
+          setActiveOrganizationId(organization.id);
         setActiveCurrency(organization.currency);
-        setPermissionState(organization.role, ROLE_PERMISSIONS[organization.role]);
+        setPermissionState(
+          organization.role,
+          ROLE_PERMISSIONS[organization.role],
+        );
         try {
           const { data: settingRow } = await supabase
             .from("organization_settings")
             .select("role_permissions")
             .eq("organization_id", organization.id)
             .maybeSingle();
-          const rolePermissionMap = (settingRow?.role_permissions ?? null) as RolePermissionMap | null;
+          const rolePermissionMap = (settingRow?.role_permissions ??
+            null) as RolePermissionMap | null;
           setPermissionState(
             organization.role,
-            resolveRolePermissions(organization.role, rolePermissionMap)
+            resolveRolePermissions(organization.role, rolePermissionMap),
           );
         } catch {
           // Keep default role permissions when organization overrides are unavailable.
@@ -103,7 +127,9 @@ export function usePosProducts(filters: {
   limit?: number;
 }) {
   const supabase = createClient();
-  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+  const activeOrganizationId = useOrganizationStore(
+    (state) => state.activeOrganizationId,
+  );
 
   return useQuery({
     queryKey: ["pos-products", activeOrganizationId, filters],
@@ -111,7 +137,9 @@ export function usePosProducts(filters: {
       const isOnline = useConnectivityStore.getState().status !== "offline";
 
       if (!isOnline) {
-        console.log("[usePosProducts] Device offline: loading from IndexedDB cache.");
+        console.log(
+          "[usePosProducts] Device offline: loading from IndexedDB cache.",
+        );
         return await getOfflineProducts({
           search: filters.search,
           categoryId: filters.categoryId,
@@ -125,14 +153,18 @@ export function usePosProducts(filters: {
           .eq("is_active", true)
           .order("name", { ascending: true })
           .limit(filters.limit ?? 80);
-        if (activeOrganizationId) query = query.eq("organization_id", activeOrganizationId);
+        if (activeOrganizationId)
+          query = query.eq("organization_id", activeOrganizationId);
 
         if (filters.search?.trim()) {
           const term = filters.search.trim().replaceAll(",", " ");
-          query = query.or(`name.ilike.%${term}%,sku.ilike.%${term}%,barcode.ilike.%${term}%`);
+          query = query.or(
+            `name.ilike.%${term}%,sku.ilike.%${term}%,barcode.ilike.%${term}%`,
+          );
         }
 
-        if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
+        if (filters.categoryId)
+          query = query.eq("category_id", filters.categoryId);
 
         const { data, error } = await query;
         if (error) throw error;
@@ -144,7 +176,10 @@ export function usePosProducts(filters: {
 
         return (data ?? []) as PosProduct[];
       } catch (error) {
-        console.warn("[usePosProducts] Online fetch failed, falling back to IndexedDB catalog cache:", error);
+        console.warn(
+          "[usePosProducts] Online fetch failed, falling back to IndexedDB catalog cache:",
+          error,
+        );
         return await getOfflineProducts({
           search: filters.search,
           categoryId: filters.categoryId,
@@ -157,24 +192,30 @@ export function usePosProducts(filters: {
 
 export function useBarcodeLookup() {
   const supabase = createClient();
-  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+  const activeOrganizationId = useOrganizationStore(
+    (state) => state.activeOrganizationId,
+  );
 
   return useMutation({
     mutationFn: async (barcode: string) => {
-      if (!activeOrganizationId) throw new Error("Select an organization before scanning products.");
+      if (!activeOrganizationId)
+        throw new Error("Select an organization before scanning products.");
       const isOnline = useConnectivityStore.getState().status !== "offline";
 
       if (!isOnline) {
-        console.log("[useBarcodeLookup] Device offline: searching IndexedDB cache.");
+        console.log(
+          "[useBarcodeLookup] Device offline: searching IndexedDB cache.",
+        );
         const products = await getOfflineProducts();
         const match = products.find(
           (p) =>
             p.barcode === barcode ||
             p.sku === barcode ||
             p.barcode?.toLowerCase() === barcode.toLowerCase() ||
-            p.sku?.toLowerCase() === barcode.toLowerCase()
+            p.sku?.toLowerCase() === barcode.toLowerCase(),
         );
-        if (!match) throw new Error(`No active product found for ${barcode} (Offline).`);
+        if (!match)
+          throw new Error(`No active product found for ${barcode} (Offline).`);
         return match;
       }
 
@@ -191,12 +232,18 @@ export function useBarcodeLookup() {
         if (!data) throw new Error(`No active product found for ${barcode}.`);
         return data as PosProduct;
       } catch (error) {
-        console.warn("[useBarcodeLookup] Online lookup failed, falling back to cache:", error);
+        console.warn(
+          "[useBarcodeLookup] Online lookup failed, falling back to cache:",
+          error,
+        );
         const products = await getOfflineProducts();
         const match = products.find(
-          (p) => p.barcode === barcode || p.sku === barcode
+          (p) => p.barcode === barcode || p.sku === barcode,
         );
-        if (!match) throw new Error(`No active product found for ${barcode} (Offline fallback).`);
+        if (!match)
+          throw new Error(
+            `No active product found for ${barcode} (Offline fallback).`,
+          );
         return match;
       }
     },
@@ -210,7 +257,11 @@ export function useRegisterSession() {
   const { setSession, clearSession } = useSessionStore();
 
   const activeSession = useQuery({
-    queryKey: ["active-register-session", context?.profile.id, context?.organizationId],
+    queryKey: [
+      "active-register-session",
+      context?.profile.id,
+      context?.organizationId,
+    ],
     enabled: Boolean(context?.profile.id && context?.organizationId),
     queryFn: async () => {
       const { data, error } = await supabase
@@ -233,8 +284,8 @@ export function useRegisterSession() {
         id: data.id,
         register_id: data.register_id,
         register_name: Array.isArray(data.cash_registers)
-          ? data.cash_registers[0]?.name ?? "Main Register"
-          : data.cash_registers?.name ?? "Main Register",
+          ? (data.cash_registers[0]?.name ?? "Main Register")
+          : (data.cash_registers?.name ?? "Main Register"),
         opened_at: data.opened_at ?? new Date().toISOString(),
         opening_balance: Number(data.opening_balance),
         cashier_id: data.cashier_id,
@@ -260,11 +311,15 @@ export function useRegisterSession() {
       if (registerError) throw registerError;
 
       if (!register) {
-        const { data: createdRegister, error: createRegisterError } = await supabase
-          .from("cash_registers")
-          .insert({ organization_id: context.organizationId, name: "Main Register" })
-          .select("id, name")
-          .single();
+        const { data: createdRegister, error: createRegisterError } =
+          await supabase
+            .from("cash_registers")
+            .insert({
+              organization_id: context.organizationId,
+              name: "Main Register",
+            })
+            .select("id, name")
+            .single();
         if (createRegisterError) throw createRegisterError;
         register = createdRegister;
       }
@@ -300,7 +355,13 @@ export function useRegisterSession() {
   });
 
   const closeRegister = useMutation({
-    mutationFn: async ({ actualClosingBalance, notes }: { actualClosingBalance: number; notes?: string }) => {
+    mutationFn: async ({
+      actualClosingBalance,
+      notes,
+    }: {
+      actualClosingBalance: number;
+      notes?: string;
+    }) => {
       const session = useSessionStore.getState().currentSession;
       if (!session) throw new Error("No active register session.");
 
@@ -313,7 +374,11 @@ export function useRegisterSession() {
       if (cashError) throw cashError;
 
       const expectedClosing =
-        session.opening_balance + (cashSales ?? []).reduce((sum, payment) => sum + Number(payment.amount), 0);
+        session.opening_balance +
+        (cashSales ?? []).reduce(
+          (sum, payment) => sum + Number(payment.amount),
+          0,
+        );
 
       const { data, error } = await supabase
         .from("register_sessions")
@@ -366,7 +431,9 @@ export function useCheckout() {
       if (!activeSession) throw new Error("Open a register before checkout.");
       if (items.length === 0) throw new Error("Cart is empty.");
       if (errors.length > 0) throw new Error(errors[0]);
-      if (!useOrganizationStore.getState().permissions.includes("pos.checkout")) {
+      if (
+        !useOrganizationStore.getState().permissions.includes("pos.checkout")
+      ) {
         throw new Error("You do not have permission to complete checkout.");
       }
 
@@ -376,7 +443,7 @@ export function useCheckout() {
       if (isOnline) {
         const { data } = await supabase
           .from("organization_settings")
-          .select("receipt_header, receipt_footer, receipt_logo_url, receipt_notes")
+          .select("receipt_header, receipt_footer, receipt_notes")
           .eq("organization_id", activeContext.organizationId)
           .maybeSingle();
         if (data) {
@@ -388,18 +455,19 @@ export function useCheckout() {
       const receiptBranding = {
         receiptHeader: receiptSettingsRow?.receipt_header ?? null,
         receiptFooter: receiptSettingsRow?.receipt_footer ?? null,
-        receiptLogoUrl: receiptSettingsRow?.receipt_logo_url ?? null,
+        receiptLogoUrl: activeContext.organization?.logo_url ?? null,
         receiptNotes: receiptSettingsRow?.receipt_notes ?? null,
       };
 
       const paid = payments.reduce((sum, payment) => sum + payment.amount, 0);
-      if (paid + 0.01 < totals.total) throw new Error("Payment total is less than amount due.");
+      if (paid + 0.01 < totals.total)
+        throw new Error("Payment total is less than amount due.");
 
       const rpcItems = items.map((item) => {
         const lineSubtotal = item.unit_price * item.quantity;
         const lineDiscount =
           item.discount?.type === "percentage"
-            ? lineSubtotal * Math.min(item.discount.value, 100) / 100
+            ? (lineSubtotal * Math.min(item.discount.value, 100)) / 100
             : Math.min(item.discount?.value ?? 0, lineSubtotal);
         const lineTaxBase = Math.max(0, lineSubtotal - lineDiscount);
         const lineTax =
@@ -415,7 +483,9 @@ export function useCheckout() {
           unit_cost: item.unit_cost,
           discount_amount: Number(lineDiscount.toFixed(2)),
           tax_amount: Number(lineTax.toFixed(2)),
-          line_total: Number(Math.max(0, lineSubtotal - lineDiscount).toFixed(2)),
+          line_total: Number(
+            Math.max(0, lineSubtotal - lineDiscount).toFixed(2),
+          ),
           note: item.note || null,
         };
       });
@@ -427,16 +497,27 @@ export function useCheckout() {
       }));
 
       if (!isOnline) {
-        console.log("[useCheckout] Device offline: intercepting and queuing transaction.");
+        console.log(
+          "[useCheckout] Device offline: intercepting and queuing transaction.",
+        );
         const tempSaleId = crypto.randomUUID();
         const receiptNumber = `R-OFF-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
         // Deduct stock quantities in local IndexedDB product cache
         for (const item of items) {
-          const cachedProd = await getFromStore<PosProduct>("products", item.product_id);
+          const cachedProd = await getFromStore<PosProduct>(
+            "products",
+            item.product_id,
+          );
           if (cachedProd) {
-            const newStock = Math.max(0, (cachedProd.stock_quantity ?? 0) - item.quantity);
-            await putInStore<PosProduct>("products", { ...cachedProd, stock_quantity: newStock });
+            const newStock = Math.max(
+              0,
+              (cachedProd.stock_quantity ?? 0) - item.quantity,
+            );
+            await putInStore<PosProduct>("products", {
+              ...cachedProd,
+              stock_quantity: newStock,
+            });
           }
         }
 
@@ -444,7 +525,8 @@ export function useCheckout() {
           saleId: tempSaleId,
           receiptNumber,
           organizationName: activeContext.organization?.name ?? "Store",
-          cashierName: activeContext.profile.full_name ?? activeContext.profile.email,
+          cashierName:
+            activeContext.profile.full_name ?? activeContext.profile.email,
           createdAt: new Date().toISOString(),
           items,
           subtotal: totals.subtotal,
@@ -452,7 +534,10 @@ export function useCheckout() {
           discountAmount: totals.discountTotal,
           totalAmount: totals.total,
           payments,
-          changeDue: Math.max(0, payments.reduce((sum, p) => sum + p.amount, 0) - totals.total),
+          changeDue: Math.max(
+            0,
+            payments.reduce((sum, p) => sum + p.amount, 0) - totals.total,
+          ),
           ...receiptBranding,
         };
 
@@ -498,7 +583,8 @@ export function useCheckout() {
         saleId: saleId as string,
         receiptNumber: `R-${String(saleId).slice(0, 8).toUpperCase()}`,
         organizationName: activeContext.organization?.name ?? "Store",
-        cashierName: activeContext.profile.full_name ?? activeContext.profile.email,
+        cashierName:
+          activeContext.profile.full_name ?? activeContext.profile.email,
         createdAt: new Date().toISOString(),
         items,
         subtotal: totals.subtotal,
@@ -506,7 +592,11 @@ export function useCheckout() {
         discountAmount: totals.discountTotal,
         totalAmount: totals.total,
         payments,
-        changeDue: Math.max(0, payments.reduce((sum, payment) => sum + payment.amount, 0) - totals.total),
+        changeDue: Math.max(
+          0,
+          payments.reduce((sum, payment) => sum + payment.amount, 0) -
+            totals.total,
+        ),
         ...receiptBranding,
       };
 

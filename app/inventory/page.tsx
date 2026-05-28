@@ -33,18 +33,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import dynamic from "next/dynamic";
-
-// Performance: Lazy load scanner only when needed
-const BarcodeScanner = dynamic(
-  () =>
-    import("@/features/inventory/components/barcode-scanner").then(
-      (mod) => mod.BarcodeScanner,
-    ),
-  {
-    ssr: false,
-  },
-);
 
 export default function InventoryPage() {
   const {
@@ -52,7 +40,7 @@ export default function InventoryPage() {
     searchQuery,
     openProductModal,
     openCategoryModal,
-    setScannerOpen,
+    openScanner,
     stockFilter,
     setStockFilter,
     statusFilter,
@@ -188,7 +176,7 @@ export default function InventoryPage() {
             variant="ghost"
             size="icon"
             className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg hover:bg-primary/10 hover:text-primary"
-            onClick={() => setScannerOpen(true)}
+            onClick={() => openScanner("search")}
           >
             <Camera className="h-5 w-5" />
           </Button>
@@ -310,7 +298,6 @@ export default function InventoryPage() {
       <ProductForm />
       <CategoryManager />
       <InventoryAdjuster />
-      <BarcodeScanner />
     </div>
   );
 }

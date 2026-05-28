@@ -2,22 +2,42 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useBarcodeLookup } from "@/hooks/use-pos";
 import { useCartStore } from "@/store/use-cart-store";
 import { useProductSearchStore } from "@/store/use-product-search-store";
 import { useScannerStore } from "@/store/use-scanner-store";
-import { Camera, CheckCircle2, Loader2, ScanBarcode, XCircle } from "lucide-react";
+import {
+  Camera,
+  CheckCircle2,
+  Loader2,
+  ScanBarcode,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
+import { normalizeScannedCode } from "@/lib/barcode";
 
 export function BarcodeScanner() {
   const scannerId = useMemo(() => "pos-barcode-scanner", []);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const lastScanAtRef = useRef(0);
-  const { isScannerOpen, isScanning, lastScan, scanError, closeScanner, setScanning, setLastScan, setScanError } =
-    useScannerStore();
+  const {
+    isScannerOpen,
+    isScanning,
+    lastScan,
+    scanError,
+    closeScanner,
+    setScanning,
+    setLastScan,
+    setScanError,
+  } = useScannerStore();
   const { addItem } = useCartStore();
   const { rememberProduct } = useProductSearchStore();
   const barcodeLookup = useBarcodeLookup();
@@ -37,23 +57,32 @@ export function BarcodeScanner() {
           const now = Date.now();
           if (now - lastScanAtRef.current < 900) return;
           lastScanAtRef.current = now;
-          setLastScan(decodedText);
+          const code = normalizeScannedCode(decodedText);
+          setLastScan(code);
           setScanError(null);
 
           try {
-            const product = await barcodeLookup.mutateAsync(decodedText);
+            const product = await barcodeLookup.mutateAsync(code);
             addItem(product);
             rememberProduct(product);
             toast.success(`${product.name} added`);
           } catch (error) {
-            setScanError(error instanceof Error ? error.message : "Unable to read barcode.");
+            setScanError(
+              error instanceof Error
+                ? error.message
+                : "Unable to read barcode.",
+            );
           }
         },
-        () => undefined
+        () => undefined,
       )
       .then(() => mounted && setScanning(true))
       .catch((error) => {
-        setScanError(error instanceof Error ? error.message : "Camera scanner could not start.");
+        setScanError(
+          error instanceof Error
+            ? error.message
+            : "Camera scanner could not start.",
+        );
         setScanning(false);
       });
 
@@ -82,7 +111,10 @@ export function BarcodeScanner() {
   ]);
 
   return (
-    <Dialog open={isScannerOpen} onOpenChange={(open) => !open && closeScanner()}>
+    <Dialog
+      open={isScannerOpen}
+      onOpenChange={(open) => !open && closeScanner()}
+    >
       <DialogContent className="max-w-[520px] overflow-hidden p-0">
         <DialogHeader className="border-b p-5">
           <DialogTitle className="flex items-center gap-2 text-xl">
@@ -97,11 +129,22 @@ export function BarcodeScanner() {
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <Badge variant={isScanning ? "default" : "secondary"} className="h-8 gap-2 px-3">
-              {isScanning ? <CheckCircle2 className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}
+            <Badge
+              variant={isScanning ? "default" : "secondary"}
+              className="h-8 gap-2 px-3"
+            >
+              {isScanning ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
               {isScanning ? "Scanning" : "Starting camera"}
             </Badge>
-            {lastScan && <span className="truncate text-sm text-muted-foreground">Last scan: {lastScan}</span>}
+            {lastScan && (
+              <span className="truncate text-sm text-muted-foreground">
+                Last scan: {lastScan}
+              </span>
+            )}
           </div>
 
           {scanError && (
@@ -111,7 +154,11 @@ export function BarcodeScanner() {
             </div>
           )}
 
-          <Button className="h-12 w-full gap-2" variant="secondary" onClick={closeScanner}>
+          <Button
+            className="h-12 w-full gap-2"
+            variant="secondary"
+            onClick={closeScanner}
+          >
             <Camera className="h-4 w-4" />
             Done scanning
           </Button>

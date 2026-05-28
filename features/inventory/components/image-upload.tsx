@@ -1,19 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Upload, X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
   value?: string | null;
   onChange: (url: string | null) => void;
   className?: string;
+  bucket?: string;
+  folder?: string;
+  label?: string;
+  alt?: string;
+  previewClassName?: string;
+  imageClassName?: string;
 }
 
-export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
+export function ImageUpload({
+  value,
+  onChange,
+  className,
+  bucket = "product-images",
+  folder = "product-images",
+  label = "Upload image",
+  alt = "Uploaded image",
+  previewClassName,
+  imageClassName,
+}: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const supabase = createClient();
 
@@ -23,23 +39,26 @@ export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `product-images/${fileName}`;
+      const fileExt = file.name.split(".").pop() ?? "png";
+      const fileName =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? `${crypto.randomUUID()}.${fileExt}`
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+      const filePath = `${folder.replace(/^\/|\/$/g, "")}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('product-images')
+        .from(bucket)
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from(bucket).getPublicUrl(filePath);
 
       onChange(publicUrl);
     } catch (error: any) {
-      console.error('Error uploading image:', error.message);
+      toast.error(error.message ?? "Image upload failed.");
     } finally {
       setIsUploading(false);
     }
@@ -50,32 +69,42 @@ export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
   };
 
   return (
-    <div className={cn("space-y-4 w-full flex flex-col items-center justify-center", className)}>
+    <div
+      className={cn(
+        "flex w-full flex-col items-center justify-center space-y-4",
+        className,
+      )}
+    >
       {value ? (
-        <div className="relative h-40 w-40 rounded-lg overflow-hidden border">
+        <div
+          className={cn(
+            "relative h-40 w-40 overflow-hidden rounded-lg border bg-muted",
+            previewClassName,
+          )}
+        >
           <Image
             fill
             src={value}
-            alt="Product"
-            className="object-cover"
+            alt={alt}
+            className={cn("object-cover", imageClassName)}
           />
           <button
             onClick={handleRemove}
-            className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full shadow-sm hover:opacity-80 transition"
+            className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-destructive-foreground shadow-sm transition hover:opacity-80"
             type="button"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
       ) : (
-        <label className="flex flex-col items-center justify-center w-40 h-40 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted transition border-muted-foreground/25">
+        <label className="flex h-40 w-40 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 transition hover:bg-muted">
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
             {isUploading ? (
-              <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             ) : (
               <>
-                <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-xs text-muted-foreground">Upload Image</p>
+                <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">{label}</p>
               </>
             )}
           </div>

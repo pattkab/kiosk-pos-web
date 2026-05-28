@@ -11,7 +11,7 @@ Ensure the following variables are set in the Vercel Dashboard:
 | `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL                                                                      |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anonymous key                                                                    |
 | `SUPABASE_SERVICE_ROLE_KEY`     | **(SECRET)** Required for administrative tasks. Never expose to client.                        |
-| `NEXT_PUBLIC_APP_URL`           | The canonical production URL of your app. For this deployment use `https://www.kioskpos.shop`. |
+| `NEXT_PUBLIC_APP_URL`           | The canonical production URL of your app. For this deployment use `https://kioskpos.shop`.     |
 | `DATABASE_URL`                  | Transaction pooler connection string for Supabase migrations.                                  |
 | `RESEND_API_KEY`                | **(SECRET)** API key for invitation email delivery.                                            |
 | `RESEND_FROM_EMAIL`             | Verified sender, e.g. `Kiosk POS <noreply@yourdomain.com>`.                                    |
@@ -33,16 +33,16 @@ Ensure the following variables are set in the Vercel Dashboard:
 ### Authentication
 
 - [ ] Go to **Authentication > Providers** and disable "Confirm Email" if using Magic Links only, OR ensure SMTP is configured.
-- [ ] Set **Site URL** to `https://www.kioskpos.shop`.
-- [ ] Add `https://www.kioskpos.shop/**`, `https://kioskpos.shop/**`, and `http://localhost:3000/**` to **Redirect URLs**.
+- [ ] Set **Site URL** to `https://kioskpos.shop`.
+- [ ] Add `https://kioskpos.shop/**` and `http://localhost:3000/**` to **Redirect URLs**.
 
 ### Google sign-in (OAuth)
 
 - [ ] In **Google Cloud Console** → APIs & Services → Credentials → OAuth 2.0 Client, set **Authorized redirect URI** to:
   - `https://<your-supabase-project-ref>.supabase.co/auth/v1/callback`
 - [ ] In **Supabase** → Authentication → Providers → **Google**, paste the same client’s **Client ID** and **Client Secret**.
-- [ ] Ensure production **Redirect URLs** include both `https://www.kioskpos.shop/**` and `https://kioskpos.shop/**`; the app callback path is `/auth/callback`.
-- [ ] Set `NEXT_PUBLIC_APP_URL` in Vercel to `https://www.kioskpos.shop`.
+- [ ] Ensure production **Redirect URLs** include `https://kioskpos.shop/**`; the app callback path is `/auth/callback`.
+- [ ] Set `NEXT_PUBLIC_APP_URL` in Vercel to `https://kioskpos.shop`.
 - [ ] Remove `http://localhost:3000` from production **Site URL**. Keep localhost only in **Redirect URLs** for local development.
 - [ ] If sign-in fails with _Unable to exchange external code_, the Google client secret in Supabase does not match Google Cloud, the Supabase callback URI above is missing in Google, or Supabase is still using a localhost Site URL.
 

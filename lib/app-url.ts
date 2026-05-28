@@ -1,4 +1,4 @@
-export const PRODUCTION_APP_URL = "https://www.kioskpos.shop";
+export const PRODUCTION_APP_URL = "https://kioskpos.shop";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
 

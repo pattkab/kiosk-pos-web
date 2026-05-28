@@ -19,6 +19,8 @@ import {
 import { useOrganizationStore } from "@/store/use-organization-store";
 import {
   InviteMemberValues,
+  OrganizationAppearanceValues,
+  OrganizationBrandingValues,
   OrganizationProfileValues,
   OrganizationSettingsValues,
 } from "@/validators/organization";
@@ -462,7 +464,62 @@ export function useOrganizationSettings() {
     onError: (error) => toast.error(error.message),
   });
 
-  return { ...query, updateProfile, updateSettings };
+  const updateAppearance = useMutation({
+    mutationFn: async (values: OrganizationAppearanceValues) => {
+      if (!activeOrganization) throw new Error("No active organization.");
+      const { error } = await supabase.from("organization_settings").upsert(
+        {
+          organization_id: activeOrganization.id,
+          ...values,
+        },
+        { onConflict: "organization_id" },
+      );
+      if (error) throw error;
+      await supabase.rpc("write_audit_log", {
+        p_organization_id: activeOrganization.id,
+        p_action: "UPDATE_APPEARANCE",
+        p_entity_type: "organization_settings",
+        p_entity_id: activeOrganization.id,
+        p_metadata: values,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organization-settings"] });
+      toast.success("Appearance updated");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const updateBranding = useMutation({
+    mutationFn: async (values: OrganizationBrandingValues) => {
+      if (!activeOrganization) throw new Error("No active organization.");
+      const { error } = await supabase
+        .from("organizations")
+        .update({ logo_url: values.logo_url || null })
+        .eq("id", activeOrganization.id);
+      if (error) throw error;
+      await supabase.rpc("write_audit_log", {
+        p_organization_id: activeOrganization.id,
+        p_action: "UPDATE_BRANDING",
+        p_entity_type: "organization",
+        p_entity_id: activeOrganization.id,
+        p_metadata: values,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      toast.success("Branding updated");
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  return {
+    ...query,
+    updateProfile,
+    updateSettings,
+    updateAppearance,
+    updateBranding,
+  };
 }
 
 export function useAuditLogs() {

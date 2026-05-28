@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { businessTypeValues } from "@/lib/business-types";
+import { DEFAULT_APPEARANCE_COLORS } from "@/lib/appearance";
+
+const hexColorSchema = z
+  .string()
+  .regex(/^#[0-9a-fA-F]{6}$/, "Use a 6-digit hex color.");
 
 export const organizationProfileSchema = z.object({
   name: z.string().min(2),
@@ -24,6 +29,8 @@ export const organizationSettingsSchema = z.object({
   receipt_logo_url: z.string().url().optional().or(z.literal("")).or(z.null()),
   receipt_notes: z.string().max(2000).optional().or(z.literal("")),
   low_stock_threshold_default: z.coerce.number().int().min(0),
+  theme_primary_color: hexColorSchema.optional(),
+  theme_accent_color: hexColorSchema.optional(),
   role_permissions: z
     .object({
       owner: z.array(z.string()).optional(),
@@ -34,6 +41,17 @@ export const organizationSettingsSchema = z.object({
     .optional(),
   stripe_customer_id: z.string().optional(),
   stripe_subscription_id: z.string().optional(),
+});
+
+export const organizationAppearanceSchema = z.object({
+  theme_primary_color: hexColorSchema.default(
+    DEFAULT_APPEARANCE_COLORS.primary,
+  ),
+  theme_accent_color: hexColorSchema.default(DEFAULT_APPEARANCE_COLORS.accent),
+});
+
+export const organizationBrandingSchema = z.object({
+  logo_url: z.string().url().optional().or(z.literal("")).or(z.null()),
 });
 
 export const inviteMemberSchema = z.object({
@@ -47,5 +65,11 @@ export type OrganizationProfileValues = z.infer<
 >;
 export type OrganizationSettingsValues = z.infer<
   typeof organizationSettingsSchema
+>;
+export type OrganizationAppearanceValues = z.infer<
+  typeof organizationAppearanceSchema
+>;
+export type OrganizationBrandingValues = z.infer<
+  typeof organizationBrandingSchema
 >;
 export type InviteMemberValues = z.infer<typeof inviteMemberSchema>;

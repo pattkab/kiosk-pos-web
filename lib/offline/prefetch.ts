@@ -9,8 +9,11 @@ import type { ReportsData } from "@/types/reports";
 /**
  * Caches products, categories, dashboard reports, and receipt settings for offline use.
  */
-export async function prefetchOfflineEssentials(organizationId?: string | null) {
-  const orgId = organizationId ?? useOrganizationStore.getState().activeOrganizationId;
+export async function prefetchOfflineEssentials(
+  organizationId?: string | null,
+) {
+  const orgId =
+    organizationId ?? useOrganizationStore.getState().activeOrganizationId;
   if (!orgId) return;
 
   const status = useConnectivityStore.getState().status;
@@ -51,7 +54,9 @@ async function prefetchDashboardReports(organizationId: string) {
       supabase.rpc("get_product_performance", { ...args, p_limit: 100 }),
       supabase.rpc("get_payment_breakdown", args),
       supabase.rpc("get_cashier_performance", args),
-      supabase.rpc("get_inventory_valuation_report", { p_organization_id: organizationId }),
+      supabase.rpc("get_inventory_valuation_report", {
+        p_organization_id: organizationId,
+      }),
     ]);
 
     if (kpis.error && revenueTrend.error) return;
@@ -59,10 +64,14 @@ async function prefetchDashboardReports(organizationId: string) {
     const reportData: ReportsData = {
       kpis: (kpis.data ?? {}) as ReportsData["kpis"],
       revenueTrend: (revenueTrend.data ?? []) as ReportsData["revenueTrend"],
-      productPerformance: (productPerformance.data ?? []) as ReportsData["productPerformance"],
-      paymentBreakdown: (paymentBreakdown.data ?? []) as ReportsData["paymentBreakdown"],
-      cashierPerformance: (cashierPerformance.data ?? []) as ReportsData["cashierPerformance"],
-      inventoryValuation: (inventoryValuation.data ?? []) as ReportsData["inventoryValuation"],
+      productPerformance: (productPerformance.data ??
+        []) as ReportsData["productPerformance"],
+      paymentBreakdown: (paymentBreakdown.data ??
+        []) as ReportsData["paymentBreakdown"],
+      cashierPerformance: (cashierPerformance.data ??
+        []) as ReportsData["cashierPerformance"],
+      inventoryValuation: (inventoryValuation.data ??
+        []) as ReportsData["inventoryValuation"],
       sales: [],
       saleItems: [],
       registerSessions: [],
@@ -81,14 +90,17 @@ async function prefetchReceiptSettings(organizationId: string) {
   try {
     const { data, error } = await supabase
       .from("organization_settings")
-      .select("receipt_header, receipt_footer, receipt_logo_url, receipt_notes, tax_rate")
+      .select("receipt_header, receipt_footer, receipt_notes, tax_rate")
       .eq("organization_id", organizationId)
       .maybeSingle();
 
     if (error) throw error;
     if (data) await saveMetadata(cacheKey, data);
   } catch (error) {
-    console.warn("[prefetchOfflineEssentials] Receipt settings cache skipped:", error);
+    console.warn(
+      "[prefetchOfflineEssentials] Receipt settings cache skipped:",
+      error,
+    );
   }
 }
 
@@ -109,10 +121,13 @@ async function prefetchOrganizationContext(organizationId: string) {
       .eq("auth_user_id", user.id)
       .single();
 
-    const { data: organizationRows } = await supabase.rpc("list_my_organizations");
+    const { data: organizationRows } = await supabase.rpc(
+      "list_my_organizations",
+    );
     const organization =
-      (organizationRows ?? []).find((entry: { id: string }) => entry.id === organizationId) ??
-      null;
+      (organizationRows ?? []).find(
+        (entry: { id: string }) => entry.id === organizationId,
+      ) ?? null;
 
     if (!profile || !organization) return;
 
@@ -123,6 +138,9 @@ async function prefetchOrganizationContext(organizationId: string) {
       role: organization.role,
     });
   } catch (error) {
-    console.warn("[prefetchOfflineEssentials] POS context cache skipped:", error);
+    console.warn(
+      "[prefetchOfflineEssentials] POS context cache skipped:",
+      error,
+    );
   }
 }

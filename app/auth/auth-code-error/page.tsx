@@ -35,7 +35,6 @@ export default async function AuthCodeErrorPage({
             In Supabase → Authentication → URL configuration, add redirect URLs
             for your app:{" "}
             <code className="text-xs">{PRODUCTION_APP_URL}/**</code>,{" "}
-            <code className="text-xs">https://kioskpos.shop/**</code>, and{" "}
             <code className="text-xs">http://localhost:3000/**</code> for local
             development.
           </li>

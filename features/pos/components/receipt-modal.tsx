@@ -1,6 +1,11 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCheckoutStore } from "@/store/use-checkout-store";
@@ -14,7 +19,10 @@ export function ReceiptModal() {
   if (!receipt) return null;
 
   return (
-    <Dialog open={isReceiptOpen} onOpenChange={(open) => !open && closeReceipt()}>
+    <Dialog
+      open={isReceiptOpen}
+      onOpenChange={(open) => !open && closeReceipt()}
+    >
       <DialogContent className="max-w-[440px] p-0">
         <DialogHeader className="border-b p-5">
           <DialogTitle className="flex items-center gap-2">
@@ -30,7 +38,7 @@ export function ReceiptModal() {
                 <div className="mb-2 flex justify-center">
                   <Image
                     src={receipt.receiptLogoUrl}
-                    alt="Receipt logo"
+                    alt="Company logo"
                     width={64}
                     height={64}
                     className="h-16 w-16 rounded object-contain"
@@ -38,9 +46,13 @@ export function ReceiptModal() {
                 </div>
               )}
               <ReceiptText className="mx-auto mb-2 h-7 w-7" />
-              <h2 className="text-base font-bold uppercase">{receipt.organizationName}</h2>
+              <h2 className="text-base font-bold uppercase">
+                {receipt.organizationName}
+              </h2>
               {receipt.receiptHeader && (
-                <p className="mt-1 text-xs whitespace-pre-line">{receipt.receiptHeader}</p>
+                <p className="mt-1 text-xs whitespace-pre-line">
+                  {receipt.receiptHeader}
+                </p>
               )}
               <p className="text-xs">Receipt {receipt.receiptNumber}</p>
               {receipt.receiptNumber.startsWith("R-OFF") && (
@@ -48,7 +60,9 @@ export function ReceiptModal() {
                   Queued Offline Sale
                 </div>
               )}
-              <p className="text-xs">{new Date(receipt.createdAt).toLocaleString()}</p>
+              <p className="text-xs">
+                {new Date(receipt.createdAt).toLocaleString()}
+              </p>
               <p className="text-xs">Cashier: {receipt.cashierName}</p>
             </div>
 
@@ -59,7 +73,9 @@ export function ReceiptModal() {
                 <div key={item.product_id}>
                   <div className="flex justify-between gap-3">
                     <span className="font-medium">{item.name}</span>
-                    <span>{formatCurrency(item.unit_price * item.quantity)}</span>
+                    <span>
+                      {formatCurrency(item.unit_price * item.quantity)}
+                    </span>
                   </div>
                   <div className="text-xs text-black/60">
                     {item.quantity} x {formatCurrency(item.unit_price)}
@@ -96,7 +112,10 @@ export function ReceiptModal() {
 
             <div className="space-y-1">
               {receipt.payments.map((payment) => (
-                <div key={payment.id} className="flex justify-between capitalize">
+                <div
+                  key={payment.id}
+                  className="flex justify-between capitalize"
+                >
                   <span>{payment.payment_method.replace("_", " ")}</span>
                   <span>{formatCurrency(payment.amount)}</span>
                 </div>
@@ -110,7 +129,9 @@ export function ReceiptModal() {
             </div>
 
             {receipt.receiptNotes && (
-              <p className="mt-4 text-center text-[11px] whitespace-pre-line">{receipt.receiptNotes}</p>
+              <p className="mt-4 text-center text-[11px] whitespace-pre-line">
+                {receipt.receiptNotes}
+              </p>
             )}
             <p className="mt-3 text-center text-xs uppercase tracking-wide">
               {receipt.receiptFooter || "Thank you"}
@@ -123,7 +144,11 @@ export function ReceiptModal() {
             <Printer className="h-4 w-4" />
             Print
           </Button>
-          <Button className="h-12 flex-1" variant="secondary" onClick={closeReceipt}>
+          <Button
+            className="h-12 flex-1"
+            variant="secondary"
+            onClick={closeReceipt}
+          >
             New sale
           </Button>
         </div>

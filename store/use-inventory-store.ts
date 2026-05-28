@@ -1,15 +1,17 @@
 import { create } from "zustand";
 
+type InventoryScannerTarget = "search" | "product-form-barcode";
+
 interface InventoryState {
   // Search & Filters
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   categoryFilter: string | null;
   setCategoryFilter: (id: string | null) => void;
-  statusFilter: 'all' | 'active' | 'inactive';
-  setStatusFilter: (status: 'all' | 'active' | 'inactive') => void;
-  stockFilter: 'all' | 'low' | 'out';
-  setStockFilter: (filter: 'all' | 'low' | 'out') => void;
+  statusFilter: "all" | "active" | "inactive";
+  setStatusFilter: (status: "all" | "active" | "inactive") => void;
+  stockFilter: "all" | "low" | "out";
+  setStockFilter: (filter: "all" | "low" | "out") => void;
 
   // Selected Products (Bulk Actions)
   selectedProductIds: string[];
@@ -32,7 +34,12 @@ interface InventoryState {
   closeCategoryModal: () => void;
 
   scannerOpen: boolean;
+  scannerTarget: InventoryScannerTarget;
+  scannedBarcode: string | null;
+  openScanner: (target?: InventoryScannerTarget) => void;
   setScannerOpen: (open: boolean) => void;
+  setScannedBarcode: (code: string | null) => void;
+  clearScannedBarcode: () => void;
 }
 
 export const useInventoryStore = create<InventoryState>((set) => ({
@@ -40,33 +47,44 @@ export const useInventoryStore = create<InventoryState>((set) => ({
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   categoryFilter: null,
   setCategoryFilter: (categoryFilter) => set({ categoryFilter }),
-  statusFilter: 'all',
+  statusFilter: "all",
   setStatusFilter: (statusFilter) => set({ statusFilter }),
-  stockFilter: 'all',
+  stockFilter: "all",
   setStockFilter: (stockFilter) => set({ stockFilter }),
 
   selectedProductIds: [],
   setSelectedProducts: (selectedProductIds) => set({ selectedProductIds }),
-  toggleProductSelection: (id) => set((state) => ({
-    selectedProductIds: state.selectedProductIds.includes(id)
-      ? state.selectedProductIds.filter(pid => pid !== id)
-      : [...state.selectedProductIds, id]
-  })),
+  toggleProductSelection: (id) =>
+    set((state) => ({
+      selectedProductIds: state.selectedProductIds.includes(id)
+        ? state.selectedProductIds.filter((pid) => pid !== id)
+        : [...state.selectedProductIds, id],
+    })),
 
   productModalOpen: false,
   editingProductId: null,
-  openProductModal: (id = null) => set({ productModalOpen: true, editingProductId: id }),
-  closeProductModal: () => set({ productModalOpen: false, editingProductId: null }),
+  openProductModal: (id = null) =>
+    set({ productModalOpen: true, editingProductId: id }),
+  closeProductModal: () =>
+    set({ productModalOpen: false, editingProductId: null }),
 
   adjustmentModalOpen: false,
   adjustingProductId: null,
-  openAdjustmentModal: (id) => set({ adjustmentModalOpen: true, adjustingProductId: id }),
-  closeAdjustmentModal: () => set({ adjustmentModalOpen: false, adjustingProductId: null }),
+  openAdjustmentModal: (id) =>
+    set({ adjustmentModalOpen: true, adjustingProductId: id }),
+  closeAdjustmentModal: () =>
+    set({ adjustmentModalOpen: false, adjustingProductId: null }),
 
   categoryModalOpen: false,
   openCategoryModal: () => set({ categoryModalOpen: true }),
   closeCategoryModal: () => set({ categoryModalOpen: false }),
 
   scannerOpen: false,
+  scannerTarget: "search",
+  scannedBarcode: null,
+  openScanner: (scannerTarget = "search") =>
+    set({ scannerOpen: true, scannerTarget, scannedBarcode: null }),
   setScannerOpen: (scannerOpen) => set({ scannerOpen }),
+  setScannedBarcode: (scannedBarcode) => set({ scannedBarcode }),
+  clearScannedBarcode: () => set({ scannedBarcode: null }),
 }));

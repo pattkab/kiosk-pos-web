@@ -8,10 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useOrganizationSettings } from "@/hooks/use-organization";
-import { organizationSettingsSchema, OrganizationSettingsValues } from "@/validators/organization";
-import { ImageUpload } from "@/features/inventory/components/image-upload";
+import {
+  organizationSettingsSchema,
+  OrganizationSettingsValues,
+} from "@/validators/organization";
 
-export function OrganizationOperationalSettings({ mode }: { mode: "receipt" | "tax" }) {
+export function OrganizationOperationalSettings({
+  mode,
+}: {
+  mode: "receipt" | "tax";
+}) {
   const settings = useOrganizationSettings();
   const form = useForm<OrganizationSettingsValues>({
     resolver: zodResolver(organizationSettingsSchema),
@@ -19,7 +25,6 @@ export function OrganizationOperationalSettings({ mode }: { mode: "receipt" | "t
       tax_rate: 0,
       receipt_header: "",
       receipt_footer: "",
-      receipt_logo_url: "",
       receipt_notes: "",
       low_stock_threshold_default: 5,
     },
@@ -31,9 +36,10 @@ export function OrganizationOperationalSettings({ mode }: { mode: "receipt" | "t
         tax_rate: Number(settings.data.tax_rate ?? 0),
         receipt_header: settings.data.receipt_header ?? "",
         receipt_footer: settings.data.receipt_footer ?? "",
-        receipt_logo_url: settings.data.receipt_logo_url ?? "",
         receipt_notes: settings.data.receipt_notes ?? "",
-        low_stock_threshold_default: Number(settings.data.low_stock_threshold_default ?? 5),
+        low_stock_threshold_default: Number(
+          settings.data.low_stock_threshold_default ?? 5,
+        ),
       });
     }
   }, [form, settings.data]);
@@ -41,20 +47,19 @@ export function OrganizationOperationalSettings({ mode }: { mode: "receipt" | "t
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{mode === "receipt" ? "Receipt settings" : "Tax settings"}</CardTitle>
+        <CardTitle>
+          {mode === "receipt" ? "Receipt settings" : "Tax settings"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={form.handleSubmit((values) => settings.updateSettings.mutate(values))}>
+        <form
+          className="space-y-4"
+          onSubmit={form.handleSubmit((values) =>
+            settings.updateSettings.mutate(values),
+          )}
+        >
           {mode === "receipt" ? (
             <>
-              <div className="space-y-2">
-                <Label>Receipt logo</Label>
-                <ImageUpload
-                  value={form.watch("receipt_logo_url") || null}
-                  onChange={(value) => form.setValue("receipt_logo_url", value || "", { shouldDirty: true })}
-                  className="items-start"
-                />
-              </div>
               <div className="space-y-2">
                 <Label>Receipt header</Label>
                 <Input {...form.register("receipt_header")} />
@@ -77,15 +82,24 @@ export function OrganizationOperationalSettings({ mode }: { mode: "receipt" | "t
             <>
               <div className="space-y-2">
                 <Label>Tax rate (%)</Label>
-                <Input type="number" step="0.01" {...form.register("tax_rate")} />
+                <Input
+                  type="number"
+                  step="0.01"
+                  {...form.register("tax_rate")}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Default low stock threshold</Label>
-                <Input type="number" {...form.register("low_stock_threshold_default")} />
+                <Input
+                  type="number"
+                  {...form.register("low_stock_threshold_default")}
+                />
               </div>
             </>
           )}
-          <Button disabled={settings.updateSettings.isPending}>Save settings</Button>
+          <Button disabled={settings.updateSettings.isPending}>
+            Save settings
+          </Button>
         </form>
       </CardContent>
     </Card>

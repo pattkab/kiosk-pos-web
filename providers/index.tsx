@@ -4,6 +4,7 @@ import { QueryProvider } from "./query-provider";
 import { RealtimeProvider } from "./realtime-provider";
 import { ThemeProvider } from "./theme-provider";
 import { PwaProvider } from "./pwa-provider";
+import { AppearanceProvider } from "./appearance-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -14,11 +15,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <QueryProvider>
-        <RealtimeProvider>
-          <PwaProvider>{children}</PwaProvider>
-        </RealtimeProvider>
+        <AppearanceProvider>
+          <RealtimeProvider>
+            <PwaProvider>{children}</PwaProvider>
+          </RealtimeProvider>
+        </AppearanceProvider>
       </QueryProvider>
     </ThemeProvider>
   );
 }
-
