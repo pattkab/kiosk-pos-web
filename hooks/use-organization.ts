@@ -26,6 +26,10 @@ import {
 } from "@/validators/organization";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import {
+  DEFAULT_APPEARANCE_COLORS,
+  normalizeHexColor,
+} from "@/lib/appearance";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 export type OrganizationWithRole = {
@@ -502,21 +506,54 @@ export function useOrganizationSettings() {
   const updateAppearance = useMutation({
     mutationFn: async (values: OrganizationAppearanceValues) => {
       if (!activeOrganization) throw new Error("No active organization.");
-      const { error } = await supabase.from("organization_settings").upsert(
-        {
-          organization_id: activeOrganization.id,
-          ...values,
-        },
-        { onConflict: "organization_id" },
+      const theme_primary_color = normalizeHexColor(
+        values.theme_primary_color,
+        DEFAULT_APPEARANCE_COLORS.primary,
       );
-      if (error) throw error;
-      await supabase.rpc("write_audit_log", {
+      const theme_accent_color = normalizeHexColor(
+        values.theme_accent_color,
+        DEFAULT_APPEARANCE_COLORS.accent,
+      );
+
+      const rpcResult = await supabase.rpc("update_organization_appearance", {
         p_organization_id: activeOrganization.id,
-        p_action: "UPDATE_APPEARANCE",
-        p_entity_type: "organization_settings",
-        p_entity_id: activeOrganization.id,
-        p_metadata: values,
+        p_theme_primary_color: theme_primary_color,
+        p_theme_accent_color: theme_accent_color,
       });
+
+      if (rpcResult.error) {
+        const message = rpcResult.error.message?.toLowerCase() ?? "";
+        const rpcMissing =
+          rpcResult.error.code === "PGRST202" ||
+          (message.includes("update_organization_appearance") &&
+            (message.includes("could not find") ||
+              message.includes("does not exist")));
+
+        if (!rpcMissing) {
+          throw rpcResult.error;
+        }
+
+        const { data, error } = await supabase
+          .from("organization_settings")
+          .update({
+            theme_primary_color,
+            theme_accent_color,
+          })
+          .eq("organization_id", activeOrganization.id)
+          .select("organization_id")
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) throw new Error("Organization settings were not found.");
+
+        await supabase.rpc("write_audit_log", {
+          p_organization_id: activeOrganization.id,
+          p_action: "UPDATE_APPEARANCE",
+          p_entity_type: "organization_settings",
+          p_entity_id: activeOrganization.id,
+          p_metadata: { theme_primary_color, theme_accent_color },
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organization-settings"] });

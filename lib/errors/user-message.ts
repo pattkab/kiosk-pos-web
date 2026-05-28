@@ -38,6 +38,15 @@ export function getUserErrorMessage(
   if (lower.includes("permission") || lower.includes("not allowed")) {
     return "You do not have permission to perform this action.";
   }
+  if (lower.includes("theme color") || lower.includes("hex")) {
+    return "Enter valid theme colors as 6-digit hex values (for example, #2563eb).";
+  }
+  if (
+    lower.includes("could not find the function") &&
+    lower.includes("update_organization_appearance")
+  ) {
+    return "Appearance settings are not available yet. Apply the latest database migration and try again.";
+  }
   if (
     lower.includes("duplicate") ||
     lower.includes("already exists") ||
