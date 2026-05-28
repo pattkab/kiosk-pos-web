@@ -34,6 +34,14 @@ describe("app URL resolution", () => {
     );
   });
 
+  it("normalizes the old www host to the canonical bare domain", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://www.kioskpos.shop");
+
+    expect(getConfiguredAppUrl({ allowLocalhost: false })).toBe(
+      PRODUCTION_APP_URL,
+    );
+  });
+
   it("prefers a forwarded production host over an internal request URL", () => {
     const request = new Request("http://localhost:3000/auth/callback", {
       headers: {

@@ -1,3 +1,11 @@
+import {
+  comparePlans,
+  getRequiredPlanForFeature,
+  normalizePlanId,
+  type PlanId,
+  type SubscriptionFeature,
+} from "@/lib/billing/plans";
+
 export type SubscriptionSettings = {
   subscription_status?: string | null;
   subscription_plan?: string | null;
@@ -19,6 +27,36 @@ export function hasSubscriptionAccess(
   }
 
   return settings.subscription_status === "trialing";
+}
+
+export function getCurrentPlan(
+  settings: SubscriptionSettings | null | undefined,
+) {
+  return normalizePlanId(settings?.subscription_plan);
+}
+
+export function isTrialAccess(
+  settings: SubscriptionSettings | null | undefined,
+) {
+  if (!settings || settings.subscription_status !== "trialing") return false;
+  if (!settings.trial_ends_at) return true;
+  return new Date(settings.trial_ends_at).getTime() > Date.now();
+}
+
+export function hasPlanAccess(
+  settings: SubscriptionSettings | null | undefined,
+  requiredPlan: PlanId,
+) {
+  if (!hasSubscriptionAccess(settings)) return false;
+  if (isTrialAccess(settings)) return true;
+  return comparePlans(getCurrentPlan(settings), requiredPlan) >= 0;
+}
+
+export function hasFeatureAccess(
+  settings: SubscriptionSettings | null | undefined,
+  feature: SubscriptionFeature,
+) {
+  return hasPlanAccess(settings, getRequiredPlanForFeature(feature));
 }
 
 export function getTrialDaysRemaining(trialEndsAt: string | null | undefined) {

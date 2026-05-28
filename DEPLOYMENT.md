@@ -6,18 +6,33 @@
 
 Ensure the following variables are set in the Vercel Dashboard:
 
-| Variable                        | Description                                                                                    |
-| ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL                                                                      |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anonymous key                                                                    |
-| `SUPABASE_SERVICE_ROLE_KEY`     | **(SECRET)** Required for administrative tasks. Never expose to client.                        |
-| `NEXT_PUBLIC_APP_URL`           | The canonical production URL of your app. For this deployment use `https://kioskpos.shop`.     |
-| `DATABASE_URL`                  | Transaction pooler connection string for Supabase migrations.                                  |
-| `RESEND_API_KEY`                | **(SECRET)** API key for invitation email delivery.                                            |
-| `RESEND_FROM_EMAIL`             | Verified sender, e.g. `Kiosk POS <noreply@yourdomain.com>`.                                    |
-| `STRIPE_SECRET_KEY`             | **(SECRET)** Stripe server key for Checkout + Billing Portal.                                  |
-| `STRIPE_WEBHOOK_SECRET`         | **(SECRET)** Stripe webhook signing secret.                                                    |
-| `STRIPE_PRICE_20_YEAR`          | Optional Stripe Price ID for annual `$20` plan. If omitted, app creates inline annual pricing. |
+| Variable                        | Description                                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL                                                                        |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anonymous key                                                                      |
+| `SUPABASE_SERVICE_ROLE_KEY`     | **(SECRET)** Required for administrative tasks. Never expose to client.                          |
+| `NEXT_PUBLIC_APP_URL`           | The canonical production URL of your app. For this deployment use `https://kioskpos.shop`.       |
+| `DATABASE_URL`                  | Transaction pooler connection string for Supabase migrations.                                    |
+| `RESEND_API_KEY`                | **(SECRET)** API key for invitation email delivery.                                              |
+| `RESEND_FROM_EMAIL`             | Verified sender, e.g. `Kiosk POS <noreply@yourdomain.com>`.                                      |
+| `STRIPE_SECRET_KEY`             | **(SECRET)** Stripe server key for Checkout + Billing Portal.                                    |
+| `STRIPE_WEBHOOK_SECRET`         | **(SECRET)** Stripe webhook signing secret.                                                      |
+| `STRIPE_PRICE_STARTER_MONTHLY`  | Optional Stripe monthly Price ID for the Starter tier. If omitted, Checkout uses inline pricing. |
+| `STRIPE_PRICE_STARTER_YEARLY`   | Optional Stripe yearly Price ID for the Starter tier. If omitted, Checkout uses inline pricing.  |
+| `STRIPE_PRICE_GROWTH_MONTHLY`   | Optional Stripe monthly Price ID for the Growth tier. If omitted, Checkout uses inline pricing.  |
+| `STRIPE_PRICE_GROWTH_YEARLY`    | Optional Stripe yearly Price ID for the Growth tier. If omitted, Checkout uses inline pricing.   |
+| `STRIPE_PRICE_PRO_MONTHLY`      | Optional Stripe monthly Price ID for the Pro tier. If omitted, Checkout uses inline pricing.     |
+| `STRIPE_PRICE_PRO_YEARLY`       | Optional Stripe yearly Price ID for the Pro tier. If omitted, Checkout uses inline pricing.      |
+
+### Stripe Pricing Tiers
+
+The app ships with inline fallback pricing if Stripe Price IDs are not configured:
+
+| Tier    | Monthly | Yearly | Primary gated features                                               |
+| ------- | ------- | ------ | -------------------------------------------------------------------- |
+| Starter | `$19`   | `$190` | POS checkout, inventory, receipts, and basic dashboard.              |
+| Growth  | `$49`   | `$490` | Reports, team management, offline queue, and notifications.          |
+| Pro     | `$99`   | `$990` | Branding, appearance controls, audit logs, and advanced permissions. |
 
 ### Build Settings
 

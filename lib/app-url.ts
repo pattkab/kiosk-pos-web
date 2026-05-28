@@ -1,6 +1,7 @@
 export const PRODUCTION_APP_URL = "https://kioskpos.shop";
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
+const CANONICAL_HOSTS = new Map([["www.kioskpos.shop", "kioskpos.shop"]]);
 
 function firstHeaderValue(value: string | null) {
   return value?.split(",")[0]?.trim() || null;
@@ -10,7 +11,10 @@ export function normalizeAppUrl(value: string | null | undefined) {
   if (!value) return null;
 
   try {
-    return new URL(value).origin;
+    const url = new URL(value);
+    const canonicalHost = CANONICAL_HOSTS.get(url.hostname);
+    if (canonicalHost) url.hostname = canonicalHost;
+    return url.origin;
   } catch {
     return null;
   }

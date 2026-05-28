@@ -41,6 +41,8 @@ export const organizationSettingsSchema = z.object({
     .optional(),
   stripe_customer_id: z.string().optional(),
   stripe_subscription_id: z.string().optional(),
+  subscription_plan: z.enum(["starter", "growth", "pro"]).optional(),
+  subscription_status: z.string().optional(),
 });
 
 export const organizationAppearanceSchema = z.object({

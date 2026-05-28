@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createStripeClient } from "@/lib/stripe/client";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parsePlanId, type PlanId } from "@/lib/billing/plans";
+import { inferPlanIdFromStripePriceId } from "@/lib/billing/stripe-prices";
 
 function normalizeSubscriptionStatus(status?: string | null) {
   switch (status) {
@@ -18,6 +20,28 @@ function normalizeSubscriptionStatus(status?: string | null) {
     default:
       return "inactive";
   }
+}
+
+function planForStatus(status: string, planId: PlanId) {
+  return status === "inactive" ? "starter" : planId;
+}
+
+function getPlanFromSession(session: Stripe.Checkout.Session) {
+  return parsePlanId(session.metadata?.planId);
+}
+
+function getPlanFromSubscription(
+  subscription: Stripe.Subscription,
+  fallbackPlan: PlanId | null = null,
+) {
+  const priceId = subscription.items.data[0]?.price.id ?? null;
+  const pricePlan = inferPlanIdFromStripePriceId(priceId);
+  if (pricePlan) return pricePlan;
+
+  const metadataPlan = parsePlanId(subscription.metadata?.planId);
+  if (metadataPlan) return metadataPlan;
+
+  return fallbackPlan ?? "starter";
 }
 
 export async function POST(request: Request) {
@@ -50,14 +74,17 @@ export async function POST(request: Request) {
         const normalizedStatus = normalizeSubscriptionStatus(
           subscription.status,
         );
+        const planId = getPlanFromSubscription(
+          subscription,
+          getPlanFromSession(session),
+        );
         await admin.from("organization_settings").upsert(
           {
             organization_id: organizationId,
             stripe_customer_id:
               typeof session.customer === "string" ? session.customer : null,
             stripe_subscription_id: subscription.id,
-            subscription_plan:
-              normalizedStatus === "inactive" ? "starter" : "pro",
+            subscription_plan: planForStatus(normalizedStatus, planId),
             subscription_status: normalizedStatus,
           },
           { onConflict: "organization_id" },
@@ -76,11 +103,12 @@ export async function POST(request: Request) {
           ? subscription.customer
           : subscription.customer.id;
       const normalizedStatus = normalizeSubscriptionStatus(subscription.status);
+      const planId = getPlanFromSubscription(subscription);
       const update = {
         stripe_customer_id: customerId,
         stripe_subscription_id: subscription.id,
         subscription_status: normalizedStatus,
-        subscription_plan: normalizedStatus === "inactive" ? "starter" : "pro",
+        subscription_plan: planForStatus(normalizedStatus, planId),
       };
       const organizationId = subscription.metadata?.organizationId;
 
@@ -98,8 +126,7 @@ export async function POST(request: Request) {
           .update({
             stripe_subscription_id: subscription.id,
             subscription_status: normalizedStatus,
-            subscription_plan:
-              normalizedStatus === "inactive" ? "starter" : "pro",
+            subscription_plan: planForStatus(normalizedStatus, planId),
           })
           .eq("stripe_customer_id", customerId);
       }

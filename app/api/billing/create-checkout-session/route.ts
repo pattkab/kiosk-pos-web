@@ -2,16 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createStripeClient } from "@/lib/stripe/client";
 import { resolveRequestAppUrl } from "@/lib/app-url";
+import {
+  PRICING_PLANS,
+  getPlanPriceCents,
+  parseBillingInterval,
+  parsePlanId,
+} from "@/lib/billing/plans";
+import { getStripePriceId } from "@/lib/billing/stripe-prices";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as { organizationId?: string };
+    const body = (await request.json()) as {
+      organizationId?: string;
+      planId?: string;
+      interval?: string;
+    };
     if (!body.organizationId) {
       return NextResponse.json(
         { ok: false, error: "organizationId is required." },
         { status: 400 },
       );
     }
+    const planId = parsePlanId(body.planId) ?? "starter";
+    const interval = parseBillingInterval(body.interval) ?? "month";
+    const plan = PRICING_PLANS[planId];
 
     const supabase = await createClient();
     const {
@@ -85,7 +99,12 @@ export async function POST(request: NextRequest) {
 
     const appUrl = resolveRequestAppUrl(request);
     const normalizedAppUrl = appUrl.replace(/\/$/, "");
-    const priceId = process.env.STRIPE_PRICE_20_YEAR;
+    const priceId = getStripePriceId(planId, interval);
+    const metadata = {
+      organizationId: org.id,
+      planId,
+      billingInterval: interval,
+    };
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -103,19 +122,21 @@ export async function POST(request: NextRequest) {
               quantity: 1,
               price_data: {
                 currency: "usd",
-                recurring: { interval: "year", interval_count: 1 },
+                recurring: { interval, interval_count: 1 },
                 product_data: {
-                  name: "Kiosk POS Pro",
-                  description:
-                    "Full team and operations access billed annually.",
+                  name: `Kiosk POS ${plan.name}`,
+                  description: plan.description,
+                  metadata: {
+                    app_plan: planId,
+                  },
                 },
-                unit_amount: 2000,
+                unit_amount: getPlanPriceCents(planId, interval),
               },
             },
           ],
-      metadata: { organizationId: org.id },
+      metadata,
       subscription_data: {
-        metadata: { organizationId: org.id },
+        metadata,
       },
       success_url: `${normalizedAppUrl}/settings/billing?status=success`,
       cancel_url: `${normalizedAppUrl}/settings/billing?status=cancelled`,

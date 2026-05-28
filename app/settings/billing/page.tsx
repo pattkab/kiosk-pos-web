@@ -7,7 +7,13 @@ export default async function BillingSettingsPage() {
   await checkPermission("settings.manage");
   return (
     <SettingsShell>
-      <Suspense fallback={<div className="text-sm text-muted-foreground">Loading billing...</div>}>
+      <Suspense
+        fallback={
+          <div className="text-sm text-muted-foreground">
+            Loading billing...
+          </div>
+        }
+      >
         <BillingSettings />
       </Suspense>
     </SettingsShell>
