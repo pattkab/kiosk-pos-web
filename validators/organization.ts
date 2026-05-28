@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { businessTypeValues } from "@/lib/business-types";
 import { DEFAULT_APPEARANCE_COLORS } from "@/lib/appearance";
+import {
+  BILLING_CYCLES,
+  PLAN_IDS,
+  SUBSCRIPTION_STATUSES,
+} from "@/lib/billing/plans";
 
 const hexColorSchema = z
   .string()
@@ -41,8 +46,12 @@ export const organizationSettingsSchema = z.object({
     .optional(),
   stripe_customer_id: z.string().optional(),
   stripe_subscription_id: z.string().optional(),
-  subscription_plan: z.enum(["starter", "growth", "pro"]).optional(),
-  subscription_status: z.string().optional(),
+  plan: z.enum(PLAN_IDS).optional(),
+  subscription_plan: z.enum(PLAN_IDS).optional(),
+  subscription_status: z.enum(SUBSCRIPTION_STATUSES).optional(),
+  trial_ends_at: z.string().optional().nullable(),
+  current_period_ends_at: z.string().optional().nullable(),
+  billing_cycle: z.enum(BILLING_CYCLES).optional(),
 });
 
 export const organizationAppearanceSchema = z.object({

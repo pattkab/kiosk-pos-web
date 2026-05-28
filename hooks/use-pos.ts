@@ -22,6 +22,7 @@ import {
 } from "@/lib/auth/permissions";
 import { OrganizationWithRole } from "@/hooks/use-organization";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
+import { canUseFeature } from "@/lib/billing/plans";
 
 export function useCurrentPosContext() {
   const supabase = createClient();
@@ -221,6 +222,18 @@ export function useBarcodeLookup() {
       }
 
       try {
+        const { data: settings, error: settingsError } = await supabase
+          .from("organization_settings")
+          .select("plan, subscription_plan, subscription_status, trial_ends_at")
+          .eq("organization_id", activeOrganizationId)
+          .maybeSingle();
+        if (settingsError) throw settingsError;
+        if (!canUseFeature(settings, "barcodeScanning")) {
+          throw new Error(
+            "Barcode scanning is available on Growth and higher plans.",
+          );
+        }
+
         const { data, error } = await supabase
           .from("products")
           .select("*, categories(name)")

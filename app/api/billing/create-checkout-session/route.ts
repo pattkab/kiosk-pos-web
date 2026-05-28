@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBillingPaymentProvider } from "@/lib/billing/payment-provider";
+import { normalizeBillingInterval, parsePlanId } from "@/lib/billing/plans";
 import { createClient } from "@/lib/supabase/server";
-import { createStripeClient } from "@/lib/stripe/client";
-import { resolveRequestAppUrl } from "@/lib/app-url";
-import {
-  PRICING_PLANS,
-  getPlanPriceCents,
-  parseBillingInterval,
-  parsePlanId,
-} from "@/lib/billing/plans";
-import { getStripePriceId } from "@/lib/billing/stripe-prices";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,19 +16,31 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    const planId = parsePlanId(body.planId) ?? "starter";
-    const interval = parseBillingInterval(body.interval) ?? "month";
-    const plan = PRICING_PLANS[planId];
+
+    const planId = parsePlanId(body.planId);
+    if (!planId || planId === "starter" || planId === "enterprise") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            planId === "enterprise"
+              ? "Enterprise uses Contact Sales until payments are configured."
+              : "Choose Growth or Business to start checkout.",
+        },
+        { status: 400 },
+      );
+    }
 
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user)
+    if (!user) {
       return NextResponse.json(
         { ok: false, error: "Unauthorized." },
         { status: 401 },
       );
+    }
 
     const { data: canManage, error: permissionError } = await supabase.rpc(
       "has_org_permission",
@@ -51,98 +56,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const [{ data: org }, { data: settings }, { data: profile }] =
-      await Promise.all([
-        supabase
-          .from("organizations")
-          .select("id, name")
-          .eq("id", body.organizationId)
-          .maybeSingle(),
-        supabase
-          .from("organization_settings")
-          .select("stripe_customer_id")
-          .eq("organization_id", body.organizationId)
-          .maybeSingle(),
-        supabase
-          .from("profiles")
-          .select("email")
-          .eq("auth_user_id", user.id)
-          .maybeSingle(),
-      ]);
-
-    if (!org)
-      return NextResponse.json(
-        { ok: false, error: "Organization not found." },
-        { status: 404 },
-      );
-
-    const stripe = createStripeClient();
-    let customerId = settings?.stripe_customer_id ?? null;
-    const customerEmail = profile?.email ?? user.email ?? undefined;
-
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: customerEmail,
-        name: org.name,
-        metadata: { organizationId: org.id },
-      });
-      customerId = customer.id;
-      await supabase.from("organization_settings").upsert(
-        {
-          organization_id: org.id,
-          stripe_customer_id: customer.id,
-          subscription_plan: "starter",
-        },
-        { onConflict: "organization_id" },
-      );
-    }
-
-    const appUrl = resolveRequestAppUrl(request);
-    const normalizedAppUrl = appUrl.replace(/\/$/, "");
-    const priceId = getStripePriceId(planId, interval);
-    const metadata = {
-      organizationId: org.id,
+    const provider = getBillingPaymentProvider();
+    const result = await provider.createCheckoutSession({
+      organizationId: body.organizationId,
       planId,
-      billingInterval: interval,
-    };
-
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId,
-      allow_promotion_codes: true,
-      client_reference_id: org.id,
-      customer_update: {
-        address: "auto",
-        name: "auto",
-      },
-      line_items: priceId
-        ? [{ price: priceId, quantity: 1 }]
-        : [
-            {
-              quantity: 1,
-              price_data: {
-                currency: "usd",
-                recurring: { interval, interval_count: 1 },
-                product_data: {
-                  name: `Kiosk POS ${plan.name}`,
-                  description: plan.description,
-                  metadata: {
-                    app_plan: planId,
-                  },
-                },
-                unit_amount: getPlanPriceCents(planId, interval),
-              },
-            },
-          ],
-      metadata,
-      subscription_data: {
-        metadata,
-      },
-      success_url: `${normalizedAppUrl}/settings/billing?status=success`,
-      cancel_url: `${normalizedAppUrl}/settings/billing?status=cancelled`,
+      interval: normalizeBillingInterval(body.interval),
     });
 
-    return NextResponse.json({ ok: true, url: session.url });
+    return NextResponse.json(result, {
+      status: result.ok ? 200 : (result.status ?? 501),
+    });
   } catch (error) {
     return NextResponse.json(
       {

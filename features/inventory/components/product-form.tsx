@@ -53,13 +53,17 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { useActiveOrganization } from "@/hooks/use-organization";
+import {
+  useActiveOrganization,
+  useOrganizationSettings,
+} from "@/hooks/use-organization";
 import {
   getCategorySeedsForBusinessType,
   getSeedCategoryKey,
 } from "@/lib/category-taxonomy";
 import dynamic from "next/dynamic";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
+import { canUseFeature } from "@/lib/billing/plans";
 
 const InventoryBarcodeScanner = dynamic(
   () =>
@@ -83,6 +87,7 @@ export function ProductForm() {
   } = useInventoryStore();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { activeOrganization } = useActiveOrganization();
+  const organizationSettings = useOrganizationSettings();
   const { createProduct, updateProduct } = useProductMutations();
   const { data: products } = useProducts({});
   const activeCurrency = useOrganizationStore((state) => state.activeCurrency);
@@ -98,6 +103,14 @@ export function ProductForm() {
     useState(false);
 
   const editingProduct = products?.find((p) => p.id === editingProductId);
+  const canUseBarcode = canUseFeature(
+    organizationSettings.data,
+    "barcodeScanning",
+  );
+  const canUseExpiryTracking = canUseFeature(
+    organizationSettings.data,
+    "pharmacyExpiryTracking",
+  );
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -178,7 +191,10 @@ export function ProductForm() {
       toast.success("Category created");
     } catch (err: any) {
       toast.error(
-        getUserErrorMessage(err, "We could not create that category right now."),
+        getUserErrorMessage(
+          err,
+          "We could not create that category right now.",
+        ),
       );
     } finally {
       setIsAddingCategoryLoading(false);
@@ -608,8 +624,13 @@ export function ProductForm() {
                           <FormControl>
                             <div className="flex gap-2">
                               <Input
-                                placeholder="Scan or type"
+                                placeholder={
+                                  canUseBarcode
+                                    ? "Scan or type"
+                                    : "Upgrade to Growth"
+                                }
                                 className="h-11"
+                                disabled={!canUseBarcode}
                                 {...field}
                               />
                               <Button
@@ -619,12 +640,18 @@ export function ProductForm() {
                                 onClick={() =>
                                   openScanner("product-form-barcode")
                                 }
+                                disabled={!canUseBarcode}
                                 aria-label="Scan product barcode"
                               >
                                 <ScanBarcode className="h-4 w-4" />
                               </Button>
                             </div>
                           </FormControl>
+                          {!canUseBarcode ? (
+                            <FormDescription className="text-xs">
+                              Upgrade to Growth for barcode scanning.
+                            </FormDescription>
+                          ) : null}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -746,10 +773,13 @@ export function ProductForm() {
                               className="h-11"
                               {...field}
                               value={field.value ?? ""}
+                              disabled={!canUseExpiryTracking}
                             />
                           </FormControl>
                           <FormDescription className="text-xs">
-                            Leave blank when not applicable.
+                            {canUseExpiryTracking
+                              ? "Leave blank when not applicable."
+                              : "Upgrade to Business for pharmacy expiry tracking."}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

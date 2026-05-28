@@ -1,44 +1,43 @@
 import {
+  canUseFeature,
   comparePlans,
-  getRequiredPlanForFeature,
-  normalizePlanId,
+  enforceSubscriptionAccess,
+  getPlanFromSubscription,
+  normalizeSubscriptionStatus,
   type PlanId,
   type SubscriptionFeature,
 } from "@/lib/billing/plans";
 
 export type SubscriptionSettings = {
+  plan?: string | null;
   subscription_status?: string | null;
   subscription_plan?: string | null;
   stripe_subscription_id?: string | null;
   trial_ends_at?: string | null;
+  current_period_ends_at?: string | null;
+  billing_cycle?: string | null;
 };
 
 export function hasSubscriptionAccess(
   settings: SubscriptionSettings | null | undefined,
 ) {
-  if (!settings) return false;
-
-  if (settings.subscription_status === "active") {
-    return true;
-  }
-
-  if (settings.trial_ends_at) {
-    return new Date(settings.trial_ends_at).getTime() > Date.now();
-  }
-
-  return settings.subscription_status === "trialing";
+  return enforceSubscriptionAccess(settings).ok;
 }
 
 export function getCurrentPlan(
   settings: SubscriptionSettings | null | undefined,
 ) {
-  return normalizePlanId(settings?.subscription_plan);
+  return getPlanFromSubscription(settings);
 }
 
 export function isTrialAccess(
   settings: SubscriptionSettings | null | undefined,
 ) {
-  if (!settings || settings.subscription_status !== "trialing") return false;
+  if (
+    !settings ||
+    normalizeSubscriptionStatus(settings.subscription_status) !== "trialing"
+  )
+    return false;
   if (!settings.trial_ends_at) return true;
   return new Date(settings.trial_ends_at).getTime() > Date.now();
 }
@@ -48,7 +47,6 @@ export function hasPlanAccess(
   requiredPlan: PlanId,
 ) {
   if (!hasSubscriptionAccess(settings)) return false;
-  if (isTrialAccess(settings)) return true;
   return comparePlans(getCurrentPlan(settings), requiredPlan) >= 0;
 }
 
@@ -56,7 +54,7 @@ export function hasFeatureAccess(
   settings: SubscriptionSettings | null | undefined,
   feature: SubscriptionFeature,
 ) {
-  return hasPlanAccess(settings, getRequiredPlanForFeature(feature));
+  return canUseFeature(settings, feature);
 }
 
 export function getTrialDaysRemaining(trialEndsAt: string | null | undefined) {
@@ -69,9 +67,11 @@ export function isTrialExpired(
   settings: SubscriptionSettings | null | undefined,
 ) {
   if (!settings) return true;
-  if (settings.subscription_status === "active") {
+  const status = normalizeSubscriptionStatus(settings.subscription_status);
+  if (status === "active" || status === "free") {
     return false;
   }
+  if (status !== "trialing") return false;
   if (!settings.trial_ends_at) return false;
   return new Date(settings.trial_ends_at).getTime() <= Date.now();
 }

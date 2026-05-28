@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBillingPaymentProvider } from "@/lib/billing/payment-provider";
 import { createClient } from "@/lib/supabase/server";
-import { createStripeClient } from "@/lib/stripe/client";
-import { resolveRequestAppUrl } from "@/lib/app-url";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,11 +16,12 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user)
+    if (!user) {
       return NextResponse.json(
         { ok: false, error: "Unauthorized." },
         { status: 401 },
       );
+    }
 
     const { data: canManage, error: permissionError } = await supabase.rpc(
       "has_org_permission",
@@ -43,24 +43,15 @@ export async function POST(request: NextRequest) {
       .eq("organization_id", body.organizationId)
       .maybeSingle();
 
-    if (!settings?.stripe_customer_id) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "No billing customer found for this organization.",
-        },
-        { status: 404 },
-      );
-    }
-
-    const stripe = createStripeClient();
-    const appUrl = resolveRequestAppUrl(request);
-    const portal = await stripe.billingPortal.sessions.create({
-      customer: settings.stripe_customer_id,
-      return_url: `${appUrl.replace(/\/$/, "")}/settings/billing`,
+    const provider = getBillingPaymentProvider();
+    const result = await provider.createPortalSession({
+      organizationId: body.organizationId,
+      customerId: settings?.stripe_customer_id ?? null,
     });
 
-    return NextResponse.json({ ok: true, url: portal.url });
+    return NextResponse.json(result, {
+      status: result.ok ? 200 : (result.status ?? 501),
+    });
   } catch (error) {
     return NextResponse.json(
       {

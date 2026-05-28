@@ -14,9 +14,13 @@ const STRIPE_PRICE_ENV: Record<PlanId, Record<BillingInterval, string>> = {
     month: "STRIPE_PRICE_GROWTH_MONTHLY",
     year: "STRIPE_PRICE_GROWTH_YEARLY",
   },
-  pro: {
-    month: "STRIPE_PRICE_PRO_MONTHLY",
-    year: "STRIPE_PRICE_PRO_YEARLY",
+  business: {
+    month: "STRIPE_PRICE_BUSINESS_MONTHLY",
+    year: "STRIPE_PRICE_BUSINESS_YEARLY",
+  },
+  enterprise: {
+    month: "STRIPE_PRICE_ENTERPRISE_MONTHLY",
+    year: "STRIPE_PRICE_ENTERPRISE_YEARLY",
   },
 };
 

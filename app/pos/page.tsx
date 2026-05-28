@@ -15,6 +15,7 @@ import {
   usePosProducts,
   useRegisterSession,
 } from "@/hooks/use-pos";
+import { useOrganizationSettings } from "@/hooks/use-organization";
 import { CartSidebar } from "@/features/pos/components/cart-sidebar";
 import { useCartStore } from "@/store/use-cart-store";
 import { useCheckoutStore } from "@/store/use-checkout-store";
@@ -38,6 +39,7 @@ import dynamic from "next/dynamic";
 import { ProductForm } from "@/features/inventory/components/product-form";
 import { isLikelyScannerBurst, normalizeScannedCode } from "@/lib/barcode";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
+import { canUseFeature } from "@/lib/billing/plans";
 
 // Performance: Lazy load the heavy barcode scanner only when needed
 const BarcodeScanner = dynamic(
@@ -59,6 +61,7 @@ export default function PosPage() {
   const barcodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scanQueueRef = useRef(Promise.resolve());
   const { data: categories } = useCategories();
+  const organizationSettings = useOrganizationSettings();
   const { activeSession } = useRegisterSession();
   const {
     search,
@@ -91,6 +94,10 @@ export default function PosPage() {
   const products = productsQuery.data ?? [];
   const selectedProduct = products[selectedIndex];
   const cartTotals = getTotals();
+  const canUseBarcode = canUseFeature(
+    organizationSettings.data,
+    "barcodeScanning",
+  );
 
   const resetBarcodeBuffer = useCallback(() => {
     barcodeBufferRef.current = "";
@@ -101,6 +108,11 @@ export default function PosPage() {
 
   const handleScannedBarcode = useCallback(
     (rawCode: string) => {
+      if (!canUseBarcode) {
+        toast.info("Upgrade to Growth to unlock barcode scanning.");
+        return;
+      }
+
       const barcode = normalizeScannedCode(rawCode);
       if (!barcode) return;
 
@@ -122,7 +134,7 @@ export default function PosPage() {
           }
         });
     },
-    [addItem, barcodeLookup, rememberProduct],
+    [addItem, barcodeLookup, canUseBarcode, rememberProduct],
   );
 
   useEffect(() => {
@@ -299,7 +311,14 @@ export default function PosPage() {
             <Button
               variant="secondary"
               className="h-14 gap-2 px-5 font-bold"
-              onClick={openScanner}
+              onClick={() => {
+                if (!canUseBarcode) {
+                  toast.info("Upgrade to Growth to unlock barcode scanning.");
+                  return;
+                }
+                openScanner();
+              }}
+              disabled={!canUseBarcode}
             >
               <ScanBarcode className="h-5 w-5" />
               <span className="hidden sm:inline">Scan</span>

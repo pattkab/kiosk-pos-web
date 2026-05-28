@@ -67,18 +67,19 @@ export default function TermsPage() {
 
       <LegalSection title="4. Subscriptions and billing">
         <p>
-          New organizations receive a one-month free trial. After the trial ends, a paid annual
-          subscription is required to continue using the Services. Pricing and billing intervals are
-          shown at checkout or in your account settings.
+          New organizations can use the Starter plan for free. Paid plans unlock higher limits and
+          advanced operational features such as more users, more registers, advanced reporting,
+          branch workflows, audit logs, and specialized pharmacy or restaurant workflows.
         </p>
         <p>
-          By subscribing, you authorize us and our payment processor to charge applicable fees on a
-          recurring annual basis until you cancel in accordance with these Terms.
+          When paid billing is enabled and you subscribe, you authorize us and our payment processor
+          to charge applicable fees on the selected billing cycle until you cancel in accordance with
+          these Terms.
         </p>
         <p>
-          Payments are processed by third-party providers (such as Stripe). Taxes may apply depending
-          on your location. Except where required by law, fees are non-refundable once a billing
-          period has started.
+          Payments may be processed by third-party providers. Taxes may apply depending on your
+          location. Except where required by law, fees are non-refundable once a billing period has
+          started.
         </p>
         <p>
           You may manage or cancel subscriptions through account billing settings or the payment

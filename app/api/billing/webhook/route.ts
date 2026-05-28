@@ -16,14 +16,14 @@ function normalizeSubscriptionStatus(status?: string | null) {
       return "past_due";
     case "canceled":
     case "unpaid":
-      return "inactive";
+      return "cancelled";
     default:
-      return "inactive";
+      return "cancelled";
   }
 }
 
 function planForStatus(status: string, planId: PlanId) {
-  return status === "inactive" ? "starter" : planId;
+  return status === "cancelled" ? "starter" : planId;
 }
 
 function getPlanFromSession(session: Stripe.Checkout.Session) {
@@ -42,6 +42,12 @@ function getPlanFromSubscription(
   if (metadataPlan) return metadataPlan;
 
   return fallbackPlan ?? "starter";
+}
+
+function billingCycleFromSubscription(subscription: Stripe.Subscription) {
+  return subscription.items.data[0]?.price.recurring?.interval === "year"
+    ? "yearly"
+    : "monthly";
 }
 
 export async function POST(request: Request) {
@@ -84,8 +90,13 @@ export async function POST(request: Request) {
             stripe_customer_id:
               typeof session.customer === "string" ? session.customer : null,
             stripe_subscription_id: subscription.id,
+            plan: planForStatus(normalizedStatus, planId),
             subscription_plan: planForStatus(normalizedStatus, planId),
             subscription_status: normalizedStatus,
+            billing_cycle:
+              session.metadata?.billingInterval === "year"
+                ? "yearly"
+                : "monthly",
           },
           { onConflict: "organization_id" },
         );
@@ -108,7 +119,9 @@ export async function POST(request: Request) {
         stripe_customer_id: customerId,
         stripe_subscription_id: subscription.id,
         subscription_status: normalizedStatus,
+        plan: planForStatus(normalizedStatus, planId),
         subscription_plan: planForStatus(normalizedStatus, planId),
+        billing_cycle: billingCycleFromSubscription(subscription),
       };
       const organizationId = subscription.metadata?.organizationId;
 
@@ -126,6 +139,7 @@ export async function POST(request: Request) {
           .update({
             stripe_subscription_id: subscription.id,
             subscription_status: normalizedStatus,
+            plan: planForStatus(normalizedStatus, planId),
             subscription_plan: planForStatus(normalizedStatus, planId),
           })
           .eq("stripe_customer_id", customerId);
