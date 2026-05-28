@@ -17,6 +17,7 @@ import { useOrganizationStore } from "@/store/use-organization-store";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
+import { getOAuthCallbackUrl } from "@/lib/auth/oauth";
 
 type InvitationRecord = {
   token: string;
@@ -136,7 +137,7 @@ export default function AcceptInvitePage() {
             data: {
               full_name: fullName.trim(),
             },
-            emailRedirectTo: `${window.location.origin}/invite/${token}`,
+            emailRedirectTo: getOAuthCallbackUrl(`/invite/${token}`),
           },
         });
 

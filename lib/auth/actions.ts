@@ -61,6 +61,7 @@ export async function signInWithGoogle(next = "/select-organization") {
 
 export async function signUp(data: any) {
   const supabase = createClient();
+  const { getOAuthCallbackUrl } = await import("@/lib/auth/oauth");
 
   const { error, data: authData } = await supabase.auth.signUp({
     email: data.email,
@@ -69,6 +70,7 @@ export async function signUp(data: any) {
       data: {
         full_name: data.full_name,
       },
+      emailRedirectTo: getOAuthCallbackUrl("/select-organization"),
     },
   });
 
@@ -90,7 +92,10 @@ export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) {
     toast.error(
-      getUserErrorMessage(error, "We could not sign you out. Please try again."),
+      getUserErrorMessage(
+        error,
+        "We could not sign you out. Please try again.",
+      ),
     );
   } else {
     window.location.href = "/login";
