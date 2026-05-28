@@ -15,6 +15,10 @@ export const businessTypeValues = businessTypes.map((type) => type.value) as [
 ];
 
 export function getBusinessTypeLabel(value?: string | null) {
+  if (value?.startsWith("other:")) {
+    const custom = value.slice("other:".length).trim();
+    if (custom.length > 0) return `Other (${custom})`;
+  }
   return businessTypes.find((type) => type.value === value)?.label ?? "Other";
 }
 

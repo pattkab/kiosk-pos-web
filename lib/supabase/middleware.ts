@@ -60,6 +60,7 @@ export async function updateSession(request: NextRequest) {
   const isOrganizationSelectionPage = request.nextUrl.pathname.startsWith(
     "/select-organization",
   );
+  const isExplorePage = request.nextUrl.pathname === "/dashboard";
 
   if (!user && !isPublicPage && !isPublicRuntimeAsset && !isBillingWebhook) {
     const url = request.nextUrl.clone();
@@ -72,6 +73,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user) {
+    await supabase.rpc("ensure_profile_for_current_user");
     const { data: hasMembership } = await supabase.rpc(
       "has_active_organization_membership",
     );
@@ -81,7 +83,8 @@ export async function updateSession(request: NextRequest) {
       !member &&
       !request.nextUrl.pathname.startsWith("/onboarding") &&
       !isPublicPage &&
-      !isOrganizationSelectionPage
+      !isOrganizationSelectionPage &&
+      !isExplorePage
     ) {
       const url = request.nextUrl.clone();
       url.pathname = "/onboarding";

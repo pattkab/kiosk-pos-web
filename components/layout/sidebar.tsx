@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { Permission } from "@/lib/auth/permissions";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useOrganizationStore } from "@/store/use-organization-store";
+import { toast } from "sonner";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, module: "dashboard" },
@@ -32,6 +33,7 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useAppStore();
   const { activeOrganization } = useActiveOrganization();
   const userRole = activeOrganization?.role;
@@ -40,6 +42,7 @@ export function Sidebar() {
   const [isHovered, setIsHovered] = useState(false);
 
   const isExpanded = sidebarOpen || (isDesktop && isHovered);
+  const canExploreWithoutOrganization = (module: string) => module === "dashboard";
 
   const hasModuleAccess = (module: string) => {
     if (!userRole) return true;
@@ -145,6 +148,19 @@ export function Sidebar() {
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )}
+                  onClick={(event) => {
+                    if (activeOrganization || canExploreWithoutOrganization(item.module)) {
+                      return;
+                    }
+
+                    event.preventDefault();
+                    toast.info("Create an organization to use this feature.", {
+                      action: {
+                        label: "Create",
+                        onClick: () => router.push("/onboarding"),
+                      },
+                    });
+                  }}
                 >
                   <item.icon
                     className={cn(

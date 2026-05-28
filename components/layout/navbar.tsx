@@ -1,6 +1,5 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import Link from "next/link";
 import { Moon, Sun, Search, Menu, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,9 +21,10 @@ import { SyncStatusBadge } from "@/components/realtime/sync-status-badge";
 import { OfflineBanner } from "./offline-banner";
 import { getProfileInitials } from "@/lib/avatar-presets";
 import { useCurrentProfile } from "@/hooks/use-profile";
+import { useThemePreference } from "@/hooks/use-theme-preference";
 
 export function Navbar() {
-  const { setTheme } = useTheme();
+  const { setThemePreference } = useThemePreference();
   const { toggleSidebar, setCommandPaletteOpen } = useAppStore();
   const { data: profile } = useCurrentProfile();
   const displayName = profile?.full_name || "Account";
@@ -91,13 +91,13 @@ export function Navbar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setTheme("light")}>
+              <DropdownMenuItem onClick={() => setThemePreference("light")}>
                 Light
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
+              <DropdownMenuItem onClick={() => setThemePreference("dark")}>
                 Dark
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")}>
+              <DropdownMenuItem onClick={() => setThemePreference("system")}>
                 System
               </DropdownMenuItem>
             </DropdownMenuContent>

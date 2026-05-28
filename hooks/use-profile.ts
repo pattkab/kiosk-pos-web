@@ -13,6 +13,7 @@ export type CurrentProfile = {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
+  theme_preference: "light" | "dark" | "system";
 };
 
 export const currentProfileKey = ["current-profile"] as const;
@@ -31,9 +32,11 @@ export function useCurrentProfile() {
       if (userError) throw userError;
       if (!user) throw new Error("You must be signed in.");
 
+      await supabase.rpc("ensure_profile_for_current_user");
+
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, auth_user_id, email, full_name, phone, avatar_url")
+        .select("id, auth_user_id, email, full_name, phone, avatar_url, theme_preference")
         .eq("auth_user_id", user.id)
         .maybeSingle();
 
@@ -74,7 +77,7 @@ export function useUpdateCurrentProfile() {
           avatar_url: avatarUrl,
         })
         .eq("auth_user_id", user.id)
-        .select("id, auth_user_id, email, full_name, phone, avatar_url")
+        .select("id, auth_user_id, email, full_name, phone, avatar_url, theme_preference")
         .single();
 
       if (error) throw error;

@@ -21,6 +21,8 @@ export async function signIn(data: LoginFormValues) {
     return { error: error.message };
   }
 
+  await supabase.rpc("ensure_profile_for_current_user");
+
   toast.success("Successfully signed in!");
   return { success: true };
 }

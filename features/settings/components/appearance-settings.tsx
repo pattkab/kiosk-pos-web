@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTheme } from "next-themes";
 import { Monitor, Moon, Palette, RotateCcw, Sun, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +27,7 @@ import {
   normalizeHexColor,
 } from "@/lib/appearance";
 import { cn } from "@/lib/utils";
+import { useThemePreference } from "@/hooks/use-theme-preference";
 
 const themeOptions = [
   { value: "system", label: "System", icon: Monitor },
@@ -43,7 +43,7 @@ const colorPresets = [
 ];
 
 export function AppearanceSettings() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setThemePreference } = useThemePreference();
   const { activeOrganization } = useActiveOrganization();
   const settings = useOrganizationSettings();
 
@@ -135,7 +135,7 @@ export function AppearanceSettings() {
                   type="button"
                   variant={active ? "default" : "outline"}
                   className="h-12 justify-start gap-2 font-bold"
-                  onClick={() => setTheme(option.value)}
+                  onClick={() => setThemePreference(option.value)}
                 >
                   <Icon className="h-4 w-4" />
                   {option.label}

@@ -2,7 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Building2, Check, PlusCircle, Settings, Trash2 } from "lucide-react";
+import {
+  Building2,
+  Check,
+  LogOut,
+  PlusCircle,
+  Settings,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActiveOrganization } from "@/hooks/use-organization";
+import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/utils";
 import { getBusinessTypeLabel } from "@/lib/business-types";
 
@@ -28,6 +37,7 @@ export default function SelectOrganizationPage() {
   } = useActiveOrganization();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isProceeding, setIsProceeding] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const effectiveSelectedId =
     selectedId ?? activeOrganization?.id ?? organizations[0]?.id ?? null;
 
@@ -43,6 +53,11 @@ export default function SelectOrganizationPage() {
     if (!selectedOrganization) return;
     setIsProceeding(true);
     switchOrganization(selectedOrganization.id);
+    window.location.assign("/dashboard");
+  };
+
+  const exploreWithoutOrganization = () => {
+    setIsProceeding(true);
     window.location.assign("/dashboard");
   };
 
@@ -163,20 +178,53 @@ export default function SelectOrganizationPage() {
             </div>
           )}
 
-          <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-between">
-            <Button variant="outline" asChild className="w-full sm:w-auto">
-              <Link href="/onboarding">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create another organization
-              </Link>
-            </Button>
-            <Button
-              className="w-full sm:w-auto"
-              disabled={!selectedOrganization || isProceeding}
-              onClick={proceedToDashboard}
-            >
-              {isProceeding ? "Opening dashboard..." : "Proceed to Dashboard"}
-            </Button>
+          <div className="flex flex-col gap-3 border-t pt-5">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+              <Button variant="outline" asChild className="w-full sm:w-auto">
+                <Link href="/onboarding">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Create another organization
+                </Link>
+              </Button>
+              {organizations.length > 0 ? (
+                <Button
+                  className="w-full sm:w-auto"
+                  disabled={!selectedOrganization || isProceeding}
+                  onClick={proceedToDashboard}
+                >
+                  {isProceeding ? "Opening dashboard..." : "Proceed to Dashboard"}
+                </Button>
+              ) : (
+                <Button
+                  className="w-full sm:w-auto"
+                  variant="secondary"
+                  disabled={isProceeding}
+                  onClick={exploreWithoutOrganization}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {isProceeding ? "Opening..." : "Explore app without organization"}
+                </Button>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                className="w-full sm:w-auto"
+                disabled={isSigningOut}
+                onClick={async () => {
+                  setIsSigningOut(true);
+                  try {
+                    await signOut();
+                  } finally {
+                    setIsSigningOut(false);
+                  }
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                {isSigningOut ? "Signing out..." : "Sign out"}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

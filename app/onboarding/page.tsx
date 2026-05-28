@@ -25,7 +25,9 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import {
+  Check,
   CheckCircle2,
+  ChevronsUpDown,
   LayoutDashboard,
   PackagePlus,
   Users,
@@ -36,26 +38,54 @@ import {
   getBusinessTypeLabel,
 } from "@/lib/business-types";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { getCurrencyCodes } from "@/lib/currencies";
 
-const onboardingSchema = z.object({
-  name: z.string().min(2, "Organization name must be at least 2 characters"),
-  slug: z
-    .string()
-    .min(2, "Slug must be at least 2 characters")
-    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
-  business_type: z.enum(businessTypeValues, {
-    required_error: "Business type is required",
-  }),
-  currency: z.string().min(1, "Currency is required"),
-});
+const onboardingSchema = z
+  .object({
+    name: z.string().min(2, "Organization name must be at least 2 characters"),
+    slug: z
+      .string()
+      .min(2, "Slug must be at least 2 characters")
+      .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+    business_type: z.enum(businessTypeValues, {
+      required_error: "Business type is required",
+    }),
+    business_type_other: z.string().trim().optional(),
+    currency: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z]{3}$/, "Use a valid 3-letter currency code"),
+  })
+  .superRefine((values, context) => {
+    if (
+      values.business_type === "other" &&
+      (!values.business_type_other || values.business_type_other.length < 2)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please specify your business type",
+        path: ["business_type_other"],
+      });
+    }
+  });
 
-const currencies = ["USD", "UGX", "KES", "TZS", "EUR", "GBP"];
+const currencies = getCurrencyCodes();
 
 const slugify = (value: string) =>
   value
@@ -77,6 +107,7 @@ export default function OnboardingPage() {
 
   const [step, setStep] = useState(1);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
 
   const form = useForm<z.infer<typeof onboardingSchema>>({
     resolver: zodResolver(onboardingSchema),
@@ -84,10 +115,15 @@ export default function OnboardingPage() {
       name: "",
       slug: "",
       business_type: "supermarket_or_shop",
+      business_type_other: "",
       currency: "USD",
     },
   });
   const organizationName = useWatch({ control: form.control, name: "name" });
+  const selectedBusinessType = useWatch({
+    control: form.control,
+    name: "business_type",
+  });
 
   async function onOrgSubmit(values: z.infer<typeof onboardingSchema>) {
     setIsLoading(true);
@@ -97,7 +133,10 @@ export default function OnboardingPage() {
         {
           p_name: values.name,
           p_slug: values.slug,
-          p_business_type: values.business_type,
+          p_business_type:
+            values.business_type === "other"
+              ? `other:${values.business_type_other?.trim()}`
+              : values.business_type,
           p_currency: values.currency,
         },
       );
@@ -190,7 +229,14 @@ export default function OnboardingPage() {
                         <FormItem>
                           <FormLabel>Business type</FormLabel>
                           <Select
-                            onValueChange={field.onChange}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              if (value !== "other") {
+                                form.setValue("business_type_other", "", {
+                                  shouldValidate: true,
+                                });
+                              }
+                            }}
                             value={field.value}
                           >
                             <FormControl>
@@ -210,29 +256,76 @@ export default function OnboardingPage() {
                         </FormItem>
                       )}
                     />
+                    {selectedBusinessType === "other" ? (
+                      <FormField
+                        control={form.control}
+                        name="business_type_other"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Specify business type</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="e.g. Electronics wholesaler"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ) : null}
                     <FormField
                       control={form.control}
                       name="currency"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Currency</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select currency" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {currencies.map((currency) => (
-                                <SelectItem key={currency} value={currency}>
-                                  {currency}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <Popover open={currencyOpen} onOpenChange={setCurrencyOpen}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between"
+                                >
+                                  {field.value || "Select currency"}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                              <Command>
+                                <CommandInput placeholder="Search currency..." />
+                                <CommandList>
+                                  <CommandEmpty>No currency found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {currencies.map((currency) => (
+                                      <CommandItem
+                                        key={currency}
+                                        value={currency}
+                                        onSelect={() => {
+                                          form.setValue("currency", currency, {
+                                            shouldValidate: true,
+                                          });
+                                          setCurrencyOpen(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={
+                                            field.value === currency
+                                              ? "mr-2 h-4 w-4 opacity-100"
+                                              : "mr-2 h-4 w-4 opacity-0"
+                                          }
+                                        />
+                                        {currency}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
                           <FormMessage />
                         </FormItem>
                       )}

@@ -68,5 +68,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/auth/auth-code-error${query}`);
   }
 
+  await supabase.rpc("ensure_profile_for_current_user");
+
   return response;
 }
