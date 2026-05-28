@@ -238,11 +238,15 @@ function PlanPrice({
         </span>
       </div>
       {localPrice && localPrice.currency !== "USD" ? (
-        <p className="mt-1 text-xs font-semibold text-emerald-700">
-          ≈ {localPrice.label} /{interval === "year" ? "year" : "month"}
+        <p className="mt-2 text-lg font-bold leading-tight text-emerald-700 sm:text-xl">
+          ≈ {localPrice.label}
+          <span className="text-sm font-semibold text-emerald-700/80">
+            {" "}
+            /{interval === "year" ? "year" : "month"}
+          </span>
         </p>
       ) : (
-        <p className="mt-1 text-xs font-semibold text-emerald-700">
+        <p className="mt-2 text-sm font-semibold text-emerald-700">
           USD billing
         </p>
       )}
