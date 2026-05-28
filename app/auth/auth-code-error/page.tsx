@@ -39,6 +39,12 @@ export default async function AuthCodeErrorPage({
             development.
           </li>
           <li>
+            In Supabase → Authentication → URL configuration, keep the
+            production Site URL set to{" "}
+            <code className="text-xs">{PRODUCTION_APP_URL}</code>, not
+            localhost.
+          </li>
+          <li>
             In Supabase → Authentication → Providers → Google, verify Client ID
             and Client Secret match the Google OAuth client.
           </li>

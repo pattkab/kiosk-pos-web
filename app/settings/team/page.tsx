@@ -1,12 +1,5 @@
-import { SettingsShell } from "@/features/settings/components/settings-shell";
-import { TeamManagement } from "@/features/settings/components/team-management";
-import { checkPermission } from "@/lib/auth/server-permissions";
+import { redirect } from "next/navigation";
 
 export default async function SettingsTeamPage() {
-  await checkPermission("team.manage");
-  return (
-    <SettingsShell>
-      <TeamManagement />
-    </SettingsShell>
-  );
+  redirect("/team");
 }

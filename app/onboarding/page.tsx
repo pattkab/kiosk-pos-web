@@ -284,7 +284,7 @@ export default function OnboardingPage() {
                     setIsNavigating(true);
                     if (orgId) setActiveOrganizationId(orgId);
                     setActiveCurrency(form.getValues("currency"));
-                    window.location.assign("/settings/team");
+                    window.location.assign("/team");
                   }}
                 >
                   <Users className="h-5 w-5" />

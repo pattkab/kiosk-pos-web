@@ -4,6 +4,7 @@ import {
   getConfiguredAppUrl,
   resolveRequestAppUrl,
 } from "@/lib/app-url";
+import { getOAuthCallbackUrl } from "@/lib/auth/oauth";
 
 const ORIGINAL_APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 
@@ -52,6 +53,15 @@ describe("app URL resolution", () => {
 
     expect(resolveRequestAppUrl(request, { allowLocalhost: false })).toBe(
       PRODUCTION_APP_URL,
+    );
+  });
+
+  it("uses the canonical production URL for OAuth callbacks when localhost is configured", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+
+    expect(getOAuthCallbackUrl("/reports")).toBe(
+      `${PRODUCTION_APP_URL}/auth/callback?next=%2Freports`,
     );
   });
 });

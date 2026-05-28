@@ -13,14 +13,12 @@ import {
   Receipt,
   Shield,
   TriangleAlert,
-  Users,
   WalletCards,
 } from "lucide-react";
 
 const nav = [
   { href: "/settings", label: "General", icon: Building2 },
   { href: "/settings/appearance", label: "Appearance", icon: Palette },
-  { href: "/settings/team", label: "Team", icon: Users },
   { href: "/settings/roles", label: "Roles", icon: Shield },
   { href: "/settings/notifications", label: "Notifications", icon: Bell },
   { href: "/settings/receipt", label: "Receipt", icon: Receipt },
@@ -39,7 +37,7 @@ export function SettingsShell({ children }: { children: React.ReactNode }) {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
           <p className="text-sm text-muted-foreground">
-            Organization, team, permissions, and audit controls.
+            Organization, permissions, and audit controls.
           </p>
         </div>
         <nav className="grid gap-1 pt-4">
