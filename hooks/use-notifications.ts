@@ -11,6 +11,7 @@ import {
   UserNotification,
 } from "@/types/notifications";
 import { toast } from "sonner";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 export function useNotifications() {
   const supabase = createClient();
@@ -117,7 +118,13 @@ export function useNotificationPreferences() {
       queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
       toast.success("Notification preferences saved");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not save notification preferences.",
+        ),
+      ),
   });
 
   return { ...query, save };
@@ -152,7 +159,10 @@ export function useAcknowledgeAlert() {
       queryClient.invalidateQueries({ queryKey: ["alerts"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(error, "We could not acknowledge this alert."),
+      ),
   });
 }
 
@@ -198,7 +208,13 @@ export function useNotificationActions() {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["alerts"] });
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not mark notifications as read right now.",
+        ),
+      ),
   });
 
   const archive = useMutation({

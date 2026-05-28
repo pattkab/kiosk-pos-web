@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { createClient } from "@/lib/supabase/client";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 import type { UserProfileValues } from "@/validators/profile";
 
 export type CurrentProfile = {
@@ -96,6 +97,12 @@ export function useUpdateCurrentProfile() {
       queryClient.invalidateQueries({ queryKey: ["organization-members"] });
       toast.success("Account updated");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not update your account right now. Please try again.",
+        ),
+      ),
   });
 }

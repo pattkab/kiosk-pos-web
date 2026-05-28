@@ -58,6 +58,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { getCurrencyCodes } from "@/lib/currencies";
 import { useCurrentProfile } from "@/hooks/use-profile";
 import { signOut } from "@/lib/auth/actions";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 const onboardingSchema = z
   .object({
@@ -157,7 +158,12 @@ export default function OnboardingPage() {
       setStep(2);
       toast.success("Organization created!");
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not create your organization. Please try again.",
+        ),
+      );
     } finally {
       setIsLoading(false);
     }

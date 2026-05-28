@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -37,7 +38,12 @@ export default function ResetPasswordPage() {
     });
     setIsLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not update your password. Please try again.",
+        ),
+      );
     } else {
       toast.success("Password updated successfully!");
       router.push("/dashboard");

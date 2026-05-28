@@ -29,6 +29,7 @@ import {
   userProfileSchema,
   type UserProfileValues,
 } from "@/validators/profile";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 
@@ -113,7 +114,9 @@ export function UserAccountSettings() {
       });
       toast.success("Profile photo uploaded");
     } catch (error: any) {
-      toast.error(error.message ?? "Profile photo upload failed.");
+      toast.error(
+        getUserErrorMessage(error, "Profile photo upload failed. Please try again."),
+      );
     } finally {
       setIsUploading(false);
     }
@@ -135,7 +138,10 @@ export function UserAccountSettings() {
             </div>
           ) : profile.isError ? (
             <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-              {profile.error.message}
+              {getUserErrorMessage(
+                profile.error,
+                "We could not load your account details right now.",
+              )}
             </div>
           ) : (
             <form

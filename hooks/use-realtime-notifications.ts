@@ -9,6 +9,7 @@ import { useAppStore } from "@/store/use-app-store";
 import { useRealtimeStore } from "@/store/use-realtime-store";
 import { toast } from "sonner";
 import { useNotificationStore } from "@/store/use-notification-store";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 export function useRealtimeNotifications() {
   const supabase = createClient();
@@ -196,7 +197,12 @@ export function useMarkNotificationRead() {
       .update({ read_at: new Date().toISOString() })
       .eq("id", id);
     if (error) {
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not mark that notification as read.",
+        ),
+      );
       return;
     }
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -231,7 +237,12 @@ export function useMarkAllNotificationsRead() {
       .is("read_at", null)
       .is("archived_at", null);
     if (notificationError) {
-      toast.error(notificationError.message);
+      toast.error(
+        getUserErrorMessage(
+          notificationError,
+          "We could not mark notifications as read.",
+        ),
+      );
       return;
     }
 
@@ -241,7 +252,9 @@ export function useMarkAllNotificationsRead() {
       .eq("organization_id", context.organizationId)
       .eq("is_read", false);
     if (alertError) {
-      toast.error(alertError.message);
+      toast.error(
+        getUserErrorMessage(alertError, "We could not update alerts right now."),
+      );
       return;
     }
 
@@ -277,7 +290,9 @@ export function useClearNotifications() {
       .is("archived_at", null);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(error, "We could not clear notifications right now."),
+      );
       return;
     }
 

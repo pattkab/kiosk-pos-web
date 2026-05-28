@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { toast } from "sonner";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 interface ImageUploadProps {
   value?: string | null;
@@ -58,7 +59,7 @@ export function ImageUpload({
 
       onChange(publicUrl);
     } catch (error: any) {
-      toast.error(error.message ?? "Image upload failed.");
+      toast.error(getUserErrorMessage(error, "Image upload failed."));
     } finally {
       setIsUploading(false);
     }

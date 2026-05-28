@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 export default function Error({
   error,
@@ -17,7 +18,12 @@ export default function Error({
   return (
     <div className="flex h-screen flex-col items-center justify-center space-y-4">
       <h2 className="text-2xl font-bold">Something went wrong!</h2>
-      <p className="text-muted-foreground">{error.message}</p>
+      <p className="text-muted-foreground">
+        {getUserErrorMessage(
+          error,
+          "Something went wrong while loading this page.",
+        )}
+      </p>
       <Button onClick={() => reset()}>Try again</Button>
     </div>
   );

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -32,7 +33,12 @@ export default function ForgotPasswordPage() {
     });
     setIsLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not send a reset link right now. Please try again.",
+        ),
+      );
     } else {
       toast.success("Password reset link sent to your email.");
     }

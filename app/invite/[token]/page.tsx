@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useOrganizationStore } from "@/store/use-organization-store";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 type InvitationRecord = {
   token: string;
@@ -18,6 +19,23 @@ type InvitationRecord = {
   role: string;
   organizations: { name: string } | Array<{ name: string }> | null;
 };
+
+type ActivateInvitationResponse = {
+  ok?: boolean;
+  error?: string;
+  email?: string;
+};
+
+async function parseApiJson<T>(response: Response): Promise<T | null> {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
+}
 
 export default function AcceptInvitePage() {
   const params = useParams<{ token: string }>();
@@ -84,8 +102,10 @@ export default function AcceptInvitePage() {
       await supabase.rpc("ensure_profile_for_current_user");
       await acceptInvitation();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to accept invitation.";
+      const message = getUserErrorMessage(
+        error,
+        "We could not accept your invitation. Please try again.",
+      );
       setErrorMessage(message);
       toast.error(message);
     } finally {
@@ -122,14 +142,16 @@ export default function AcceptInvitePage() {
         }),
       });
 
-      const result = (await response.json()) as {
-        ok?: boolean;
-        error?: string;
-        email?: string;
-      };
+      const result =
+        (await parseApiJson<ActivateInvitationResponse>(response)) ?? {};
 
       if (!response.ok || !result.ok || !result.email) {
-        throw new Error(result.error ?? "Failed to activate invitation.");
+        throw new Error(
+          result.error ??
+            (response.ok
+              ? "Failed to activate invitation."
+              : `Invitation activation failed (${response.status}).`),
+        );
       }
 
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -158,10 +180,10 @@ export default function AcceptInvitePage() {
         throw lastError ?? new Error("Failed to accept invitation.");
       }
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to finish invitation setup.";
+      const message = getUserErrorMessage(
+        error,
+        "We could not finish invitation setup. Please try again.",
+      );
       setErrorMessage(message);
       toast.error(message);
     } finally {

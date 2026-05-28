@@ -11,6 +11,7 @@ import { useOrganizationStore } from "@/store/use-organization-store";
 import { getAllFromStore, bulkPutInStore } from "@/lib/storage/db";
 import { useConnectivityStore } from "@/store/use-connectivity-store";
 import { invalidateInventoryProducts } from "@/lib/inventory/invalidate-products";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -227,7 +228,10 @@ export function useProductMutations() {
       invalidateInventoryProducts(queryClient);
       toast.success("Product created successfully");
     },
-    onError: (error: any) => toast.error(error.message),
+    onError: (error: any) =>
+      toast.error(
+        getUserErrorMessage(error, "We could not create the product right now."),
+      ),
   });
 
   const updateProduct = useMutation({
@@ -255,7 +259,10 @@ export function useProductMutations() {
       invalidateInventoryProducts(queryClient);
       toast.success("Product updated successfully");
     },
-    onError: (error: any) => toast.error(error.message),
+    onError: (error: any) =>
+      toast.error(
+        getUserErrorMessage(error, "We could not update the product right now."),
+      ),
   });
 
   const deleteProduct = useMutation({
@@ -351,6 +358,9 @@ export function useInventoryAdjustment() {
       queryClient.invalidateQueries({ queryKey: ["inventory-history"] });
       toast.success("Stock adjusted successfully");
     },
-    onError: (error: any) => toast.error(error.message),
+    onError: (error: any) =>
+      toast.error(
+        getUserErrorMessage(error, "We could not adjust stock right now."),
+      ),
   });
 }

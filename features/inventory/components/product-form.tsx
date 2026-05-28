@@ -59,6 +59,7 @@ import {
   getSeedCategoryKey,
 } from "@/lib/category-taxonomy";
 import dynamic from "next/dynamic";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 const InventoryBarcodeScanner = dynamic(
   () =>
@@ -176,7 +177,9 @@ export function ProductForm() {
       setNewCategoryName("");
       toast.success("Category created");
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(
+        getUserErrorMessage(err, "We could not create that category right now."),
+      );
     } finally {
       setIsAddingCategoryLoading(false);
     }
@@ -226,7 +229,12 @@ export function ProductForm() {
       });
       toast.success(`${recommendation.name} category added`);
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not add that recommended category right now.",
+        ),
+      );
     } finally {
       setIsCreatingRecommendedCategory(false);
     }

@@ -21,6 +21,7 @@ import {
   resolveRolePermissions,
 } from "@/lib/auth/permissions";
 import { OrganizationWithRole } from "@/hooks/use-organization";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 export function useCurrentPosContext() {
   const supabase = createClient();
@@ -351,7 +352,13 @@ export function useRegisterSession() {
       queryClient.invalidateQueries({ queryKey: ["active-register-session"] });
       toast.success("Register opened");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not open the register. Please try again.",
+        ),
+      ),
   });
 
   const closeRegister = useMutation({
@@ -400,7 +407,13 @@ export function useRegisterSession() {
       queryClient.invalidateQueries({ queryKey: ["active-register-session"] });
       toast.success("Register closed");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not close the register. Please try again.",
+        ),
+      ),
   });
 
   return { activeSession, openRegister, closeRegister };

@@ -31,6 +31,7 @@ import { useReports } from "@/hooks/use-reports";
 import { getPresetDateRange } from "@/lib/reports/date-ranges";
 import { printReport } from "@/lib/reports/export";
 import { BarChart3, Download, Printer } from "lucide-react";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 type ReportKind =
   | "overview"
@@ -165,7 +166,10 @@ export function ReportsPage({ kind }: { kind: ReportKind }) {
           <Card className="border-destructive/40 bg-destructive/10">
             <CardContent className="p-4 text-sm text-destructive">
               {reports.error instanceof Error
-                ? reports.error.message
+                ? getUserErrorMessage(
+                    reports.error,
+                    "Unable to load reports right now.",
+                  )
                 : "Unable to load reports."}
             </CardContent>
           </Card>

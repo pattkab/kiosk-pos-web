@@ -26,6 +26,7 @@ import {
 } from "@/validators/organization";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 export type OrganizationWithRole = {
   id: string;
@@ -292,7 +293,13 @@ export function useInviteMember() {
         description: data.emailError ?? data.invitationUrl ?? undefined,
       });
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not send that invitation. Please try again.",
+        ),
+      ),
   });
 }
 
@@ -328,7 +335,12 @@ export function useRevokeInvitation() {
       context?.previousLists?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not revoke that invitation. Please try again.",
+        ),
+      );
     },
     onSuccess: (_id, _invitationId, context) => {
       removeInvitationFromCachedLists(queryClient, _invitationId);
@@ -367,7 +379,10 @@ export function useUpdateMemberRole() {
       queryClient.invalidateQueries({ queryKey: ["organization-members"] });
       toast.success("Role updated");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(error, "We could not update the role. Please try again."),
+      ),
   });
 }
 
@@ -389,7 +404,13 @@ export function useRemoveMember() {
       queryClient.invalidateQueries({ queryKey: ["organization-members"] });
       toast.success("Member removed");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not remove this member. Please try again.",
+        ),
+      ),
   });
 }
 
@@ -438,7 +459,13 @@ export function useOrganizationSettings() {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       toast.success("Organization updated");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not update organization details. Please try again.",
+        ),
+      ),
   });
 
   const updateSettings = useMutation({
@@ -463,7 +490,13 @@ export function useOrganizationSettings() {
       queryClient.invalidateQueries({ queryKey: ["organization-settings"] });
       toast.success("Settings updated");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not update organization settings. Please try again.",
+        ),
+      ),
   });
 
   const updateAppearance = useMutation({
@@ -489,7 +522,13 @@ export function useOrganizationSettings() {
       queryClient.invalidateQueries({ queryKey: ["organization-settings"] });
       toast.success("Appearance updated");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not update appearance settings. Please try again.",
+        ),
+      ),
   });
 
   const updateBranding = useMutation({
@@ -512,7 +551,13 @@ export function useOrganizationSettings() {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       toast.success("Branding updated");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not update branding. Please try again.",
+        ),
+      ),
   });
 
   return {
@@ -565,6 +610,12 @@ export function useDeleteOrganization() {
       toast.success("Organization deleted");
       router.push("/select-organization");
     },
-    onError: (error) => toast.error(error.message),
+    onError: (error) =>
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not delete this organization right now.",
+        ),
+      ),
   });
 }

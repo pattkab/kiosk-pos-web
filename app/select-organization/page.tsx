@@ -25,6 +25,7 @@ import { useActiveOrganization } from "@/hooks/use-organization";
 import { signOut } from "@/lib/auth/actions";
 import { cn } from "@/lib/utils";
 import { getBusinessTypeLabel } from "@/lib/business-types";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 export default function SelectOrganizationPage() {
   const {
@@ -79,7 +80,12 @@ export default function SelectOrganizationPage() {
           ) : error ? (
             <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
               <p className="font-medium">Could not load your organizations.</p>
-              <p className="mt-1">{error.message}</p>
+              <p className="mt-1">
+                {getUserErrorMessage(
+                  error,
+                  "We could not load your organizations right now.",
+                )}
+              </p>
               <Button
                 className="mt-4"
                 variant="outline"

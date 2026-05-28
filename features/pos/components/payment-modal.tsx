@@ -14,6 +14,7 @@ import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Banknote, CheckCircle2, CreditCard, Delete, Loader2, Plus, Smartphone, SplitSquareHorizontal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 type TenderMethod = CheckoutPayment["payment_method"];
 
@@ -85,7 +86,9 @@ export function PaymentModal() {
       closePayment();
       toast.success("Sale completed");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Checkout failed.");
+      toast.error(
+        getUserErrorMessage(error, "Checkout failed. Please try again."),
+      );
     }
   };
 

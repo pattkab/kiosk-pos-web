@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { ProductForm } from "@/features/inventory/components/product-form";
 import { isLikelyScannerBurst, normalizeScannedCode } from "@/lib/barcode";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 // Performance: Lazy load the heavy barcode scanner only when needed
 const BarcodeScanner = dynamic(
@@ -113,7 +114,10 @@ export default function PosPage() {
             toast.success(`${product.name} added`);
           } catch (error) {
             toast.error(
-              error instanceof Error ? error.message : "Barcode lookup failed.",
+              getUserErrorMessage(
+                error,
+                "Barcode lookup failed. Please try again.",
+              ),
             );
           }
         });

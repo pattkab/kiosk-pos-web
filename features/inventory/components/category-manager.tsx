@@ -24,6 +24,7 @@ import { useCategories } from "@/hooks/use-inventory";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useInventoryStore } from "@/store/use-inventory-store";
 import { useOrganizationStore } from "@/store/use-organization-store";
+import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 export function CategoryManager() {
   const { categoryModalOpen, closeCategoryModal } = useInventoryStore();
@@ -85,7 +86,9 @@ export function CategoryManager() {
       setNewName("");
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(error, "We could not add that category right now."),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -115,7 +118,12 @@ export function CategoryManager() {
           : "Recommended categories are already set up",
       );
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not add recommended categories right now.",
+        ),
+      );
     } finally {
       setIsSeeding(false);
     }
@@ -137,7 +145,12 @@ export function CategoryManager() {
       toast.success("Category deleted");
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(
+        getUserErrorMessage(
+          error,
+          "We could not delete that category right now.",
+        ),
+      );
     }
   };
 
