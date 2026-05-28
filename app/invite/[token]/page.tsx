@@ -31,6 +31,7 @@ export default function AcceptInvitePage() {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
 
   useEffect(() => {
@@ -78,10 +79,15 @@ export default function AcceptInvitePage() {
 
   async function handleAccept() {
     setProcessing(true);
+    setErrorMessage(null);
     try {
+      await supabase.rpc("ensure_profile_for_current_user");
       await acceptInvitation();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to accept invitation.");
+      const message =
+        error instanceof Error ? error.message : "Failed to accept invitation.";
+      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setProcessing(false);
     }
@@ -89,6 +95,7 @@ export default function AcceptInvitePage() {
 
   async function handleSetPasswordAndContinue() {
     if (!invitation) return;
+    setErrorMessage(null);
 
     if (fullName.trim().length < 2) {
       toast.error("Full name must be at least 2 characters.");
@@ -131,9 +138,32 @@ export default function AcceptInvitePage() {
       });
       if (signInError) throw signInError;
 
-      await acceptInvitation();
+      let accepted = false;
+      let lastError: Error | null = null;
+      for (let attempt = 1; attempt <= 5; attempt += 1) {
+        await supabase.rpc("ensure_profile_for_current_user");
+        try {
+          await acceptInvitation();
+          accepted = true;
+          break;
+        } catch (error) {
+          lastError =
+            error instanceof Error
+              ? error
+              : new Error("Failed to accept invitation.");
+          await new Promise((resolve) => setTimeout(resolve, attempt * 200));
+        }
+      }
+      if (!accepted) {
+        throw lastError ?? new Error("Failed to accept invitation.");
+      }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to finish invitation setup.");
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to finish invitation setup.";
+      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setProcessing(false);
     }
@@ -141,6 +171,7 @@ export default function AcceptInvitePage() {
 
   async function signOutAndSwitchAccount() {
     setProcessing(true);
+    setErrorMessage(null);
     try {
       await supabase.auth.signOut();
       setAuthUserEmail(null);
@@ -251,6 +282,9 @@ export default function AcceptInvitePage() {
                   "Set password and continue"
                 )}
               </Button>
+              {errorMessage ? (
+                <p className="text-sm text-destructive">{errorMessage}</p>
+              ) : null}
             </div>
           )}
         </CardContent>

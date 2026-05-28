@@ -42,15 +42,23 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = createAdminClient();
-    const { error: createError } = await admin.auth.admin.createUser({
+    const { data: createResult, error: createError } =
+      await admin.auth.admin.createUser({
       email: invitation.email,
       password: payload.password,
       email_confirm: true,
       user_metadata: { full_name: payload.fullName },
     });
 
+    if (!createError) {
+      return NextResponse.json({
+        ok: true,
+        email: invitation.email,
+        userId: createResult.user?.id ?? null,
+      });
+    }
+
     if (
-      createError &&
       !/already been registered|already registered|already exists/i.test(
         createError.message,
       )
@@ -61,9 +69,57 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let page = 1;
+    let matchedUserId: string | null = null;
+    while (page <= 10 && !matchedUserId) {
+      const { data: usersPage, error: usersError } =
+        await admin.auth.admin.listUsers({
+          page,
+          perPage: 200,
+        });
+      if (usersError) {
+        return NextResponse.json(
+          { ok: false, error: usersError.message },
+          { status: 400 },
+        );
+      }
+      matchedUserId =
+        usersPage.users.find(
+          (user) => user.email?.toLowerCase() === invitation.email.toLowerCase(),
+        )?.id ?? null;
+      page += 1;
+    }
+
+    if (!matchedUserId) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Invited account exists but could not be resolved. Contact support.",
+        },
+        { status: 404 },
+      );
+    }
+
+    const { error: updateError } = await admin.auth.admin.updateUserById(
+      matchedUserId,
+      {
+        password: payload.password,
+        email_confirm: true,
+        user_metadata: { full_name: payload.fullName },
+      },
+    );
+    if (updateError) {
+      return NextResponse.json(
+        { ok: false, error: updateError.message },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json({
       ok: true,
       email: invitation.email,
+      userId: matchedUserId,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
