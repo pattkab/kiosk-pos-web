@@ -9,6 +9,23 @@ type CookieToSet = {
   options?: Parameters<Awaited<ReturnType<typeof cookies>>["set"]>[2];
 };
 
+function getOAuthErrorMessage(searchParams: URLSearchParams) {
+  const error = searchParams.get("error");
+  const code = searchParams.get("error_code");
+  const description = searchParams.get("error_description");
+
+  if (!error && !description) return null;
+
+  if (
+    code === "flow_state_already_used" ||
+    description?.toLowerCase().includes("state has already been used")
+  ) {
+    return "That Google sign-in attempt has already been used. Please start a fresh Google sign-in from Kiosk POS.";
+  }
+
+  return description ?? error ?? "Sign-in failed.";
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
@@ -17,8 +34,7 @@ export async function GET(request: Request) {
   const safeNext = next.startsWith("/") ? next : "/select-organization";
 
   if (!code) {
-    const message =
-      searchParams.get("error_description") ?? searchParams.get("error");
+    const message = getOAuthErrorMessage(searchParams);
     const query = message ? `?message=${encodeURIComponent(message)}` : "";
     return NextResponse.redirect(`${origin}/auth/auth-code-error${query}`);
   }

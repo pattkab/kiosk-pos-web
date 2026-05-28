@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useRealtimeStore } from "@/store/use-realtime-store";
 import {
+  useClearNotifications,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
 } from "@/hooks/use-realtime-notifications";
@@ -98,7 +99,9 @@ export function NotificationCenter() {
   const realtimeNotifications = useRealtimeStore((state) => state.notifications);
   const markNotificationRead = useMarkNotificationRead();
   const markAllNotificationsRead = useMarkAllNotificationsRead();
+  const clearNotifications = useClearNotifications();
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const notifications = mergeNotifications(
     notificationQuery.data,
     realtimeNotifications,
@@ -151,7 +154,7 @@ export function NotificationCenter() {
             </div>
           )}
         </ScrollArea>
-        <div className="grid grid-cols-2 gap-2 border-t p-2">
+        <div className="grid grid-cols-3 gap-2 border-t p-2">
           <Button
             type="button"
             variant="ghost"
@@ -168,6 +171,23 @@ export function NotificationCenter() {
             }}
           >
             {isMarkingAllRead ? "Marking..." : "Mark all as read"}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-xs"
+            size="sm"
+            disabled={isClearing || notifications.length === 0}
+            onClick={async () => {
+              setIsClearing(true);
+              try {
+                await clearNotifications();
+              } finally {
+                setIsClearing(false);
+              }
+            }}
+          >
+            {isClearing ? "Clearing..." : "Clear all"}
           </Button>
           <Button variant="ghost" className="w-full gap-1 text-xs" size="sm" asChild>
             <Link href="/notifications">

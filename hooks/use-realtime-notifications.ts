@@ -25,9 +25,11 @@ export function useRealtimeNotifications() {
     enabled: Boolean(orgId),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("alerts")
+        .from("notifications")
         .select("*")
         .eq("organization_id", orgId!)
+        .or(`recipient_id.is.null,recipient_id.eq.${context!.profile.id}`)
+        .is("archived_at", null)
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
@@ -38,15 +40,15 @@ export function useRealtimeNotifications() {
   useEffect(() => {
     if (notificationsQuery.data) {
       setNotifications(
-        notificationsQuery.data.map((alert) => ({
-          id: alert.id,
-          title: alert.title,
-          message: alert.message,
-          type: alert.type,
-          priority: alert.priority,
-          read: Boolean(alert.is_read),
-          createdAt: alert.created_at ?? new Date().toISOString(),
-          resourceId: alert.resource_id,
+        notificationsQuery.data.map((notification) => ({
+          id: notification.id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          priority: notification.priority,
+          read: Boolean(notification.read_at),
+          createdAt: notification.created_at ?? new Date().toISOString(),
+          resourceId: notification.alert_id,
         }))
       );
     }
@@ -79,16 +81,6 @@ export function useRealtimeNotifications() {
           };
 
           if (payload.eventType === "DELETE") return;
-
-          upsertNotification({
-            id: alert.id,
-            title: alert.title,
-            message: alert.message,
-            type: alert.type,
-            read: Boolean(alert.is_read),
-            createdAt: alert.created_at ?? new Date().toISOString(),
-            resourceId: alert.resource_id,
-          });
 
           if (!alert.is_read && payload.eventType === "INSERT") {
             addNotification({
@@ -204,11 +196,8 @@ export function useMarkNotificationRead() {
       .update({ read_at: new Date().toISOString() })
       .eq("id", id);
     if (error) {
-      const { error: alertError } = await supabase.from("alerts").update({ is_read: true }).eq("id", id);
-      if (alertError) {
-        toast.error(alertError.message);
-        return;
-      }
+      toast.error(error.message);
+      return;
     }
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
     queryClient.invalidateQueries({ queryKey: ["alerts"] });
@@ -253,6 +242,42 @@ export function useMarkAllNotificationsRead() {
       .eq("is_read", false);
     if (alertError) {
       toast.error(alertError.message);
+      return;
+    }
+
+    await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    await queryClient.invalidateQueries({ queryKey: ["alerts"] });
+  };
+}
+
+export function useClearNotifications() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+  const { data: context } = useRealtimeContext();
+  const clearRealtime = useRealtimeStore((state) => state.clearNotifications);
+  const clearLocal = useAppStore((state) => state.clearNotifications);
+
+  return async () => {
+    if (!context?.organizationId) {
+      toast.error("Not signed in.");
+      return;
+    }
+
+    const profileId = context.profile.id;
+    const now = new Date().toISOString();
+
+    clearRealtime();
+    clearLocal();
+
+    const { error } = await supabase
+      .from("notifications")
+      .update({ archived_at: now })
+      .eq("organization_id", context.organizationId)
+      .or(`recipient_id.is.null,recipient_id.eq.${profileId}`)
+      .is("archived_at", null);
+
+    if (error) {
+      toast.error(error.message);
       return;
     }
 

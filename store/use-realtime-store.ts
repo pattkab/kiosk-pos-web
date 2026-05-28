@@ -23,6 +23,7 @@ interface RealtimeState {
   upsertNotification: (notification: ActiveRealtimeNotification) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
+  clearNotifications: () => void;
   setNotifications: (notifications: ActiveRealtimeNotification[]) => void;
   addConflict: (conflict: Omit<RealtimeConflict, "id" | "createdAt" | "resolved">) => void;
   resolveConflict: (id: string) => void;
@@ -61,6 +62,7 @@ export const useRealtimeStore = create<RealtimeState>((set) => ({
     set((state) => ({
       notifications: state.notifications.map((entry) => ({ ...entry, read: true })),
     })),
+  clearNotifications: () => set({ notifications: [] }),
   setNotifications: (notifications) => set({ notifications }),
   addConflict: (conflict) =>
     set((state) => ({

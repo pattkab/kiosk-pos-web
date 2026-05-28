@@ -13,8 +13,6 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth/actions";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { OrgSwitcher } from "./org-switcher";
 import { NotificationCenter } from "./notification-center";
 import { useAppStore } from "@/store/use-app-store";
@@ -22,20 +20,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PresenceAvatars } from "@/components/realtime/presence-avatars";
 import { SyncStatusBadge } from "@/components/realtime/sync-status-badge";
 import { OfflineBanner } from "./offline-banner";
+import { getProfileInitials } from "@/lib/avatar-presets";
+import { useCurrentProfile } from "@/hooks/use-profile";
 
 export function Navbar() {
   const { setTheme } = useTheme();
-  const [user, setUser] = useState<any>(null);
-  const supabase = createClient();
   const { toggleSidebar, setCommandPaletteOpen } = useAppStore();
-
-  useEffect(() => {
-    async function getUser() {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    }
-    getUser();
-  }, [supabase]);
+  const { data: profile } = useCurrentProfile();
+  const displayName = profile?.full_name || "Account";
+  const email = profile?.email ?? "";
+  const initials = getProfileInitials(profile?.full_name, profile?.email);
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -111,25 +105,34 @@ export function Navbar() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+              <Button
+                variant="ghost"
+                className="relative h-9 w-9 rounded-full p-0"
+              >
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="" alt={user?.email || ""} />
-                  <AvatarFallback>
-                    {user?.email?.charAt(0).toUpperCase() || "U"}
-                  </AvatarFallback>
+                  <AvatarImage
+                    src={profile?.avatar_url ?? ""}
+                    alt={displayName}
+                  />
+                  <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Account</p>
+                  <p className="text-sm font-medium leading-none">
+                    {displayName}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
+                    {email}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings/account">Account settings</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/select-organization">Switch organization</Link>
               </DropdownMenuItem>

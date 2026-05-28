@@ -4,6 +4,7 @@ import { Providers } from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { ConflictResolutionModal } from "@/components/realtime/conflict-resolution-modal";
 import { AcknowledgementModal } from "@/features/notifications/components/acknowledgement-modal";
+import { OAuthErrorHandler } from "@/components/auth/oauth-error-handler";
 
 export const metadata: Metadata = {
   title: "Kiosk POS",
@@ -19,6 +20,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
+          <OAuthErrorHandler />
           {children}
           <ConflictResolutionModal />
           <AcknowledgementModal />
