@@ -1,21 +1,25 @@
 import { describe, expect, it } from "vitest";
 import {
   getCurrentPlan,
+  getEffectivePlan,
   getTrialDaysRemaining,
   hasFeatureAccess,
   hasPlanAccess,
   hasSubscriptionAccess,
+  isTrialAccess,
   isTrialExpired,
 } from "@/lib/billing/access";
 import {
   canUseFeature,
   formatPlanPrice,
   getAnnualSavingsCents,
+  getEffectivePlanForAccess,
   getPlanLimits,
   getUpgradeRecommendation,
   hasReachedLimit,
   normalizeBillingCycle,
   normalizePlanId,
+  TRIAL_EFFECTIVE_PLAN,
 } from "@/lib/billing/plans";
 
 describe("Billing access", () => {
@@ -29,7 +33,7 @@ describe("Billing access", () => {
     ).toBe(true);
   });
 
-  it("allows unexpired trials and blocks expired trials", () => {
+  it("allows trialing orgs including after trial expiry (Starter fallback)", () => {
     const future = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
     const past = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -50,7 +54,7 @@ describe("Billing access", () => {
         subscription_status: "trialing",
         trial_ends_at: past,
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       isTrialExpired({ subscription_status: "trialing", trial_ends_at: past }),
     ).toBe(true);
@@ -85,19 +89,33 @@ describe("Billing access", () => {
     ).toBe(true);
   });
 
-  it("does not let trials bypass the stored plan tier", () => {
+  it("grants Business-tier access during an active trial", () => {
     const future = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+    const trialSettings = {
+      subscription_status: "trialing",
+      plan: "starter",
+      trial_ends_at: future,
+    };
 
-    expect(
-      hasFeatureAccess(
-        {
-          subscription_status: "trialing",
-          plan: "starter",
-          trial_ends_at: future,
-        },
-        "auditLogs",
-      ),
-    ).toBe(false);
+    expect(isTrialAccess(trialSettings)).toBe(true);
+    expect(getEffectivePlan(trialSettings)).toBe(TRIAL_EFFECTIVE_PLAN);
+    expect(getEffectivePlanForAccess(trialSettings)).toBe(TRIAL_EFFECTIVE_PLAN);
+    expect(hasFeatureAccess(trialSettings, "auditLogs")).toBe(true);
+    expect(getPlanLimits(trialSettings).products).toBeNull();
+  });
+
+  it("falls back to Starter after trial expiry", () => {
+    const past = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const expiredTrial = {
+      subscription_status: "trialing",
+      plan: "starter",
+      trial_ends_at: past,
+    };
+
+    expect(isTrialAccess(expiredTrial)).toBe(false);
+    expect(getEffectivePlan(expiredTrial)).toBe("starter");
+    expect(hasFeatureAccess(expiredTrial, "auditLogs")).toBe(false);
+    expect(hasFeatureAccess(expiredTrial, "pos")).toBe(true);
   });
 
   it("normalizes legacy Pro to Business and unknown plans to Starter", () => {

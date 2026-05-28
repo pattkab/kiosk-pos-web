@@ -764,13 +764,46 @@ export function getPlanFromSubscription(
   return normalizePlanId(settings?.plan ?? settings?.subscription_plan);
 }
 
+/** Plan used for feature gates and usage limits during an active trial. */
+export const TRIAL_EFFECTIVE_PLAN: PlanId = "business";
+
+export const TRIAL_DURATION_DAYS = 30;
+
+export function isActiveTrial(settings: SubscriptionLike | null | undefined) {
+  if (!settings) return false;
+  if (normalizeSubscriptionStatus(settings.subscription_status) !== "trialing") {
+    return false;
+  }
+  if (!settings.trial_ends_at) return true;
+  return new Date(settings.trial_ends_at).getTime() > Date.now();
+}
+
+export function isExpiredTrial(settings: SubscriptionLike | null | undefined) {
+  if (!settings) return false;
+  if (normalizeSubscriptionStatus(settings.subscription_status) !== "trialing") {
+    return false;
+  }
+  if (!settings.trial_ends_at) return false;
+  return new Date(settings.trial_ends_at).getTime() <= Date.now();
+}
+
+/** Stored plan for billing UI; elevated to Business limits/features while trialing. */
+export function getEffectivePlanForAccess(
+  settings: SubscriptionLike | null | undefined,
+): PlanId {
+  if (isActiveTrial(settings)) return TRIAL_EFFECTIVE_PLAN;
+  return getPlanFromSubscription(settings);
+}
+
 export function getPlanLimits(
   settings: SubscriptionLike | PlanId | null | undefined,
 ) {
   const planId =
     typeof settings === "string"
       ? normalizePlanId(settings)
-      : getPlanFromSubscription(settings);
+      : getEffectivePlanForAccess(
+          typeof settings === "object" ? settings : null,
+        );
   return PRICING_PLANS[planId].limits;
 }
 
@@ -789,7 +822,10 @@ export function canUseFeature(
 ) {
   const access = enforceSubscriptionAccess(settings);
   if (!access.ok) return false;
-  return planIncludesFeature(getPlanFromSubscription(settings), featureKey);
+  return planIncludesFeature(
+    getEffectivePlanForAccess(settings),
+    featureKey,
+  );
 }
 
 export function assertFeatureAccess(
@@ -833,11 +869,7 @@ export function enforceSubscriptionAccess(
   }
 
   if (status === "trialing") {
-    if (!settings.trial_ends_at) return { ok: true, reason: null };
-    if (new Date(settings.trial_ends_at).getTime() > Date.now()) {
-      return { ok: true, reason: null };
-    }
-    return { ok: false, reason: "trial_expired" as const };
+    return { ok: true, reason: null };
   }
 
   return { ok: false, reason: status };

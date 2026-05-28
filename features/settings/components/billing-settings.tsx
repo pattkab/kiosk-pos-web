@@ -17,7 +17,14 @@ import {
   useActiveOrganization,
   useOrganizationSettings,
 } from "@/hooks/use-organization";
-import { getCurrentPlan } from "@/lib/billing/access";
+import {
+  getCurrentPlan,
+  getEffectivePlan,
+  getTrialDaysRemaining,
+  isTrialAccess,
+  isTrialExpired,
+} from "@/lib/billing/access";
+import { TRIAL_EFFECTIVE_PLAN } from "@/lib/billing/plans";
 import {
   FEATURE_LABELS,
   PLAN_LIMIT_KEYS,
@@ -305,7 +312,12 @@ export function BillingSettings() {
     settings.data?.subscription_status,
   );
   const currentPlan = getCurrentPlan(settings.data);
+  const effectivePlan = getEffectivePlan(settings.data);
+  const onActiveTrial = isTrialAccess(settings.data);
+  const trialExpired = isTrialExpired(settings.data);
+  const trialDaysRemaining = getTrialDaysRemaining(settings.data?.trial_ends_at);
   const currentPlanConfig = PRICING_PLANS[currentPlan];
+  const effectivePlanConfig = PRICING_PLANS[effectivePlan];
   const localCurrency = activeOrganization?.currency ?? "USD";
   const requiredPlan = parsePlanId(searchParams.get("requiredPlan"));
   const requiredFeatureLabel = getFeatureLabel(searchParams.get("feature"));
@@ -417,6 +429,35 @@ export function BillingSettings() {
         </div>
       </div>
 
+      {onActiveTrial ? (
+        <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-4 text-sm">
+          <div className="flex items-start gap-3">
+            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+            <div>
+              <p className="font-bold text-emerald-950 dark:text-emerald-50">
+                Full-access trial — {trialDaysRemaining} day
+                {trialDaysRemaining === 1 ? "" : "s"} left
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                You have {PRICING_PLANS[TRIAL_EFFECTIVE_PLAN].name} features and
+                limits until your trial ends. After that, paid features require
+                Growth or Business unless you stay on free Starter.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {trialExpired ? (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-4 text-sm">
+          <p className="font-bold">Your trial has ended</p>
+          <p className="mt-1 text-muted-foreground">
+            You are on free Starter. Upgrade to keep barcode scanning, reports,
+            team tools, and other paid features you used during the trial.
+          </p>
+        </div>
+      ) : null}
+
       {requiredPlan || recommendation ? (
         <div className="rounded-md border border-primary/40 bg-primary/5 p-4 text-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -452,10 +493,14 @@ export function BillingSettings() {
                 Current plan
               </p>
               <h3 className="mt-1 text-2xl font-black">
-                {currentPlanConfig.name}
+                {onActiveTrial
+                  ? `${currentPlanConfig.name} trial`
+                  : currentPlanConfig.name}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                {currentPlanConfig.description}
+                {onActiveTrial
+                  ? `${effectivePlanConfig.name} features unlocked until your trial ends.`
+                  : currentPlanConfig.description}
               </p>
             </div>
             <WalletCards className="h-5 w-5 text-primary" />
@@ -508,7 +553,7 @@ export function BillingSettings() {
                 key={key}
                 label={key[0].toUpperCase() + key.slice(1)}
                 used={usage.data?.[key] ?? 0}
-                limit={getPlanLimits(currentPlan)[key]}
+                limit={getPlanLimits(settings.data ?? currentPlan)[key]}
               />
             ))}
           </div>

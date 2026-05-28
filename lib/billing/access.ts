@@ -2,7 +2,9 @@ import {
   canUseFeature,
   comparePlans,
   enforceSubscriptionAccess,
+  getEffectivePlanForAccess,
   getPlanFromSubscription,
+  isActiveTrial,
   normalizeSubscriptionStatus,
   type PlanId,
   type SubscriptionFeature,
@@ -33,13 +35,13 @@ export function getCurrentPlan(
 export function isTrialAccess(
   settings: SubscriptionSettings | null | undefined,
 ) {
-  if (
-    !settings ||
-    normalizeSubscriptionStatus(settings.subscription_status) !== "trialing"
-  )
-    return false;
-  if (!settings.trial_ends_at) return true;
-  return new Date(settings.trial_ends_at).getTime() > Date.now();
+  return isActiveTrial(settings);
+}
+
+export function getEffectivePlan(
+  settings: SubscriptionSettings | null | undefined,
+) {
+  return getEffectivePlanForAccess(settings);
 }
 
 export function hasPlanAccess(
@@ -47,7 +49,7 @@ export function hasPlanAccess(
   requiredPlan: PlanId,
 ) {
   if (!hasSubscriptionAccess(settings)) return false;
-  return comparePlans(getCurrentPlan(settings), requiredPlan) >= 0;
+  return comparePlans(getEffectivePlanForAccess(settings), requiredPlan) >= 0;
 }
 
 export function hasFeatureAccess(
