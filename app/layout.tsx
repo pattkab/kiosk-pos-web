@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ConflictResolutionModal } from "@/components/realtime/conflict-resolution-modal";
 import { AcknowledgementModal } from "@/features/notifications/components/acknowledgement-modal";
 import { OAuthErrorHandler } from "@/components/auth/oauth-error-handler";
+import { GlobalProgressIndicator } from "@/components/ui/global-progress-indicator";
 
 export const metadata: Metadata = {
   title: "Kiosk POS",
@@ -21,6 +22,7 @@ export default function RootLayout({
       <body>
         <Providers>
           <OAuthErrorHandler />
+          <GlobalProgressIndicator />
           {children}
           <ConflictResolutionModal />
           <AcknowledgementModal />
