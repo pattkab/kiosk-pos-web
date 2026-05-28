@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +30,7 @@ type ActivateInvitationResponse = {
   ok?: boolean;
   error?: string;
   email?: string;
+  organizationId?: string;
 };
 
 async function parseApiJson<T>(response: Response): Promise<T | null> {
@@ -50,7 +57,9 @@ export default function AcceptInvitePage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
+  const setActiveOrganizationId = useOrganizationStore(
+    (state) => state.setActiveOrganizationId,
+  );
 
   useEffect(() => {
     async function fetchInvitation() {
@@ -84,9 +93,13 @@ export default function AcceptInvitePage() {
   }, [router, supabase, token]);
 
   async function acceptInvitation() {
-    const { data, error } = await supabase.rpc("accept_organization_invitation", { p_token: token });
+    const { data, error } = await supabase.rpc(
+      "accept_organization_invitation",
+      { p_token: token },
+    );
 
-    if (error || !data) throw new Error(error?.message ?? "Failed to accept invitation.");
+    if (error || !data)
+      throw new Error(error?.message ?? "Failed to accept invitation.");
     const orgName = Array.isArray(invitation?.organizations)
       ? invitation?.organizations[0]?.name
       : invitation?.organizations?.name;
@@ -145,7 +158,12 @@ export default function AcceptInvitePage() {
       const result =
         (await parseApiJson<ActivateInvitationResponse>(response)) ?? {};
 
-      if (!response.ok || !result.ok || !result.email) {
+      if (
+        !response.ok ||
+        !result.ok ||
+        !result.email ||
+        !result.organizationId
+      ) {
         throw new Error(
           result.error ??
             (response.ok
@@ -160,25 +178,9 @@ export default function AcceptInvitePage() {
       });
       if (signInError) throw signInError;
 
-      let accepted = false;
-      let lastError: Error | null = null;
-      for (let attempt = 1; attempt <= 5; attempt += 1) {
-        await supabase.rpc("ensure_profile_for_current_user");
-        try {
-          await acceptInvitation();
-          accepted = true;
-          break;
-        } catch (error) {
-          lastError =
-            error instanceof Error
-              ? error
-              : new Error("Failed to accept invitation.");
-          await new Promise((resolve) => setTimeout(resolve, attempt * 200));
-        }
-      }
-      if (!accepted) {
-        throw lastError ?? new Error("Failed to accept invitation.");
-      }
+      setActiveOrganizationId(result.organizationId);
+      toast.success(`Joined ${organizationName ?? "organization"}`);
+      router.push("/dashboard");
     } catch (error) {
       const message = getUserErrorMessage(
         error,
@@ -204,7 +206,11 @@ export default function AcceptInvitePage() {
   }
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading invitation...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Loading invitation...
+      </div>
+    );
   }
 
   const invitedEmail = invitation?.email?.toLowerCase() ?? null;
@@ -212,8 +218,12 @@ export default function AcceptInvitePage() {
     ? invitation?.organizations[0]?.name
     : invitation?.organizations?.name;
   const invitationRole = invitation?.role ?? "team member";
-  const signedInAsInvitedUser = Boolean(authUserEmail && invitedEmail && authUserEmail === invitedEmail);
-  const signedInAsDifferentUser = Boolean(authUserEmail && invitedEmail && authUserEmail !== invitedEmail);
+  const signedInAsInvitedUser = Boolean(
+    authUserEmail && invitedEmail && authUserEmail === invitedEmail,
+  );
+  const signedInAsDifferentUser = Boolean(
+    authUserEmail && invitedEmail && authUserEmail !== invitedEmail,
+  );
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4">
@@ -221,8 +231,8 @@ export default function AcceptInvitePage() {
         <CardHeader>
           <CardTitle>Join organization</CardTitle>
           <CardDescription>
-            You have been invited to join <strong>{organizationName}</strong> as a{" "}
-            <strong>{invitationRole}</strong>.
+            You have been invited to join <strong>{organizationName}</strong> as
+            a <strong>{invitationRole}</strong>.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -233,9 +243,15 @@ export default function AcceptInvitePage() {
           {signedInAsDifferentUser ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                You are signed in as <strong>{authUserEmail}</strong>. Sign out to continue with the invited account.
+                You are signed in as <strong>{authUserEmail}</strong>. Sign out
+                to continue with the invited account.
               </p>
-              <Button className="w-full" variant="outline" onClick={signOutAndSwitchAccount} disabled={processing}>
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={signOutAndSwitchAccount}
+                disabled={processing}
+              >
                 {processing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -247,7 +263,11 @@ export default function AcceptInvitePage() {
               </Button>
             </div>
           ) : signedInAsInvitedUser ? (
-            <Button className="w-full" onClick={handleAccept} disabled={processing}>
+            <Button
+              className="w-full"
+              onClick={handleAccept}
+              disabled={processing}
+            >
               {processing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -294,7 +314,11 @@ export default function AcceptInvitePage() {
                   placeholder="Repeat your password"
                 />
               </div>
-              <Button className="w-full" onClick={handleSetPasswordAndContinue} disabled={processing}>
+              <Button
+                className="w-full"
+                onClick={handleSetPasswordAndContinue}
+                disabled={processing}
+              >
                 {processing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
