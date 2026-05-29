@@ -27,6 +27,13 @@ vi.mock("@/hooks/use-pos", () => ({
     closeRegister: { mutate: vi.fn(), isPending: false },
   }),
   useCheckout: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useCurrentPosContext: () => ({
+    data: {
+      organizationId: "org-123",
+      profile: { id: "profile-123", full_name: "Test", email: "t@test.com" },
+      organization: { id: "org-123", name: "Test Org" },
+    },
+  }),
 }));
 
 describe("POS Checkout Integration", () => {

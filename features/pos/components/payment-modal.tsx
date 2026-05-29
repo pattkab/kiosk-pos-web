@@ -6,37 +6,83 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useCheckout } from "@/hooks/use-pos";
+import { useCheckout, useCurrentPosContext } from "@/hooks/use-pos";
 import { useCartStore } from "@/store/use-cart-store";
 import { useCheckoutStore } from "@/store/use-checkout-store";
+import { useSessionStore } from "@/store/use-session-store";
 import { CheckoutPayment } from "@/types/pos";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { Banknote, CheckCircle2, CreditCard, Delete, Loader2, Plus, Smartphone, SplitSquareHorizontal, Trash2 } from "lucide-react";
+import {
+  Banknote,
+  CheckCircle2,
+  CreditCard,
+  Delete,
+  Loader2,
+  Plus,
+  Smartphone,
+  SplitSquareHorizontal,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
+import { YoCollectionPanel } from "@/features/pos/components/yo-collection-panel";
+import type { YoCollectionMethod } from "@/lib/payments/yo/types";
 
-type TenderMethod = CheckoutPayment["payment_method"];
+type TenderMethod = CheckoutPayment["payment_method"] | YoCollectionMethod;
 
-const methodOptions: Array<{ value: TenderMethod; label: string; icon: typeof Banknote }> = [
+type MethodOption = {
+  value: TenderMethod;
+  label: string;
+  icon: typeof Banknote;
+  yo?: boolean;
+};
+
+const baseMethodOptions: MethodOption[] = [
   { value: "cash", label: "Cash", icon: Banknote },
-  { value: "mobile_money", label: "Mobile money", icon: Smartphone },
-  { value: "card", label: "Card", icon: CreditCard },
 ];
 
-const makePayment = (method: TenderMethod, amount: number): CheckoutPayment => ({
+const yoMethodOptions: MethodOption[] = [
+  { value: "mtn_mobile_money", label: "MTN MoMo", icon: Smartphone, yo: true },
+  { value: "airtel_money", label: "Airtel Money", icon: Smartphone, yo: true },
+  { value: "visa", label: "Visa", icon: CreditCard, yo: true },
+  { value: "mastercard", label: "Mastercard", icon: CreditCard, yo: true },
+];
+
+const manualDigitalOptions: MethodOption[] = [
+  { value: "mobile_money", label: "Mobile money (manual)", icon: Smartphone },
+  { value: "card", label: "Card (manual)", icon: CreditCard },
+];
+
+const makePayment = (
+  method: CheckoutPayment["payment_method"],
+  amount: number,
+): CheckoutPayment => ({
   id: crypto.randomUUID(),
   payment_method: method,
   amount,
   reference: "",
 });
 
+function isYoMethod(method: TenderMethod): method is YoCollectionMethod {
+  return (
+    method === "mtn_mobile_money" ||
+    method === "airtel_money" ||
+    method === "visa" ||
+    method === "mastercard" ||
+    method === "card"
+  );
+}
+
 export function PaymentModal() {
   const { isPaymentOpen, closePayment, setReceipt, resetCheckout } = useCheckoutStore();
   const { getTotals, clearCart } = useCartStore();
+  const { data: posContext } = useCurrentPosContext();
+  const currentSession = useSessionStore((state) => state.currentSession);
   const checkout = useCheckout();
   const totals = getTotals();
   const [method, setMethod] = useState<TenderMethod>("cash");
+  const [yoEnabled, setYoEnabled] = useState(false);
   const [amountText, setAmountText] = useState("");
   const [payments, setPayments] = useState<CheckoutPayment[]>([]);
   const paid = payments.reduce((sum, payment) => sum + payment.amount, 0);
@@ -49,6 +95,22 @@ export function PaymentModal() {
     return Array.from(new Set([totals.total, rounded, rounded + 5, rounded + 10])).slice(0, 4);
   }, [totals.total]);
 
+  const methodOptions = useMemo(
+    () =>
+      yoEnabled
+        ? [...baseMethodOptions, ...yoMethodOptions]
+        : [...baseMethodOptions, ...manualDigitalOptions],
+    [yoEnabled],
+  );
+
+  useEffect(() => {
+    if (!isPaymentOpen) return;
+    fetch("/api/payments/yo/config")
+      .then((response) => response.json())
+      .then((body) => setYoEnabled(Boolean(body.enabled)))
+      .catch(() => setYoEnabled(false));
+  }, [isPaymentOpen]);
+
   useEffect(() => {
     if (isPaymentOpen) {
       setPayments([]);
@@ -56,6 +118,8 @@ export function PaymentModal() {
       setMethod("cash");
     }
   }, [isPaymentOpen, totals.total]);
+
+  const yoPanelAmount = Math.max(0, remaining > 0 ? remaining : totals.total);
 
   const appendDigit = (value: string) => {
     if (value === "clear") return setAmountText("");
@@ -65,6 +129,7 @@ export function PaymentModal() {
   };
 
   const addPayment = () => {
+    if (isYoMethod(method)) return;
     if (!Number.isFinite(tenderAmount)) {
       toast.error("Enter a valid payment amount.");
       return;
@@ -110,23 +175,49 @@ export function PaymentModal() {
               <div className="mt-2 text-5xl font-black tracking-tight text-primary">{formatCurrency(totals.total)}</div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {methodOptions.map((option) => {
                 const Icon = option.icon;
                 return (
                   <Button
                     key={option.value}
                     variant={method === option.value ? "default" : "outline"}
-                    className="h-20 flex-col gap-2 rounded-lg border-2"
+                    className={cn(
+                      "h-[4.5rem] flex-col gap-1.5 rounded-lg border-2 px-2",
+                      option.yo && "border-emerald-500/40",
+                    )}
                     onClick={() => setMethod(option.value)}
                   >
-                    <Icon className="h-6 w-6" />
-                    <span className="text-sm font-bold">{option.label}</span>
+                    <Icon className="h-5 w-5 shrink-0" />
+                    <span className="text-center text-[11px] font-bold leading-tight sm:text-xs">
+                      {option.label}
+                    </span>
                   </Button>
                 );
               })}
             </div>
 
+            {yoEnabled && (
+              <p className="text-xs text-muted-foreground">
+                MTN, Airtel, Visa, and Mastercard collect via Yo Payments Uganda.
+              </p>
+            )}
+
+            {isYoMethod(method) && posContext?.organizationId ? (
+              <YoCollectionPanel
+                method={method}
+                amount={yoPanelAmount}
+                organizationId={posContext.organizationId}
+                registerSessionId={currentSession?.id}
+                onCollected={(payment) => {
+                  setPayments((current) => [...current, payment]);
+                  setMethod("cash");
+                  setAmountText(Math.max(0, remaining - payment.amount).toFixed(2));
+                }}
+                onCancel={() => setMethod("cash")}
+              />
+            ) : (
+              <>
             <div className="space-y-2">
               <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tender amount</Label>
               <div className="flex gap-2">
@@ -168,6 +259,8 @@ export function PaymentModal() {
                 Clear
               </Button>
             </div>
+              </>
+            )}
           </div>
 
           <div className="flex flex-col border-l bg-card p-6">

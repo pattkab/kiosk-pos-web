@@ -94,6 +94,8 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === "/offline.html" ||
     request.nextUrl.pathname === "/manifest.webmanifest";
   const isBillingWebhook = request.nextUrl.pathname === "/api/billing/webhook";
+  const isYoPaymentsWebhook =
+    request.nextUrl.pathname === "/api/payments/yo/webhook";
   const isInvitationActivationApi =
     request.nextUrl.pathname === "/api/invitations/activate";
   const isOrganizationSelectionPage = request.nextUrl.pathname.startsWith(
@@ -106,6 +108,7 @@ export async function updateSession(request: NextRequest) {
     !isPublicPage &&
     !isPublicRuntimeAsset &&
     !isBillingWebhook &&
+    !isYoPaymentsWebhook &&
     !isInvitationActivationApi
   ) {
     const url = request.nextUrl.clone();
