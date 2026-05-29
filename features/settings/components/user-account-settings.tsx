@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, ImagePlus, LifeBuoy, PhoneCall, Save, X } from "lucide-react";
+import { Check, ImagePlus, LifeBuoy, MessageCircle, Save, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -315,9 +315,13 @@ export function UserAccountSettings() {
             <p className="font-semibold">{SUPPORT_CONTACT.company}</p>
           </div>
           <Button asChild variant="outline">
-            <a href={`tel:${SUPPORT_CONTACT.phoneE164}`}>
-              <PhoneCall className="mr-2 h-4 w-4" />
-              {SUPPORT_CONTACT.phoneDisplay}
+            <a
+              href={SUPPORT_CONTACT.whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              WhatsApp {SUPPORT_CONTACT.phoneDisplay}
             </a>
           </Button>
         </CardContent>
