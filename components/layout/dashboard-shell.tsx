@@ -18,7 +18,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { isNative } = useNativeShell();
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-background">
+    <div
+      className="flex h-dvh overflow-hidden bg-background"
+      data-native-splash-anchor="app-shell"
+    >
       {!isNative ? <Sidebar /> : null}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <ConnectivityBanner />

@@ -133,7 +133,10 @@ function AuthPageContent() {
   const busy = isLoading || isGoogleLoading;
 
   return (
-    <div className="grid min-h-dvh bg-[#f4f6fb] lg:grid-cols-[minmax(0,1.08fr)_minmax(440px,0.92fr)]">
+    <div
+      className="grid min-h-dvh bg-[#f4f6fb] lg:grid-cols-[minmax(0,1.08fr)_minmax(440px,0.92fr)]"
+      data-native-splash-anchor="auth"
+    >
       <AuthShowcase mode={mode} />
 
       <div className="relative flex min-h-dvh flex-col">

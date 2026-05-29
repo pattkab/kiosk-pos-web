@@ -120,7 +120,7 @@ Deploy to production so https links open in the app when installed.
 
 - Bottom navigation (POS, Home, Stock, More)
 - Compact header with page title
-- Splash screen with Kiosk POS branding (hidden after load, min 600ms fade-out; 12s fallback)
+- Splash screen with Kiosk POS branding (hidden after the landing page or app shell finishes loading; 20s fallback)
 - Android back → history or minimize
 - In-app navigation allowlist (Google OAuth, Supabase, Yo checkout stay in WebView)
 - `KioskPOS-Native/1.0` user-agent on WebView requests

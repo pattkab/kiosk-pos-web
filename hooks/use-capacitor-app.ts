@@ -6,6 +6,7 @@ import {
   isCapacitorNative,
 } from "@/lib/utils/capacitor";
 import { navigateNativeDeepLink } from "@/lib/navigation/native-deeplink";
+import { NATIVE_APP_READY_EVENT } from "@/lib/native/splash-screen";
 
 /**
  * Native shell bootstrap: status bar, splash, back button, deep links.
@@ -84,7 +85,7 @@ export function useCapacitorApp() {
         let splashHidden = false;
         const splashShownAt = Date.now();
         const minSplashMs = 600;
-        const maxSplashMs = 12000;
+        const maxSplashMs = 20000;
 
         const hideSplash = () => {
           if (splashHidden) return;
@@ -98,10 +99,10 @@ export function useCapacitorApp() {
           }, delay);
         };
 
-        if (document.readyState === "complete") {
+        if (window.__kioskposAppReady) {
           hideSplash();
         } else {
-          window.addEventListener("load", hideSplash, { once: true });
+          window.addEventListener(NATIVE_APP_READY_EVENT, hideSplash, { once: true });
         }
 
         window.setTimeout(hideSplash, maxSplashMs);
