@@ -114,7 +114,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
-                <Link href="/register">
+                <Link href="/login?mode=create">
                   Create account
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -230,7 +230,7 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild>
-              <Link href="/register">Create account</Link>
+              <Link href="/login?mode=create">Create account</Link>
             </Button>
             <Button
               asChild

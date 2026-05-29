@@ -26,7 +26,7 @@ export function LegalDocumentLayout({
             <Link href="/login" className="text-muted-foreground hover:text-foreground">
               Sign in
             </Link>
-            <Link href="/register" className="text-muted-foreground hover:text-foreground">
+            <Link href="/login?mode=create" className="text-muted-foreground hover:text-foreground">
               Register
             </Link>
           </div>
