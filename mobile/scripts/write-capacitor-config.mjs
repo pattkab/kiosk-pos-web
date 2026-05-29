@@ -26,7 +26,9 @@ const allowNavigation = [
   "*.supabase.co",
   "supabase.co",
   "10.0.2.2",
-  "localhost",
+  "play.google.com",
+  "apps.apple.com",
+  "itms-apps",
 ];
 
 const config = `import type { CapacitorConfig } from "@capacitor/cli";
@@ -36,7 +38,7 @@ const config: CapacitorConfig = {
   appId: "shop.kioskpos.app",
   appName: "Kiosk POS",
   webDir: "www",
-  backgroundColor: "#0a0c12",
+  backgroundColor: "#1c1f26",
   server: {
     url: "${serverUrl}",
     cleartext: ${isLocalDev},
@@ -47,12 +49,12 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: ${isLocalDev},
-    backgroundColor: "#0a0c12",
+    backgroundColor: "#1c1f26",
     appendUserAgent: "KioskPOS-Native/1.0",
   },
   ios: {
     contentInset: "automatic",
-    backgroundColor: "#0a0c12",
+    backgroundColor: "#1c1f26",
     appendUserAgent: "KioskPOS-Native/1.0",
     scrollEnabled: true,
     scheme: "App",
@@ -61,13 +63,14 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchAutoHide: false,
       launchShowDuration: 0,
-      backgroundColor: "#0a0c12",
+      backgroundColor: "#1c1f26",
       androidSplashResourceName: "splash",
-      showSpinner: false,
+      showSpinner: true,
+      spinnerColor: "#f97316",
     },
     StatusBar: {
       style: "DARK",
-      backgroundColor: "#0a0c12",
+      backgroundColor: "#1c1f26",
     },
     Keyboard: {
       resize: "body",
@@ -75,7 +78,7 @@ const config: CapacitorConfig = {
     },
     LocalNotifications: {
       smallIcon: "ic_launcher_foreground",
-      iconColor: "#6366f1",
+      iconColor: "#f97316",
       sound: "default",
     },
     Camera: {

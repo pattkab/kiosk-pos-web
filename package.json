@@ -23,9 +23,11 @@
     "mobile:ios:sync": "npm run pod:install --prefix mobile",
     "mobile:run:local:ios": "npm run run:local:ios --prefix mobile",
     "mobile:run:local": "npm run mobile:config:local && npm run mobile:sync && npm run mobile:install:debug",
-    "mobile:build:release": "npm run build:release --prefix mobile"
+    "mobile:build:release": "npm run build:release --prefix mobile",
+    "mobile:assets:generate": "npm run assets:generate --prefix mobile"
   },
   "dependencies": {
+    "@capacitor-community/in-app-review": "^7.1.0",
     "@capacitor-community/keep-awake": "^7.1.0",
     "@capacitor/app": "^7.0.1",
     "@capacitor/camera": "^7.0.5",

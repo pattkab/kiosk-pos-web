@@ -33,7 +33,7 @@ export function useCapacitorApp() {
 
         await StatusBar.setStyle({ style: Style.Dark });
         if (getCapacitorPlatform() === "android") {
-          await StatusBar.setBackgroundColor({ color: "#0a0c12" });
+          await StatusBar.setBackgroundColor({ color: "#1c1f26" });
           await StatusBar.setOverlaysWebView({ overlay: false });
         }
 
@@ -81,13 +81,30 @@ export function useCapacitorApp() {
           /* notifications optional until plugin synced */
         }
 
-        // Hide splash after first paint of remote app (or fallback shell)
-        const hideSplash = () => void SplashScreen.hide();
+        let splashHidden = false;
+        const splashShownAt = Date.now();
+        const minSplashMs = 600;
+        const maxSplashMs = 12000;
+
+        const hideSplash = () => {
+          if (splashHidden) return;
+          splashHidden = true;
+
+          const elapsed = Date.now() - splashShownAt;
+          const delay = Math.max(0, minSplashMs - elapsed);
+
+          window.setTimeout(() => {
+            void SplashScreen.hide({ fadeOutDuration: 300 });
+          }, delay);
+        };
+
         if (document.readyState === "complete") {
           hideSplash();
         } else {
           window.addEventListener("load", hideSplash, { once: true });
         }
+
+        window.setTimeout(hideSplash, maxSplashMs);
       } catch (error) {
         console.warn("[Capacitor] Native plugins unavailable:", error);
       }

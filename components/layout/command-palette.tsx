@@ -8,6 +8,7 @@ import {
   Cloud,
   CreditCard,
   Gift,
+  FileText,
   Settings,
   Smile,
   User,
@@ -81,6 +82,10 @@ export function CommandPalette() {
           <CommandItem onSelect={() => runCommand(() => router.push("/reports"))}>
             <BarChart3 className="mr-2 h-4 w-4" />
             <span>Reports</span>
+          </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => router.push("/invoices"))}>
+            <FileText className="mr-2 h-4 w-4" />
+            <span>Invoices</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => router.push("/customers"))}>
             <UserRoundSearch className="mr-2 h-4 w-4" />

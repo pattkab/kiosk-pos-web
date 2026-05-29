@@ -15,6 +15,7 @@ import {
   UserRound,
   Users,
   UserRoundSearch,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ const MENU_ICONS: Record<string, LucideIcon> = {
   "/dashboard": LayoutDashboard,
   "/inventory": Package,
   "/customers": UserRoundSearch,
+  "/invoices": FileText,
   "/reports": BarChart3,
   "/team": Users,
   "/notifications": Bell,

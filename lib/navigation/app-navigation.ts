@@ -8,7 +8,8 @@ export type AppNavModule =
   | "team"
   | "settings"
   | "notifications"
-  | "customers";
+  | "customers"
+  | "invoices";
 
 export interface AppNavItem {
   name: string;
@@ -25,6 +26,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { name: "Reports", shortName: "Reports", href: "/reports", module: "reports" },
   { name: "Team", shortName: "Team", href: "/team", module: "team" },
   { name: "Customers", shortName: "Customers", href: "/customers", module: "customers" },
+  { name: "Invoices", shortName: "Invoices", href: "/invoices", module: "invoices" },
   { name: "Settings", shortName: "Settings", href: "/settings", module: "settings" },
 ];
 
@@ -38,6 +40,7 @@ export const NATIVE_TAB_MODULES: AppNavModule[] = [
 /** Items surfaced from the “More” tab on native. */
 export const NATIVE_MORE_MODULES: AppNavModule[] = [
   "reports",
+  "invoices",
   "customers",
   "team",
   "settings",
@@ -52,6 +55,7 @@ const MODULE_PERMISSIONS: Record<AppNavModule, Permission | null> = {
   team: "team.manage",
   settings: "settings.manage",
   customers: null,
+  invoices: null,
 };
 
 export function hasModuleAccess(
@@ -82,6 +86,7 @@ export function isNavItemActive(pathname: string, href: string): boolean {
 export function isNativeMoreSectionActive(pathname: string): boolean {
   if (
     pathname.startsWith("/customers") ||
+    pathname.startsWith("/invoices") ||
     pathname.startsWith("/pos/queue") ||
     pathname.startsWith("/select-organization")
   ) {
@@ -97,6 +102,7 @@ export function isNativeMoreSectionActive(pathname: string): boolean {
 export function getNativePageTitle(pathname: string): string {
   if (pathname.startsWith("/pos/queue")) return "Offline Queue";
   if (pathname.startsWith("/customers")) return "Customers";
+  if (pathname.startsWith("/invoices")) return "Invoices";
   if (pathname.startsWith("/select-organization")) return "Organizations";
   if (pathname.startsWith("/my-loyalty")) return "My Loyalty";
   if (pathname.startsWith("/settings/account")) return "Account";

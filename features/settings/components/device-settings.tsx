@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sun, Bell, Smartphone, ScanBarcode } from "lucide-react";
+import { Sun, Bell, Smartphone, ScanBarcode, Star } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
 } from "@/lib/native/native-notifications";
 import { ensureCameraPermission } from "@/lib/native/camera-permissions";
 import { PrinterSettingsCard } from "@/features/settings/components/printer-settings-card";
+import { requestAppReviewCheck, getAppReviewState, recordNativeAppSessionDay } from "@/lib/native/app-review";
 import { toast } from "sonner";
 
 type AppInfo = {
@@ -219,6 +220,30 @@ export function DeviceSettings() {
               Enable camera
             </Button>
           ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Star className="h-4 w-4 text-orange-500" />
+            Rate Kiosk POS
+          </CardTitle>
+          <CardDescription>
+            Leave a review on the {platform === "ios" ? "App Store" : "Google Play Store"} to help
+            other shop owners find the app.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 font-semibold text-white hover:from-orange-400 hover:to-amber-400 sm:w-auto"
+            onClick={() => {
+              requestAppReviewCheck("manual");
+              toast.message("Opening rating prompt…");
+            }}
+          >
+            Rate this app
+          </Button>
         </CardContent>
       </Card>
 

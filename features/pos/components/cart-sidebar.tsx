@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { PaymentModal } from "./payment-modal";
 import { RegisterSession } from "./register-session";
-import { ReceiptModal } from "./receipt-modal";
 import { OfflineCustomerPicker } from "@/components/offline/customer-picker";
 import {
   LoyaltyPanel,
@@ -289,7 +288,6 @@ export function CartSidebar() {
 
       <RegisterSession />
       <PaymentModal />
-      <ReceiptModal />
     </div>
   );
 }

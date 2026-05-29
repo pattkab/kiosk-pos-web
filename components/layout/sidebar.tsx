@@ -12,6 +12,7 @@ import {
   Settings,
   UserRoundSearch,
   Bell,
+  FileText,
   ChevronLeft,
   X,
   Pin,
@@ -41,6 +42,7 @@ const NAV_ICONS: Record<AppNavModule, LucideIcon> = {
   customers: UserRoundSearch,
   settings: Settings,
   notifications: Bell,
+  invoices: FileText,
 };
 
 export function Sidebar() {

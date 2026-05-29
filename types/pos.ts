@@ -54,6 +54,8 @@ export interface CheckoutPayment {
 export interface CompletedReceipt {
   saleId: string;
   receiptNumber: string;
+  invoiceNumber?: string;
+  invoiceId?: string;
   isOfflinePending?: boolean;
   remoteSaleId?: string | null;
   organizationName: string;
@@ -73,6 +75,9 @@ export interface CompletedReceipt {
   receiptFooter?: string | null;
   receiptLogoUrl?: string | null;
   receiptNotes?: string | null;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
 }
 
 export interface ActiveRegisterSession {

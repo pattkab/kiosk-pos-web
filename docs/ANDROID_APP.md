@@ -120,7 +120,7 @@ Deploy to production so https links open in the app when installed.
 
 - Bottom navigation (POS, Home, Stock, More)
 - Compact header with page title
-- Splash screen (hidden after load)
+- Splash screen with Kiosk POS branding (hidden after load, min 600ms fade-out; 12s fallback)
 - Android back → history or minimize
 - In-app navigation allowlist (Google OAuth, Supabase, Yo checkout stay in WebView)
 - `KioskPOS-Native/1.0` user-agent on WebView requests
@@ -131,6 +131,21 @@ Deploy to production so https links open in the app when installed.
 - **Local notifications** when offline sync fails or conflicts
 - **Share receipt** — thermal-formatted text via Android share sheet
 - **Device settings** — `/settings/device` (native app only)
+- **In-app review** — Play Store / App Store rating prompt after milestones (5 checkouts or 3 session days); manual trigger in Device & app settings
+
+## App store ratings
+
+The native shell uses `@capacitor-community/in-app-review` for the platform rating sheet (Google Play In-App Review on Android, StoreKit on iOS). A styled pre-prompt appears when:
+
+| Trigger | When |
+|---------|------|
+| Checkout milestone | After the 5th completed sale |
+| Session milestone | After using the app on 3 different days |
+| Manual | **Settings → Device & app → Rate this app** |
+
+Users can dismiss, snooze (90-day cooldown), or opt out permanently. If the native sheet is unavailable, the app opens the store listing instead.
+
+Update `lib/native/app-store.ts` with your **iOS App Store ID** once the app is published.
 
 ## Permissions
 
@@ -150,13 +165,29 @@ The native shell declares Android permissions used by the web app. Camera access
 
 **Future iOS app:** when you run `npx cap add ios`, Capacitor merges `NSCameraUsageDescription` from `capacitor.config.ts` into `Info.plist`.
 
+## App icon & splash assets
+
+Launcher icons and splash screens are generated from `mobile/resources/app-icon.png`.
+
+After updating the source artwork:
+
+```bash
+cd mobile
+npm run assets:generate
+npm run config:prod
+npm run sync:android
+```
+
+This updates Android mipmaps, splash drawables, iOS AppIcon/Splash, and `public/icons/` for the PWA.
+
 ## Project paths
 
 | Path | Purpose |
 |------|---------|
 | `mobile/android/` | Android Studio / Gradle project |
 | `mobile/capacitor.config.ts` | WebView URL & plugins (generated) |
-| `mobile/scripts/write-capacitor-config.mjs` | `production` / `local` config |
+| `mobile/resources/app-icon.png` | Source artwork for icons & splash |
+| `mobile/scripts/generate-app-assets.mjs` | Regenerate Android/iOS/PWA assets |
 | `docs/ANDROID_RELEASE.md` | Play Store signing & release AAB |
 | `docs/PLAY_STORE.md` | Closed testing & store listing |
 | `docs/IOS_APP.md` | iOS Capacitor shell & Xcode |

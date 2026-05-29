@@ -7,6 +7,7 @@ interface CheckoutState {
   isProcessing: boolean;
   payments: CheckoutPayment[];
   receipt: CompletedReceipt | null;
+  receiptMode: "checkout" | "reprint";
   selectedCustomerId: string | null;
   selectedCustomerName: string | null;
   selectedCustomerPoints: number;
@@ -15,7 +16,10 @@ interface CheckoutState {
   closePayment: () => void;
   setProcessing: (isProcessing: boolean) => void;
   setPayments: (payments: CheckoutPayment[]) => void;
-  setReceipt: (receipt: CompletedReceipt | null) => void;
+  setReceipt: (
+    receipt: CompletedReceipt | null,
+    mode?: "checkout" | "reprint",
+  ) => void;
   setSelectedCustomer: (
     id: string | null,
     name?: string | null,
@@ -33,6 +37,7 @@ export const useCheckoutStore = create<CheckoutState>((set) => ({
   isProcessing: false,
   payments: [],
   receipt: null,
+  receiptMode: "checkout",
   selectedCustomerId: null,
   selectedCustomerName: null,
   selectedCustomerPoints: 0,
@@ -41,7 +46,12 @@ export const useCheckoutStore = create<CheckoutState>((set) => ({
   closePayment: () => set({ isPaymentOpen: false }),
   setProcessing: (isProcessing) => set({ isProcessing }),
   setPayments: (payments) => set({ payments }),
-  setReceipt: (receipt) => set({ receipt, isReceiptOpen: Boolean(receipt) }),
+  setReceipt: (receipt, receiptMode = "checkout") =>
+    set({
+      receipt,
+      receiptMode,
+      isReceiptOpen: Boolean(receipt),
+    }),
   setSelectedCustomer: (
     selectedCustomerId,
     selectedCustomerName = null,
@@ -64,6 +74,7 @@ export const useCheckoutStore = create<CheckoutState>((set) => ({
       isProcessing: false,
       payments: [],
       receipt: null,
+      receiptMode: "checkout",
       selectedCustomerId: null,
       selectedCustomerName: null,
       selectedCustomerPoints: 0,

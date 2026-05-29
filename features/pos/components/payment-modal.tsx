@@ -154,6 +154,14 @@ export function PaymentModal() {
       resetCheckout();
       closePayment();
       toast.success("Sale completed");
+
+      const { recordSuccessfulCheckout, requestAppReviewCheck } = await import(
+        "@/lib/native/app-review"
+      );
+      const reviewState = recordSuccessfulCheckout();
+      if (reviewState.completedCheckouts >= 5) {
+        window.setTimeout(() => requestAppReviewCheck("checkout_success"), 2500);
+      }
     } catch (error) {
       toast.error(
         getUserErrorMessage(error, "Checkout failed. Please try again."),

@@ -27,6 +27,7 @@ export const NATIVE_MENU_SECTIONS: NativeMenuSection[] = [
     title: "Customers & team",
     items: [
       { href: "/customers", label: "Customers", matchPrefixes: ["/customers"] },
+      { href: "/invoices", label: "Invoices", matchPrefixes: ["/invoices"] },
       { href: "/reports", label: "Reports", module: "reports", matchPrefixes: ["/reports"] },
       { href: "/team", label: "Team", module: "team" },
     ],

@@ -26,6 +26,17 @@ export function formatThermalReceipt(receipt: CompletedReceipt): string {
 
   lines.push(
     center(`Receipt ${receipt.receiptNumber}`),
+  );
+
+  if (receipt.invoiceNumber) {
+    lines.push(center(`Invoice ${receipt.invoiceNumber}`));
+  }
+
+  if (receipt.customerName) {
+    lines.push(center(`Customer: ${receipt.customerName}`));
+  }
+
+  lines.push(
     center(new Date(receipt.createdAt).toLocaleString()),
     center(`Cashier: ${receipt.cashierName}`),
   );
@@ -56,6 +67,12 @@ export function formatThermalReceipt(receipt: CompletedReceipt): string {
 
   if (receipt.discountAmount > 0) {
     lines.push(padLine("Discount", `-${formatCurrency(receipt.discountAmount)}`));
+  }
+
+  if ((receipt.loyaltyDiscountAmount ?? 0) > 0) {
+    lines.push(
+      padLine("Loyalty", `-${formatCurrency(receipt.loyaltyDiscountAmount ?? 0)}`),
+    );
   }
 
   lines.push(

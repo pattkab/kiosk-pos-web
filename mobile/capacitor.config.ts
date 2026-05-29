@@ -5,23 +5,23 @@ const config: CapacitorConfig = {
   appId: "shop.kioskpos.app",
   appName: "Kiosk POS",
   webDir: "www",
-  backgroundColor: "#0a0c12",
+  backgroundColor: "#1c1f26",
   server: {
     url: "https://kioskpos.shop",
     cleartext: false,
     hostname: "kioskpos.shop",
     androidScheme: "https",
-    allowNavigation: ["kioskpos.shop","*.kioskpos.shop","kioskpos.shop","accounts.google.com","*.google.com","*.googleusercontent.com","*.supabase.co","supabase.co","10.0.2.2","localhost"],
+    allowNavigation: ["kioskpos.shop","*.kioskpos.shop","kioskpos.shop","accounts.google.com","*.google.com","*.googleusercontent.com","*.supabase.co","supabase.co","10.0.2.2","play.google.com","apps.apple.com","itms-apps"],
     errorPath: "index.html",
   },
   android: {
     allowMixedContent: false,
-    backgroundColor: "#0a0c12",
+    backgroundColor: "#1c1f26",
     appendUserAgent: "KioskPOS-Native/1.0",
   },
   ios: {
     contentInset: "automatic",
-    backgroundColor: "#0a0c12",
+    backgroundColor: "#1c1f26",
     appendUserAgent: "KioskPOS-Native/1.0",
     scrollEnabled: true,
     scheme: "App",
@@ -30,13 +30,14 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchAutoHide: false,
       launchShowDuration: 0,
-      backgroundColor: "#0a0c12",
+      backgroundColor: "#1c1f26",
       androidSplashResourceName: "splash",
-      showSpinner: false,
+      showSpinner: true,
+      spinnerColor: "#f97316",
     },
     StatusBar: {
       style: "DARK",
-      backgroundColor: "#0a0c12",
+      backgroundColor: "#1c1f26",
     },
     Keyboard: {
       resize: "body",
@@ -44,7 +45,7 @@ const config: CapacitorConfig = {
     },
     LocalNotifications: {
       smallIcon: "ic_launcher_foreground",
-      iconColor: "#6366f1",
+      iconColor: "#f97316",
       sound: "default",
     },
     Camera: {

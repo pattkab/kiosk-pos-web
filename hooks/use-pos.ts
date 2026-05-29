@@ -27,6 +27,7 @@ import { canUseFeature } from "@/lib/billing/plans";
 import { getDeviceId } from "@/lib/offline/device-id";
 import { generateOfflineReceiptNumber } from "@/lib/offline/receipt-number";
 import { recordLocalInventoryMovement } from "@/lib/offline/inventory-movement";
+import { fetchSaleReceiptFromServer } from "@/lib/receipts/fetch-sale-receipt";
 import {
   applyLoyaltyRedemption,
   parseLoyaltySettings,
@@ -655,25 +656,7 @@ export function useCheckout() {
       } as never);
       if (error) throw error;
 
-      const receipt: CompletedReceipt = {
-        saleId: saleId as string,
-        receiptNumber: `R-${String(saleId).slice(0, 8).toUpperCase()}`,
-        organizationName: activeContext.organization?.name ?? "Store",
-        cashierName:
-          activeContext.profile.full_name ?? activeContext.profile.email,
-        createdAt: new Date().toISOString(),
-        items,
-        subtotal: totals.subtotal,
-        taxAmount: totals.taxAmount,
-        discountAmount,
-        totalAmount: payableTotal,
-        payments,
-        changeDue: Math.max(0, paid - payableTotal),
-        loyaltyPointsRedeemed: pointsRedeemed,
-        loyaltyPointsEarned: loyaltyCheckout.pointsEarnedPreview,
-        loyaltyDiscountAmount: loyaltyDiscount,
-        ...receiptBranding,
-      };
+      const receipt = await fetchSaleReceiptFromServer(saleId as string);
 
       // Cache completed online receipts locally as well
       await putInStore("receipts", receipt);

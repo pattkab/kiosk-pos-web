@@ -11,6 +11,7 @@ import {
   SaleItemReportRow,
   SalesReportRow,
 } from "@/types/reports";
+import { ReceiptReprintButton } from "@/features/receipts/components/receipt-reprint-button";
 import { ReportDataTable } from "./report-data-table";
 
 export function SalesTable({ rows }: { rows: SalesReportRow[] }) {
@@ -26,6 +27,18 @@ export function SalesTable({ rows }: { rows: SalesReportRow[] }) {
         { key: "total_amount", label: "Total", align: "right", render: (row) => formatCurrency(row.total_amount as number) },
         { key: "payment_status", label: "Payment", render: (row) => <Badge>{String(row.payment_status)}</Badge> },
         { key: "sale_status", label: "Status", render: (row) => <Badge variant="secondary">{String(row.sale_status)}</Badge> },
+        {
+          key: "sale_id",
+          label: "Print",
+          align: "right",
+          render: (row) => (
+            <ReceiptReprintButton
+              saleId={String(row.sale_id)}
+              label="Print"
+              size="sm"
+            />
+          ),
+        },
       ]}
     />
   );

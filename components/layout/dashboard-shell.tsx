@@ -10,6 +10,7 @@ import { SubscriptionGate } from "@/components/billing/subscription-gate";
 import { NativeBottomNav } from "./native-bottom-nav";
 import { NativeHeader } from "./native-header";
 import { NativeMenuSheet } from "./native-menu-sheet";
+import { GlobalReceiptModal } from "@/features/receipts/components/global-receipt-modal";
 import { useNativeShell } from "@/hooks/use-native-shell";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +48,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       ) : null}
       <CommandPalette />
       <ConflictModal />
+      <GlobalReceiptModal />
     </div>
   );
 }

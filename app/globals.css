@@ -70,6 +70,14 @@
 
   /* Capacitor Android / iOS shell */
   html.native-app {
+    --native-nav-bar-height: 4rem;
+    --native-nav-fab-lift: 1.35rem;
+    --native-nav-margin: 0.625rem;
+    --native-nav-offset: calc(
+      var(--native-nav-bar-height) + var(--native-nav-fab-lift) + var(--native-nav-margin) +
+        env(safe-area-inset-bottom, 0px)
+    );
+
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
   }
@@ -96,15 +104,99 @@
   }
 
   .pb-native-nav {
-    padding-bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  .native-bottom-nav {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: var(--native-nav-offset, calc(3.75rem + env(safe-area-inset-bottom, 0px)));
   }
 
   html.native-app .pos-mobile-cart-bar {
-    bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+    bottom: var(--native-nav-offset, calc(3.75rem + env(safe-area-inset-bottom, 0px)));
+  }
+
+  html.native-app .native-bottom-nav-dock {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      linear-gradient(180deg, rgba(28, 31, 38, 0.94) 0%, rgba(16, 18, 24, 0.9) 100%);
+    box-shadow:
+      0 12px 48px rgba(0, 0, 0, 0.42),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+      0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+  }
+
+  html.native-app .native-nav-tab {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  html.native-app .native-nav-tab[aria-current="page"],
+  html.native-app .native-nav-tab.text-primary {
+    color: hsl(var(--primary));
+  }
+
+  html.native-app .native-nav-tab-glow {
+    animation: native-nav-glow 2.4s ease-in-out infinite;
+  }
+
+  html.native-app .native-nav-pos-fab-idle .native-nav-pos-ring {
+    animation: native-nav-pos-pulse 2.8s ease-in-out infinite;
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.35);
+  }
+
+  html.native-app .native-nav-pos-fab-active {
+    animation: native-nav-pos-pop 0.35s ease-out;
+  }
+
+  html.native-app .native-more-backdrop {
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  html.native-app .native-more-sheet {
+    max-width: 28rem;
+    margin-inline: auto;
+  }
+
+  html.native-app .native-review-backdrop {
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  html.native-app .native-review-sheet {
+    max-width: 28rem;
+    margin-inline: auto;
+  }
+}
+
+@keyframes native-nav-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes native-nav-pos-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(249, 115, 22, 0);
+  }
+}
+
+@keyframes native-nav-pos-pop {
+  0% {
+    transform: scale(0.92);
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
