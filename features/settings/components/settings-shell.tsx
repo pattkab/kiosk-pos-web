@@ -43,6 +43,40 @@ export function SettingsShell({ children }: { children: React.ReactNode }) {
 
   const visibleNav = nav.filter((item) => !item.nativeOnly || isNative);
 
+  if (isNative) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Settings</h1>
+          <p className="text-sm text-muted-foreground">
+            Account, organization, and operating controls.
+          </p>
+        </div>
+        <nav className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1">
+          {visibleNav.map((item) => {
+            const active = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Button
+                key={item.href}
+                asChild
+                size="sm"
+                variant={active ? "default" : "outline"}
+                className={cn("shrink-0 rounded-full", !active && "bg-background")}
+              >
+                <Link href={item.href}>
+                  <Icon className="mr-1.5 h-4 w-4" />
+                  {item.label}
+                </Link>
+              </Button>
+            );
+          })}
+        </nav>
+        <main className="min-w-0 flex-1">{children}</main>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
       <aside className="space-y-2">

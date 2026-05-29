@@ -34,6 +34,7 @@ export function useCapacitorApp() {
         await StatusBar.setStyle({ style: Style.Dark });
         if (getCapacitorPlatform() === "android") {
           await StatusBar.setBackgroundColor({ color: "#0a0c12" });
+          await StatusBar.setOverlaysWebView({ overlay: false });
         }
 
         const handleDeepLink = (url: string) => {

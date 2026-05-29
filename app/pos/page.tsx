@@ -23,7 +23,7 @@ import { useCheckoutStore } from "@/store/use-checkout-store";
 import { useProductSearchStore } from "@/store/use-product-search-store";
 import { useScannerStore } from "@/store/use-scanner-store";
 import { useInventoryStore } from "@/store/use-inventory-store";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import {
   Grid2X2,
   History,
@@ -50,6 +50,7 @@ import {
 } from "@/lib/pos/catalog-view";
 import { isLoyaltyCardCode } from "@/lib/loyalty/card";
 import { customerToCheckoutSelection } from "@/lib/loyalty/attach-customer";
+import { useNativeShell } from "@/hooks/use-native-shell";
 
 // Performance: Lazy load the heavy barcode scanner only when needed
 const BarcodeScanner = dynamic(
@@ -63,6 +64,7 @@ const BarcodeScanner = dynamic(
 );
 
 export default function PosPage() {
+  const { isNative } = useNativeShell();
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [catalogView, setCatalogView] = useState<PosCatalogView>("grid");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -356,7 +358,14 @@ export default function PosPage() {
   };
 
   return (
-    <div className="flex h-[calc(100dvh-104px)] flex-col gap-3 overflow-hidden lg:h-[calc(100dvh-120px)]">
+    <div
+      className={cn(
+        "flex flex-col gap-3 overflow-hidden",
+        isNative
+          ? "native-page-fill"
+          : "h-[calc(100dvh-104px)] lg:h-[calc(100dvh-120px)]",
+      )}
+    >
       <div className="shrink-0 space-y-2">
         <CatalogStaleBanner />
         <CartRecoveryBanner />

@@ -5,11 +5,16 @@ import { getCapacitorPlatform, isCapacitorNative } from "@/lib/utils/capacitor";
 
 const DETECT_DELAYS_MS = [0, 50, 150, 400, 800, 1500];
 
+function detectNativeShell() {
+  if (typeof window === "undefined") return false;
+  return isCapacitorNative();
+}
+
 /**
  * Client-only native shell detection (avoids SSR mismatch; retries until Capacitor bridge is ready).
  */
 export function useNativeShell() {
-  const [isNative, setIsNative] = useState(false);
+  const [isNative, setIsNative] = useState(detectNativeShell);
 
   useEffect(() => {
     const detect = () => {
@@ -25,7 +30,7 @@ export function useNativeShell() {
     const timers = DETECT_DELAYS_MS.map((delay) =>
       window.setTimeout(() => {
         detect();
-      }, delay)
+      }, delay),
     );
 
     return () => timers.forEach((id) => window.clearTimeout(id));

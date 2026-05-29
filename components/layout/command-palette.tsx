@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import {
   Calculator,
   Calendar,
+  Cloud,
   CreditCard,
+  Gift,
   Settings,
   Smile,
   User,
@@ -15,6 +17,7 @@ import {
   BarChart3,
   Bell,
   Users,
+  UserRoundSearch,
 } from "lucide-react";
 
 import {
@@ -79,12 +82,32 @@ export function CommandPalette() {
             <BarChart3 className="mr-2 h-4 w-4" />
             <span>Reports</span>
           </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => router.push("/customers"))}>
+            <UserRoundSearch className="mr-2 h-4 w-4" />
+            <span>Customers</span>
+          </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => router.push("/pos/queue"))}>
+            <Cloud className="mr-2 h-4 w-4" />
+            <span>Offline Queue</span>
+          </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => router.push("/notifications"))}>
+            <Bell className="mr-2 h-4 w-4" />
+            <span>Notifications</span>
+          </CommandItem>
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Settings">
           <CommandItem onSelect={() => runCommand(() => router.push("/team"))}>
             <Users className="mr-2 h-4 w-4" />
             <span>Team Management</span>
+          </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => router.push("/settings/loyalty"))}>
+            <Gift className="mr-2 h-4 w-4" />
+            <span>Loyalty settings</span>
+          </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => router.push("/settings/account"))}>
+            <User className="mr-2 h-4 w-4" />
+            <span>My account</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => router.push("/settings"))}>
             <Settings className="mr-2 h-4 w-4" />

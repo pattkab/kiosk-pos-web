@@ -11,6 +11,7 @@ import {
   BarChart3,
   Users,
   Settings,
+  UserRoundSearch,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,7 @@ const TAB_ICONS: Record<AppNavModule, LucideIcon> = {
   team: Users,
   settings: Settings,
   notifications: MoreHorizontal,
+  customers: UserRoundSearch,
 };
 
 export function NativeBottomNav() {

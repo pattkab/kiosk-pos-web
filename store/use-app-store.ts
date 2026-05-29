@@ -10,6 +10,9 @@ interface AppState {
   setCommandPaletteOpen: (open: boolean) => void;
   toggleCommandPalette: () => void;
 
+  nativeMenuOpen: boolean;
+  setNativeMenuOpen: (open: boolean) => void;
+
   notifications: Notification[];
   addNotification: (notification: Notification) => void;
   markAsRead: (id: string) => void;
@@ -36,6 +39,9 @@ export const useAppStore = create<AppState>()(
       commandPaletteOpen: false,
       setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
       toggleCommandPalette: () => set((state) => ({ commandPaletteOpen: !state.commandPaletteOpen })),
+
+      nativeMenuOpen: false,
+      setNativeMenuOpen: (open) => set({ nativeMenuOpen: open }),
 
       notifications: [],
       addNotification: (n) => set((state) => ({ notifications: [n, ...state.notifications] })),

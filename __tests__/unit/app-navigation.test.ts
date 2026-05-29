@@ -28,5 +28,7 @@ describe("app-navigation", () => {
   it("resolves native page titles", () => {
     expect(getNativePageTitle("/pos")).toBe("POS Checkout");
     expect(getNativePageTitle("/settings/sync")).toBe("Settings");
+    expect(getNativePageTitle("/customers")).toBe("Customers");
+    expect(getNativePageTitle("/pos/queue")).toBe("Offline Queue");
   });
 });

@@ -75,8 +75,18 @@
   }
 
   html.native-app body {
-    padding-top: env(safe-area-inset-top);
     user-select: none;
+  }
+
+  html.native-app .native-app-bar {
+    box-shadow: 0 1px 0 hsl(var(--border) / 0.6);
+  }
+
+  html.native-app .native-page-fill {
+    min-height: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
   }
 
   html.native-app input,

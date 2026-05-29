@@ -9,6 +9,7 @@ import { ConflictModal } from "../realtime/conflict-modal";
 import { SubscriptionGate } from "@/components/billing/subscription-gate";
 import { NativeBottomNav } from "./native-bottom-nav";
 import { NativeHeader } from "./native-header";
+import { NativeMenuSheet } from "./native-menu-sheet";
 import { useNativeShell } from "@/hooks/use-native-shell";
 import { cn } from "@/lib/utils";
 
@@ -23,14 +24,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {isNative ? <NativeHeader /> : <Navbar />}
         <main
           className={cn(
-            "flex-1 overflow-y-auto overflow-x-hidden",
-            isNative && "pb-24 pt-2" // Extra padding for bottom nav and header
+            "flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden",
+            isNative && "pb-native-nav",
           )}
         >
           <div
             className={cn(
-              "mx-auto w-full max-w-screen-2xl",
-              isNative ? "px-4" : "px-3 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-8"
+              "mx-auto flex w-full max-w-screen-2xl flex-1 flex-col min-h-0",
+              isNative ? "px-3 py-2" : "px-3 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-8",
             )}
           >
             {!isNative ? <Breadcrumbs /> : null}
@@ -38,7 +39,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
-      {isNative ? <NativeBottomNav /> : null}
+      {isNative ? (
+        <>
+          <NativeMenuSheet />
+          <NativeBottomNav />
+        </>
+      ) : null}
       <CommandPalette />
       <ConflictModal />
     </div>

@@ -7,7 +7,8 @@ export type AppNavModule =
   | "reports"
   | "team"
   | "settings"
-  | "notifications";
+  | "notifications"
+  | "customers";
 
 export interface AppNavItem {
   name: string;
@@ -23,6 +24,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { name: "Inventory", shortName: "Stock", href: "/inventory", module: "inventory" },
   { name: "Reports", shortName: "Reports", href: "/reports", module: "reports" },
   { name: "Team", shortName: "Team", href: "/team", module: "team" },
+  { name: "Customers", shortName: "Customers", href: "/customers", module: "customers" },
   { name: "Settings", shortName: "Settings", href: "/settings", module: "settings" },
 ];
 
@@ -36,6 +38,7 @@ export const NATIVE_TAB_MODULES: AppNavModule[] = [
 /** Items surfaced from the “More” tab on native. */
 export const NATIVE_MORE_MODULES: AppNavModule[] = [
   "reports",
+  "customers",
   "team",
   "settings",
 ];
@@ -48,6 +51,7 @@ const MODULE_PERMISSIONS: Record<AppNavModule, Permission | null> = {
   notifications: null,
   team: "team.manage",
   settings: "settings.manage",
+  customers: null,
 };
 
 export function hasModuleAccess(
@@ -76,6 +80,14 @@ export function isNavItemActive(pathname: string, href: string): boolean {
 }
 
 export function isNativeMoreSectionActive(pathname: string): boolean {
+  if (
+    pathname.startsWith("/customers") ||
+    pathname.startsWith("/pos/queue") ||
+    pathname.startsWith("/select-organization")
+  ) {
+    return true;
+  }
+
   return NATIVE_MORE_MODULES.some((module) => {
     const item = getNavItemByModule(module);
     return item ? isNavItemActive(pathname, item.href) : false;
@@ -83,9 +95,27 @@ export function isNativeMoreSectionActive(pathname: string): boolean {
 }
 
 export function getNativePageTitle(pathname: string): string {
+  if (pathname.startsWith("/pos/queue")) return "Offline Queue";
+  if (pathname.startsWith("/customers")) return "Customers";
+  if (pathname.startsWith("/select-organization")) return "Organizations";
+  if (pathname.startsWith("/my-loyalty")) return "My Loyalty";
+  if (pathname.startsWith("/settings/account")) return "Account";
+
   const item = APP_NAV_ITEMS.find((nav) => isNavItemActive(pathname, nav.href));
   if (item) return item.name;
   if (pathname.startsWith("/settings/")) return "Settings";
   if (pathname.startsWith("/notifications")) return "Notifications";
   return "Kiosk POS";
+}
+
+export function getNativeBackHref(pathname: string): string | null {
+  if (pathname.startsWith("/settings/") && pathname !== "/settings") {
+    return "/settings";
+  }
+  if (pathname.startsWith("/reports/") && pathname !== "/reports") {
+    return "/reports";
+  }
+  if (pathname === "/pos/queue") return "/pos";
+  if (pathname.startsWith("/notifications/")) return "/notifications";
+  return null;
 }
