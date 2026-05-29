@@ -10,6 +10,8 @@ import {
   BarChart3,
   Users,
   Settings,
+  UserRoundSearch,
+  Bell,
   ChevronLeft,
   X,
   Pin,
@@ -25,17 +27,21 @@ import {
   canExploreWithoutOrganization,
   hasModuleAccess,
   isNavItemActive,
+  type AppNavModule,
 } from "@/lib/navigation/app-navigation";
+import type { LucideIcon } from "lucide-react";
 import { useNativeShell } from "@/hooks/use-native-shell";
 
-const NAV_ICONS = {
+const NAV_ICONS: Record<AppNavModule, LucideIcon> = {
   dashboard: LayoutDashboard,
   pos: ShoppingCart,
   inventory: Package,
   reports: BarChart3,
   team: Users,
+  customers: UserRoundSearch,
   settings: Settings,
-} as const;
+  notifications: Bell,
+};
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -127,7 +133,7 @@ export function Sidebar() {
           {APP_NAV_ITEMS.filter((item) =>
             hasModuleAccess(item.module, permissions, userRole)
           ).map((item) => {
-            const Icon = NAV_ICONS[item.module as keyof typeof NAV_ICONS];
+            const Icon = NAV_ICONS[item.module];
             const isActive = isNavItemActive(pathname, item.href);
             return (
               <Link
