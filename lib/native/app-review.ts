@@ -175,7 +175,7 @@ export function requestAppReviewCheck(trigger: AppReviewTrigger) {
 
 export async function openNativeStoreListing() {
   const platform = getCapacitorPlatform();
-  if (platform === "web") return false;
+  if (platform === "web" || typeof window === "undefined") return false;
 
   const primaryUrl = getNativeStoreReviewUrl(platform);
   const fallbackUrl =
@@ -183,22 +183,11 @@ export async function openNativeStoreListing() {
       ? getPlayStoreMarketUrl(NATIVE_APP_STORE.androidPackageId)
       : primaryUrl;
 
-  try {
-    const { App } = await import("@capacitor/app");
-    await App.openUrl({ url: primaryUrl });
-    return true;
-  } catch {
-    try {
-      const { App } = await import("@capacitor/app");
-      await App.openUrl({ url: fallbackUrl });
-      return true;
-    } catch {
-      if (typeof window !== "undefined") {
-        window.open(primaryUrl, "_blank", "noopener,noreferrer");
-      }
-      return false;
-    }
-  }
+  const opened = window.open(primaryUrl, "_blank", "noopener,noreferrer");
+  if (opened) return true;
+
+  window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+  return true;
 }
 
 /** Native in-app review sheet (Play In-App Review / StoreKit). Falls back to store listing. */
