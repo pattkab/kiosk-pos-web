@@ -2,9 +2,10 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Kiosk POS",
-    short_name: "KioskPOS",
-    description: "Production-grade POS and Inventory Management",
+    name: "Kiosk POS — Point of Sale",
+    short_name: "Kiosk POS",
+    description:
+      "Offline-first Point of Sale and inventory for shops, supermarkets, restaurants, and multi-branch teams.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

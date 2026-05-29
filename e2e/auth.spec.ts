@@ -7,7 +7,7 @@ test('has title', async ({ page }) => {
 
 test('can navigate to login', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: /Get Started/i }).click();
+  await page.getByRole('link', { name: /Create account/i }).first().click();
   await expect(page).toHaveURL(/\/login/);
   await expect(page.getByRole('heading', { name: /Sign in/i })).toBeVisible();
 });

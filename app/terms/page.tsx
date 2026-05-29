@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import {
   LegalDocumentLayout,
@@ -6,12 +5,14 @@ import {
   LegalSection,
 } from "@/components/legal/legal-document-layout";
 import { SITE_URL, SUPPORT_EMAIL } from "@/lib/legal/constants";
+import { createPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Terms and Conditions | Kiosk POS",
+export const metadata = createPageMetadata({
+  title: "Terms and Conditions",
   description:
-    "Terms and conditions governing your use of Kiosk POS point-of-sale and inventory services.",
-};
+    "Terms and conditions governing your use of Kiosk POS Point of Sale, inventory, and reporting services.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

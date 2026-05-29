@@ -3,6 +3,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BrandTitle, PointOfSaleLabel } from "@/components/marketing/brand-title";
+import { SiteHeader } from "@/components/marketing/site-header";
+import { HomePageJsonLd } from "@/components/seo/home-page-json-ld";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { SITE_DESCRIPTION } from "@/lib/seo/site";
 import {
   ArrowRight,
   BarChart3,
@@ -111,10 +115,41 @@ const enterpriseStats = [
   ["24/7", "offline Point of Sale"],
 ] as const;
 
+const faqs = [
+  {
+    question: "What is Kiosk POS?",
+    answer:
+      "Kiosk POS is Point of Sale and inventory software for retail and hospitality. It covers checkout, stock, reports, register sessions, and offline selling when connectivity is poor.",
+  },
+  {
+    question: "Does it work without internet?",
+    answer:
+      "Yes. Sales, receipts, and product lookup continue offline. Transactions sync automatically when your connection returns.",
+  },
+  {
+    question: "Can I use mobile money at checkout?",
+    answer:
+      "Yes. Kiosk POS supports Yo Payments for MTN Mobile Money, Airtel Money, and card collections where your merchant account allows it.",
+  },
+];
+
+export const metadata = createPageMetadata({
+  title:
+    "Point of Sale Software for Shops, Supermarkets, Restaurants & Hotels",
+  description: SITE_DESCRIPTION,
+  path: "/",
+});
+
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="relative min-h-[90vh] overflow-hidden bg-neutral-950 text-white">
+    <>
+      <HomePageJsonLd />
+      <SiteHeader />
+      <main className="min-h-screen bg-background text-foreground">
+      <section
+        className="relative min-h-[90vh] overflow-hidden bg-neutral-950 text-white"
+        aria-labelledby="hero-heading"
+      >
         <Image
           src="/kiosk-pos-enterprise-hero.png"
           alt="Kiosk POS Point of Sale dashboard on a checkout counter"
@@ -137,7 +172,10 @@ export default function LandingPage() {
             <p className="text-sm font-bold uppercase tracking-[0.28em] text-emerald-300/80">
               Point of Sale software
             </p>
-            <h1 className="mt-2 text-5xl font-extrabold tracking-tight lg:text-7xl">
+            <h1
+              id="hero-heading"
+              className="mt-2 text-5xl font-extrabold tracking-tight lg:text-7xl"
+            >
               <BrandTitle as="span" />
             </h1>
             <p className="mt-3 text-xl font-medium text-white/90 lg:text-2xl">
@@ -203,13 +241,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="border-b bg-muted/25 px-4 py-12 sm:px-6 lg:px-8">
+      <section
+        id="features"
+        className="border-b bg-muted/25 px-4 py-12 sm:px-6 lg:px-8"
+        aria-labelledby="features-heading"
+      >
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">
               Point of Sale + back office
             </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight">
+            <h2
+              id="features-heading"
+              className="mt-2 text-3xl font-bold tracking-tight"
+            >
               Everything <BrandTitle className="text-3xl" /> does from the counter
               to the stock room
             </h2>
@@ -238,13 +283,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="px-4 py-14 sm:px-6 lg:px-8">
+      <section
+        id="industries"
+        className="px-4 py-14 sm:px-6 lg:px-8"
+        aria-labelledby="industries-heading"
+      >
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-primary">
               Multi-location Point of Sale
             </p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight">
+            <h2
+              id="industries-heading"
+              className="mt-3 text-3xl font-bold tracking-tight"
+            >
               Supermarkets, bars, hotels & rentals — one view
             </h2>
             <p className="mt-4 leading-7 text-muted-foreground">
@@ -292,7 +344,33 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="border-t bg-neutral-950 px-4 py-10 text-white sm:px-6 lg:px-8">
+      <section
+        id="faq"
+        className="border-t bg-background px-4 py-14 sm:px-6 lg:px-8"
+        aria-labelledby="faq-heading"
+      >
+        <div className="mx-auto max-w-3xl">
+          <h2 id="faq-heading" className="text-3xl font-bold tracking-tight">
+            Frequently asked questions
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            Quick answers about Point of Sale, offline mode, and payments in
+            Kiosk POS.
+          </p>
+          <dl className="mt-8 space-y-6">
+            {faqs.map((faq) => (
+              <div key={faq.question}>
+                <dt className="text-lg font-semibold">{faq.question}</dt>
+                <dd className="mt-2 leading-7 text-muted-foreground">
+                  {faq.answer}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      <footer className="border-t bg-neutral-950 px-4 py-10 text-white sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-widest text-emerald-400">
@@ -330,7 +408,8 @@ export default function LandingPage() {
             Terms and Conditions
           </Link>
         </div>
-      </section>
+      </footer>
     </main>
+    </>
   );
 }

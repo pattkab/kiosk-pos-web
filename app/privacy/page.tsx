@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import {
   LegalDocumentLayout,
@@ -6,12 +5,14 @@ import {
   LegalSection,
 } from "@/components/legal/legal-document-layout";
 import { SITE_URL, SUPPORT_EMAIL } from "@/lib/legal/constants";
+import { createPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy | Kiosk POS",
+export const metadata = createPageMetadata({
+  title: "Privacy Policy",
   description:
-    "Learn how Kiosk POS collects, uses, stores, and protects personal and business data.",
-};
+    "Learn how Kiosk POS collects, uses, stores, and protects personal and business data for Point of Sale and inventory services.",
+  path: "/privacy",
+});
 
 export default function PrivacyPolicyPage() {
   return (
