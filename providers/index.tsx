@@ -7,6 +7,7 @@ import { PwaProvider } from "./pwa-provider";
 import { AppearanceProvider } from "./appearance-provider";
 import { ThemeSyncProvider } from "./theme-sync-provider";
 import { CapacitorBootstrap } from "@/components/native/capacitor-bootstrap";
+import { PosKioskBootstrap } from "@/components/native/pos-kiosk-bootstrap";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <RealtimeProvider>
               <PwaProvider>
                 <CapacitorBootstrap />
+                <PosKioskBootstrap />
                 {children}
               </PwaProvider>
             </RealtimeProvider>

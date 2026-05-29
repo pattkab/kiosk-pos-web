@@ -2,6 +2,18 @@
 
 Native Android shell: full-screen **WebView** (no Chrome address bar). The web app loads from your deployed URL or local dev server.
 
+## Roadmap
+
+| Phase | Status | Highlights |
+|-------|--------|------------|
+| **A** | ✓ | Tablet PWA, offline checkout, sync queue |
+| **B** | ✓ | Capacitor shell, App Links, native OAuth |
+| **B+** | ✓ | Bottom nav, compact header, splash |
+| **C** | ✓ | Keep-awake POS, sync notifications, thermal receipts, device settings, release docs |
+| **D** | Next | Play closed testing, Bluetooth ESC/POS, FCM push |
+
+See [ANDROID_RELEASE.md](./ANDROID_RELEASE.md) for Play Store signing.
+
 ## Chrome vs native APK — read this first
 
 | What you see | What it is |
@@ -100,7 +112,9 @@ Deploy to production so https links open in the app when installed.
 
 **Release builds:** add your Play App Signing SHA-256 fingerprint to `assetlinks.json` (debug fingerprint is already included for local builds).
 
-## Native UX (phase B+)
+## Native UX
+
+### Phase B+ (shell)
 
 - Bottom navigation (POS, Home, Stock, More)
 - Compact header with page title
@@ -109,6 +123,13 @@ Deploy to production so https links open in the app when installed.
 - In-app navigation allowlist (Google OAuth, Supabase, Yo checkout stay in WebView)
 - `KioskPOS-Native/1.0` user-agent on WebView requests
 
+### Phase C (shop floor)
+
+- **Keep screen on** at `/pos` (Settings → Device & app)
+- **Local notifications** when offline sync fails or conflicts
+- **Share receipt** — thermal-formatted text via Android share sheet
+- **Device settings** — `/settings/device` (native app only)
+
 ## Project paths
 
 | Path | Purpose |
@@ -116,6 +137,7 @@ Deploy to production so https links open in the app when installed.
 | `mobile/android/` | Android Studio / Gradle project |
 | `mobile/capacitor.config.ts` | WebView URL & plugins (generated) |
 | `mobile/scripts/write-capacitor-config.mjs` | `production` / `local` config |
+| `docs/ANDROID_RELEASE.md` | Play Store signing & release AAB |
 
 ## Troubleshooting
 
@@ -130,8 +152,8 @@ Deploy to production so https links open in the app when installed.
 | No bottom nav (deployed) | Force-close app and reopen; ensure you are on `/dashboard` or `/pos` (not `/login`). Bottom nav needs native detection (`KioskPOS-Native` user-agent). |
 | `invalid source release: 21` | Install JDK 21: `brew install openjdk@21` then `export JAVA_HOME="$(/usr/libexec/java_home -v 21)"` and re-run `npm run install:debug` |
 
-## Phase C (next)
+## Phase D (next)
 
-- Play Store signing & closed testing
-- Bluetooth receipt printer plugin
-- Push notifications for sync failures
+- Play Store closed testing track
+- Direct Bluetooth ESC/POS printer plugin (Sunmi / generic)
+- Firebase Cloud Messaging when app is backgrounded

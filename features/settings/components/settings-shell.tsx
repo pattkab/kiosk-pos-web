@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNativeShell } from "@/hooks/use-native-shell";
 import {
   Bell,
   Building2,
@@ -13,6 +14,7 @@ import {
   Palette,
   Receipt,
   Shield,
+  Smartphone,
   TriangleAlert,
   UserRound,
   WalletCards,
@@ -28,12 +30,16 @@ const nav = [
   { href: "/settings/tax", label: "Tax", icon: WalletCards },
   { href: "/settings/billing", label: "Billing", icon: CreditCard },
   { href: "/settings/sync", label: "Offline sync", icon: Cloud },
+  { href: "/settings/device", label: "Device & app", icon: Smartphone, nativeOnly: true },
   { href: "/settings/audit", label: "Audit logs", icon: FileText },
   { href: "/settings/danger", label: "Danger zone", icon: TriangleAlert },
 ];
 
 export function SettingsShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isNative } = useNativeShell();
+
+  const visibleNav = nav.filter((item) => !item.nativeOnly || isNative);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
@@ -45,7 +51,7 @@ export function SettingsShell({ children }: { children: React.ReactNode }) {
           </p>
         </div>
         <nav className="grid gap-1 pt-4">
-          {nav.map((item) => {
+          {visibleNav.map((item) => {
             const active = pathname === item.href;
             const Icon = item.icon;
             return (

@@ -12,6 +12,9 @@ import { useCheckoutStore } from "@/store/use-checkout-store";
 import { formatCurrency } from "@/lib/utils";
 import { CheckCircle2, Printer, ReceiptText } from "lucide-react";
 import Image from "next/image";
+import { printOrShareReceipt } from "@/lib/native/receipt-print";
+import { isCapacitorNative } from "@/lib/utils/capacitor";
+import { toast } from "sonner";
 
 export function ReceiptModal() {
   const { receipt, isReceiptOpen, closeReceipt } = useCheckoutStore();
@@ -142,9 +145,18 @@ export function ReceiptModal() {
         </div>
 
         <div className="flex gap-3 border-t p-5">
-          <Button className="h-12 flex-1 gap-2" onClick={() => window.print()}>
+          <Button
+            className="h-12 flex-1 gap-2"
+            onClick={() => {
+              void printOrShareReceipt(receipt).then(() => {
+                if (isCapacitorNative()) {
+                  toast.success("Receipt ready — choose a printer app from the share menu.");
+                }
+              });
+            }}
+          >
             <Printer className="h-4 w-4" />
-            Print
+            {isCapacitorNative() ? "Share receipt" : "Print"}
           </Button>
           <Button
             className="h-12 flex-1"

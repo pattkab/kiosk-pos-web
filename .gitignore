@@ -39,3 +39,5 @@ next-env.d.ts
 /mobile/android/.gradle/
 /mobile/android/app/build/
 /mobile/android/build/
+/mobile/android/keystore.properties
+*.keystore

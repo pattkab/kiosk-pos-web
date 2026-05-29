@@ -17,6 +17,7 @@ import { updateOfflineSettings } from "@/lib/offline/offline-metadata";
 import { getDeviceId } from "@/lib/offline/device-id";
 import { cacheCustomersDelta } from "@/lib/offline/customers";
 import { recordSyncConflict } from "@/lib/offline/conflicts";
+import { notifyNativeSyncFailure } from "@/lib/native/native-notifications";
 import { Database } from "@/types/database";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
@@ -226,10 +227,17 @@ export class SyncEngine {
         });
 
         toast.error(`Sync conflict on offline sale: ${errorMsg}`);
+        void notifyNativeSyncFailure(
+          `Sync conflict: ${errorMsg.slice(0, 120)}`,
+        );
       } else {
         // Network connection error - retry later
         await queueStore.updateItemStatus(item.id, "failed", errorMsg);
         await queueStore.incrementRetryCount(item.id);
+
+        void notifyNativeSyncFailure(
+          `Offline sale failed to sync. Will retry when online.`,
+        );
 
         const updatedItem = await getFromStore<QueueItem>("queue", item.id);
         if (updatedItem) {

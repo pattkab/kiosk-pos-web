@@ -17,6 +17,7 @@ export function useCapacitorApp() {
     let cancelled = false;
     let removeBackListener: (() => void) | undefined;
     let removeUrlOpenListener: (() => void) | undefined;
+    let removeNotifListener: (() => void) | undefined;
 
     document.documentElement.classList.add("native-app");
     document.documentElement.dataset.capacitorPlatform =
@@ -57,6 +58,24 @@ export function useCapacitorApp() {
         });
         removeBackListener = () => backHandle.remove();
 
+        try {
+          const { LocalNotifications } = await import(
+            "@capacitor/local-notifications"
+          );
+          const notifHandle = await LocalNotifications.addListener(
+            "localNotificationActionPerformed",
+            (event) => {
+              const route = event.notification.extra?.route;
+              if (typeof route === "string" && route.startsWith("/")) {
+                window.location.href = `${window.location.origin}${route}`;
+              }
+            }
+          );
+          removeNotifListener = () => notifHandle.remove();
+        } catch {
+          /* notifications optional until plugin synced */
+        }
+
         // Hide splash after first paint of remote app (or fallback shell)
         const hideSplash = () => void SplashScreen.hide();
         if (document.readyState === "complete") {
@@ -73,6 +92,7 @@ export function useCapacitorApp() {
       cancelled = true;
       removeBackListener?.();
       removeUrlOpenListener?.();
+      removeNotifListener?.();
       document.documentElement.classList.remove("native-app");
       delete document.documentElement.dataset.capacitorPlatform;
     };

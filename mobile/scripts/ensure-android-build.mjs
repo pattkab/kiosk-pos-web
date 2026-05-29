@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { execSync, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -5,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const androidDir = join(root, "android");
+const task = process.argv[2] === "release" ? "bundleRelease" : "installDebug";
 
 const jdk21Paths = [
   process.env.JAVA_HOME,
@@ -46,12 +48,9 @@ if (javaHome) {
   console.log(
     "JDK 21 not found locally; Gradle will try to auto-download it (first build may take a few minutes)."
   );
-  console.log(
-    "Or install manually: brew install openjdk@21 && export JAVA_HOME=$(/usr/libexec/java_home -v 21)"
-  );
 }
 
-const result = spawnSync("./gradlew", ["installDebug"], {
+const result = spawnSync("./gradlew", [task], {
   cwd: androidDir,
   env,
   stdio: "inherit",
@@ -59,10 +58,20 @@ const result = spawnSync("./gradlew", ["installDebug"], {
 
 if (result.status !== 0) {
   console.error(
-    "\nBuild failed. Capacitor Android needs Java 21.\n" +
+    `\nBuild failed (${task}). Capacitor Android needs Java 21.\n` +
       "  brew install openjdk@21\n" +
-      "  export JAVA_HOME=\"$(/usr/libexec/java_home -v 21)\"\n" +
-      "  npm run install:debug\n"
+      "  export JAVA_HOME=\"$(/usr/libexec/java_home -v 21)\"\n"
   );
+  if (task === "bundleRelease") {
+    console.error(
+      "Release builds also need signing — see docs/ANDROID_RELEASE.md\n"
+    );
+  }
   process.exit(result.status ?? 1);
+}
+
+if (task === "bundleRelease") {
+  console.log(
+    "\nRelease bundle: mobile/android/app/build/outputs/bundle/release/app-release.aab"
+  );
 }

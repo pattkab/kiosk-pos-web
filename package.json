@@ -19,12 +19,15 @@
     "mobile:config:prod": "npm run config:prod --prefix mobile",
     "mobile:config:local": "npm run config:local --prefix mobile",
     "mobile:install:debug": "npm run install:debug --prefix mobile",
-    "mobile:run:local": "npm run mobile:config:local && npm run mobile:sync && npm run mobile:install:debug"
+    "mobile:run:local": "npm run mobile:config:local && npm run mobile:sync && npm run mobile:install:debug",
+    "mobile:build:release": "npm run build:release --prefix mobile"
   },
   "dependencies": {
     "@capacitor/app": "^7.0.1",
     "@capacitor/core": "^7.4.2",
     "@capacitor/haptics": "^7.0.5",
+    "@capacitor/local-notifications": "^7.0.1",
+    "@capacitor-community/keep-awake": "^7.1.0",
     "@capacitor/keyboard": "^7.0.1",
     "@capacitor/splash-screen": "^7.0.1",
     "@capacitor/status-bar": "^7.0.1",
