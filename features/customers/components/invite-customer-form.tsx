@@ -21,10 +21,7 @@ export function InviteCustomerForm() {
       phone,
       full_name: fullName,
     });
-    const joinUrl =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/join/customer?token=${result.token}`
-        : `${resolveRequestAppUrl()}/join/customer?token=${result.token}`;
+    const joinUrl = `${window.location.origin}/join/customer?token=${result.token}`;
     setEmail("");
     setPhone("");
     setFullName("");

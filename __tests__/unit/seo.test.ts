@@ -14,7 +14,10 @@ describe("SEO metadata", () => {
     expect(metadata.description).toBe("Privacy for Kiosk POS");
     expect(metadata.alternates?.canonical).toContain("/privacy");
     expect(metadata.openGraph?.title).toBeTruthy();
-    expect(metadata.twitter?.card).toBe("summary_large_image");
+    const twitter = metadata.twitter;
+    expect(twitter && "card" in twitter ? twitter.card : null).toBe(
+      "summary_large_image",
+    );
   });
 
   it("marks noindex pages", () => {

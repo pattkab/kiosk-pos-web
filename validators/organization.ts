@@ -6,6 +6,7 @@ import {
   PLAN_IDS,
   SUBSCRIPTION_STATUSES,
 } from "@/lib/billing/plans";
+import { loyaltySettingsSchema } from "@/validators/loyalty";
 
 const hexColorSchema = z
   .string()
@@ -55,7 +56,7 @@ export const organizationSettingsSchema = z.object({
   trial_ends_at: z.string().optional().nullable(),
   current_period_ends_at: z.string().optional().nullable(),
   billing_cycle: z.enum(BILLING_CYCLES).optional(),
-});
+}).merge(loyaltySettingsSchema.partial());
 
 export const organizationAppearanceSchema = z.object({
   theme_primary_color: hexColorSchema.default(
