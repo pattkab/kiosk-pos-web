@@ -2,22 +2,46 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { BrandTitle, PointOfSaleLabel } from "@/components/marketing/brand-title";
 import {
   ArrowRight,
   BarChart3,
   BellRing,
   Building2,
   CloudOff,
+  Coffee,
+  Home,
+  Hotel,
   PackageSearch,
+  Pill,
   ReceiptText,
+  Scissors,
   ShieldCheck,
+  ShoppingBag,
   ShoppingCart,
+  Store,
+  UtensilsCrossed,
   WalletCards,
+  Wine,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+const verticals: { label: string; icon: LucideIcon }[] = [
+  { label: "Shops", icon: Store },
+  { label: "Supermarkets", icon: ShoppingCart },
+  { label: "Bars", icon: Wine },
+  { label: "Restaurants", icon: UtensilsCrossed },
+  { label: "Cafés", icon: Coffee },
+  { label: "Hotels", icon: Hotel },
+  { label: "BnB & rentals", icon: Home },
+  { label: "Salons", icon: Scissors },
+  { label: "Pharmacies", icon: Pill },
+  { label: "Boutiques", icon: ShoppingBag },
+];
 
 const features = [
   {
-    title: "Fast POS checkout",
+    title: "Fast Point of Sale checkout",
     description:
       "Run counter sales, split payments, register sessions, receipts, and cashier workflows from one clean surface.",
     icon: ShoppingCart,
@@ -45,16 +69,16 @@ const features = [
     tone: "text-rose-600",
   },
   {
-    title: "Business enterprise management",
+    title: "Multi-branch management",
     description:
-      "Manage multiple businesses or branches together with consolidated analytics and quick branch switching.",
+      "Manage supermarkets, hotels, bars, and rental properties together with consolidated analytics and quick switching.",
     icon: Building2,
     tone: "text-violet-600",
   },
   {
     title: "Offline-first resilience",
     description:
-      "Keep selling with cached catalog data, local queues, conflict handling, and sync status visibility.",
+      "Keep selling when power or internet drops — cached catalog, local queue, sync when you are back online.",
     icon: CloudOff,
     tone: "text-cyan-600",
   },
@@ -68,7 +92,7 @@ const features = [
   {
     title: "Role-based controls",
     description:
-      "Give owners, admins, managers, and cashiers the right access for POS, inventory, reports, and settings.",
+      "Give owners, admins, managers, and cashiers the right access for checkout, inventory, reports, and settings.",
     icon: ShieldCheck,
     tone: "text-indigo-600",
   },
@@ -84,38 +108,56 @@ const features = [
 const enterpriseStats = [
   ["4", "branch analytics views"],
   ["9", "reporting modules"],
-  ["24/7", "offline sales continuity"],
-];
+  ["24/7", "offline Point of Sale"],
+] as const;
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <section className="relative min-h-[86vh] overflow-hidden bg-neutral-950 text-white">
+      <section className="relative min-h-[90vh] overflow-hidden bg-neutral-950 text-white">
         <Image
           src="/kiosk-pos-enterprise-hero.png"
-          alt="Kiosk POS analytics dashboard on a checkout counter"
+          alt="Kiosk POS Point of Sale dashboard on a checkout counter"
           fill
           priority
           sizes="100vw"
           className="object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/82 to-neutral-950/18" />
-        <div className="relative z-10 mx-auto flex min-h-[86vh] max-w-7xl flex-col justify-center px-4 py-20 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <p className="mb-4 inline-flex rounded-md border border-white/20 bg-white/10 px-3 py-1 text-sm font-medium text-white/85 backdrop-blur">
-              POS, inventory, alerts, reports, and branches in one workspace
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/88 to-neutral-950/25" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_10%_20%,rgba(16,185,129,0.12),transparent_55%)]" />
+
+        <div className="relative z-10 mx-auto flex min-h-[90vh] max-w-7xl flex-col justify-center px-4 py-20 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <p className="mb-5 inline-flex flex-wrap items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-4 py-1.5 text-sm font-medium text-white/90 backdrop-blur-md">
+              <span className="font-bold text-emerald-300">Point of Sale</span>
+              <span className="text-white/40">·</span>
+              <span>inventory · alerts · reports · branches</span>
             </p>
-            <h1 className="text-5xl font-extrabold tracking-tight lg:text-6xl">
-              Kiosk POS
+
+            <p className="text-sm font-bold uppercase tracking-[0.28em] text-emerald-300/80">
+              Point of Sale software
+            </p>
+            <h1 className="mt-2 text-5xl font-extrabold tracking-tight lg:text-7xl">
+              <BrandTitle as="span" />
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-white/78">
-              A serious operating system for shops, restaurants, hotels, BnBs,
-              salons, pharmacies, and growing multi-branch teams.
+            <p className="mt-3 text-xl font-medium text-white/90 lg:text-2xl">
+              <PointOfSaleLabel className="text-emerald-300" />
+              <span className="text-white/50"> — sell, stock, and report from one calm workspace.</span>
             </p>
+
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/75">
+              Whether you run a corner shop, a busy supermarket, a bar tab, a
+              restaurant floor, or guest-house rentals —{" "}
+              <strong className="font-semibold text-white">
+                checkout stays fast
+              </strong>{" "}
+              and your team always knows what sold and what is left on the shelf.
+            </p>
+
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg">
+              <Button asChild size="lg" className="h-12 px-6 text-base font-bold">
                 <Link href="/login?mode=create">
-                  Create account
+                  Start free — create account
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -123,20 +165,37 @@ export default function LandingPage() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-white/30 bg-white/10 text-white hover:bg-white hover:text-neutral-950"
+                className="h-12 border-white/30 bg-white/10 px-6 text-base font-semibold text-white hover:bg-white hover:text-neutral-950"
               >
-                <Link href="/login">Sign in</Link>
+                <Link href="/login">Sign in to your Point of Sale</Link>
               </Button>
             </div>
           </div>
 
-          <div className="mt-14 grid max-w-3xl gap-3 sm:grid-cols-3">
+          <div className="mt-12">
+            <p className="mb-4 text-xs font-black uppercase tracking-widest text-white/50">
+              Built for counters like yours
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {verticals.map(({ label, icon: Icon }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3.5 py-2 text-sm font-semibold text-white/90 backdrop-blur-sm transition-colors hover:border-emerald-400/30 hover:bg-emerald-500/10"
+                >
+                  <Icon className="h-4 w-4 text-emerald-300" aria-hidden />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-12 grid max-w-4xl gap-3 sm:grid-cols-3">
             {enterpriseStats.map(([value, label]) => (
               <div
                 key={label}
-                className="rounded-md border border-white/[0.14] bg-white/[0.08] p-4 backdrop-blur"
+                className="rounded-xl border border-white/[0.14] bg-white/[0.08] p-4 backdrop-blur-md"
               >
-                <div className="text-2xl font-bold">{value}</div>
+                <div className="text-2xl font-bold text-emerald-300">{value}</div>
                 <div className="mt-1 text-sm text-white/70">{label}</div>
               </div>
             ))}
@@ -147,20 +206,24 @@ export default function LandingPage() {
       <section className="border-b bg-muted/25 px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <h2 className="text-3xl font-bold tracking-tight">
-              Everything Kiosk POS can do for the front counter and the back
-              office
+            <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">
+              Point of Sale + back office
+            </p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight">
+              Everything <BrandTitle className="text-3xl" /> does from the counter
+              to the stock room
             </h2>
             <p className="mt-3 text-muted-foreground">
-              The same system handles selling, stock, reconciliation, reporting,
-              notifications, user permissions, and enterprise visibility.
+              One system for selling at the register, controlling inventory,
+              reconciling cash, alerting managers, and seeing profit — whether
+              you operate one shop or many branches.
             </p>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
-                <Card key={feature.title} className="rounded-md">
+                <Card key={feature.title} className="rounded-xl">
                   <CardContent className="p-5">
                     <Icon className={`h-6 w-6 ${feature.tone}`} />
                     <h3 className="mt-4 font-semibold">{feature.title}</h3>
@@ -179,19 +242,31 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Enterprise management
+              Multi-location Point of Sale
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-tight">
-              See every business and branch together
+              Supermarkets, bars, hotels & rentals — one view
             </h2>
             <p className="mt-4 leading-7 text-muted-foreground">
-              Owners can compare branch revenue, gross profit, sales volume, and
-              low-stock exposure from a single dashboard, then switch into the
-              branch that needs attention.
+              Owners compare branch revenue, gross profit, sales volume, and
+              low-stock exposure from a single dashboard, then jump into the
+              location that needs attention — shop floor, bar, or front desk.
             </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {["Retail", "Hospitality", "Food & drink", "Services"].map(
+                (tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 ring-1 ring-emerald-200"
+                  >
+                    {tag}
+                  </span>
+                ),
+              )}
+            </div>
           </div>
 
-          <div className="overflow-hidden rounded-md border bg-card shadow-sm">
+          <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
             <div className="grid grid-cols-4 gap-3 border-b bg-muted/40 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <span>Branch</span>
               <span>Revenue</span>
@@ -199,8 +274,8 @@ export default function LandingPage() {
               <span>Alerts</span>
             </div>
             {[
-              ["Central Shop", "$18,420", "$6,310", "2"],
-              ["Airport Kiosk", "$11,870", "$3,940", "1"],
+              ["Central Supermarket", "$18,420", "$6,310", "2"],
+              ["Riverside Bar", "$11,870", "$3,940", "1"],
               ["BnB Suites", "$9,640", "$5,480", "0"],
             ].map(([branch, revenue, profit, alerts]) => (
               <div
@@ -220,21 +295,26 @@ export default function LandingPage() {
       <section className="border-t bg-neutral-950 px-4 py-10 text-white sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">
-              Build the operating rhythm your business deserves.
+            <p className="text-sm font-bold uppercase tracking-widest text-emerald-400">
+              Point of Sale that grows with you
+            </p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
+              Ready when the next customer walks in.
             </h2>
-            <p className="mt-2 text-sm text-white/65">
-              Start with checkout and inventory, then grow into branch
-              analytics, alerts, permissions, and profit reporting.
+            <p className="mt-2 max-w-xl text-sm text-white/65">
+              Start with checkout and inventory on day one, then add branch
+              analytics, stock alerts, permissions, and profit reporting as you
+              scale from shop to supermarket to multi-site group.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button asChild>
+            <Button asChild size="lg">
               <Link href="/login?mode=create">Create account</Link>
             </Button>
             <Button
               asChild
               variant="outline"
+              size="lg"
               className="border-white/30 bg-transparent text-white hover:bg-white hover:text-neutral-950"
             >
               <Link href="/login">Sign in</Link>
