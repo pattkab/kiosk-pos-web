@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sun, Bell, Smartphone } from "lucide-react";
+import { Sun, Bell, Smartphone, ScanBarcode } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 import {
   ensureNativeNotificationPermission,
 } from "@/lib/native/native-notifications";
+import { ensureCameraPermission } from "@/lib/native/camera-permissions";
 import { PrinterSettingsCard } from "@/features/settings/components/printer-settings-card";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ export function DeviceSettings() {
   const [keepAwake, setKeepAwake] = useState(true);
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [cameraEnabled, setCameraEnabled] = useState(false);
 
   useEffect(() => {
     setKeepAwake(isKeepAwakeEnabled());
@@ -51,6 +53,10 @@ export function DeviceSettings() {
       const { LocalNotifications } = await import("@capacitor/local-notifications");
       const status = await LocalNotifications.checkPermissions();
       setNotificationsEnabled(status.display === "granted");
+
+      const { Camera } = await import("@capacitor/camera");
+      const cameraStatus = await Camera.checkPermissions();
+      setCameraEnabled(cameraStatus.camera === "granted");
     })();
   }, [isNative]);
 
@@ -63,7 +69,7 @@ export function DeviceSettings() {
             Device &amp; app
           </CardTitle>
           <CardDescription>
-            These controls are available in the native Android app (Capacitor shell), not in the browser.
+            These controls are available in the native iOS or Android app (Capacitor shell), not in the browser.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -75,7 +81,7 @@ export function DeviceSettings() {
       <div>
         <h2 className="text-xl font-bold tracking-tight">Device &amp; app</h2>
         <p className="text-sm text-muted-foreground">
-          Native Android settings for shop-floor tablets.
+          Native app settings for shop-floor phones and tablets.
         </p>
       </div>
 
@@ -174,6 +180,43 @@ export function DeviceSettings() {
               }}
             >
               Enable notifications
+            </Button>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ScanBarcode className="h-4 w-4" />
+            Barcode scanner
+          </CardTitle>
+          <CardDescription>
+            Camera access is required to scan product barcodes at POS and in inventory.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Status:{" "}
+            <span className="font-medium text-foreground">
+              {cameraEnabled ? "Enabled" : "Not enabled"}
+            </span>
+          </p>
+          {!cameraEnabled ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                void ensureCameraPermission().then((result) => {
+                  setCameraEnabled(result.granted);
+                  toast.success(
+                    result.granted
+                      ? "Camera enabled for barcode scanning."
+                      : result.message ?? "Permission denied in system settings.",
+                  );
+                });
+              }}
+            >
+              Enable camera
             </Button>
           ) : null}
         </CardContent>

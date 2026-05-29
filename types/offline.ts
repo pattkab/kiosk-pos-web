@@ -1,6 +1,11 @@
-import { Database } from "@/types/database";
+import type { Database } from "@/types/database";
 
-export type OfflineCustomer = Database["public"]["Tables"]["customers"]["Row"];
+export type OfflineCustomer = Database["public"]["Tables"]["customers"]["Row"] & {
+  loyalty_card_number?: string;
+  loyalty_points?: number;
+  profile_id?: string | null;
+  status?: string;
+};
 
 export interface SyncConflictRecord {
   id: string;

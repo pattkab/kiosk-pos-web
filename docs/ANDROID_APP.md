@@ -11,7 +11,8 @@ Native Android shell: full-screen **WebView** (no Chrome address bar). The web a
 | **B+** | ✓ | Bottom nav, compact header, splash |
 | **C** | ✓ | Keep-awake POS, sync notifications, thermal receipts, device settings, release docs |
 | **D** | ✓ (partial) | Bluetooth ESC/POS printing, release signing scaffold, resume sync |
-| **E** | Next | Play closed testing, FCM push, in-app updates |
+| **iOS** | ✓ (initial) | Capacitor iOS shell, Universal Links scaffold — see [IOS_APP.md](./IOS_APP.md) |
+| **E** | Next | Play / App Store closed testing, push notifications, in-app updates |
 
 See [ANDROID_RELEASE.md](./ANDROID_RELEASE.md) for Play Store signing.
 
@@ -131,6 +132,24 @@ Deploy to production so https links open in the app when installed.
 - **Share receipt** — thermal-formatted text via Android share sheet
 - **Device settings** — `/settings/device` (native app only)
 
+## Permissions
+
+The native shell declares Android permissions used by the web app. Camera access is required for **barcode scanning** (POS and inventory).
+
+| Permission | Used for |
+|------------|----------|
+| `CAMERA` | Scan EAN/UPC/Code128 barcodes with the device camera |
+| `INTERNET` | Load the hosted web app |
+| `WAKE_LOCK` | Keep screen on at POS |
+| `POST_NOTIFICATIONS` | Sync failure alerts |
+| `BLUETOOTH_*` | ESC/POS receipt printers |
+
+**Web browser:** allow camera when prompted at POS or inventory → scan. The site must be served over HTTPS.
+
+**Android APK:** grant Camera when prompted, or enable it under Settings → Apps → Kiosk POS → Permissions. You can also pre-enable from **Settings → Device & app → Barcode scanner**.
+
+**Future iOS app:** when you run `npx cap add ios`, Capacitor merges `NSCameraUsageDescription` from `capacitor.config.ts` into `Info.plist`.
+
 ## Project paths
 
 | Path | Purpose |
@@ -140,6 +159,8 @@ Deploy to production so https links open in the app when installed.
 | `mobile/scripts/write-capacitor-config.mjs` | `production` / `local` config |
 | `docs/ANDROID_RELEASE.md` | Play Store signing & release AAB |
 | `docs/PLAY_STORE.md` | Closed testing & store listing |
+| `docs/IOS_APP.md` | iOS Capacitor shell & Xcode |
+| `docs/APP_STORE.md` | TestFlight & App Store |
 
 ## Troubleshooting
 
@@ -154,6 +175,8 @@ Deploy to production so https links open in the app when installed.
 | No bottom nav (deployed) | Force-close app and reopen; ensure you are on `/dashboard` or `/pos` (not `/login`). Bottom nav needs native detection (`KioskPOS-Native` user-agent). |
 | `invalid source release: 21` | Install JDK 21: `brew install openjdk@21` then `export JAVA_HOME="$(/usr/libexec/java_home -v 21)"` and re-run `npm run install:debug` |
 | Bluetooth scan finds nothing | Pair printer in Android Settings → Bluetooth first; grant Nearby devices / Location if prompted |
+| Barcode scanner black screen | Grant **Camera** permission; on Android use Settings → Device & app → Enable camera, then reopen POS → Scan |
+| Camera works in browser but not APK | Reinstall debug APK after manifest changes (`npm run mobile:sync` then `mobile:install:debug`) |
 | Play Store upload | See [PLAY_STORE.md](./PLAY_STORE.md) and [ANDROID_RELEASE.md](./ANDROID_RELEASE.md) |
 
 ### Phase D (shop floor hardware)

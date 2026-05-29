@@ -32,7 +32,9 @@ export function useCapacitorApp() {
         if (cancelled) return;
 
         await StatusBar.setStyle({ style: Style.Dark });
-        await StatusBar.setBackgroundColor({ color: "#0a0c12" });
+        if (getCapacitorPlatform() === "android") {
+          await StatusBar.setBackgroundColor({ color: "#0a0c12" });
+        }
 
         const handleDeepLink = (url: string) => {
           if (navigateNativeDeepLink(url)) return;
@@ -49,14 +51,16 @@ export function useCapacitorApp() {
         });
         removeUrlOpenListener = () => urlHandle.remove();
 
-        const backHandle = await App.addListener("backButton", ({ canGoBack }) => {
-          if (canGoBack) {
-            window.history.back();
-          } else {
-            void App.minimizeApp();
-          }
-        });
-        removeBackListener = () => backHandle.remove();
+        if (getCapacitorPlatform() === "android") {
+          const backHandle = await App.addListener("backButton", ({ canGoBack }) => {
+            if (canGoBack) {
+              window.history.back();
+            } else {
+              void App.minimizeApp();
+            }
+          });
+          removeBackListener = () => backHandle.remove();
+        }
 
         try {
           const { LocalNotifications } = await import(

@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appId: "shop.kioskpos.app",
   appName: "Kiosk POS",
   webDir: "www",
+  backgroundColor: "#0a0c12",
   server: {
     url: "https://kioskpos.shop",
     cleartext: false,
@@ -17,6 +18,13 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
     backgroundColor: "#0a0c12",
     appendUserAgent: "KioskPOS-Native/1.0",
+  },
+  ios: {
+    contentInset: "automatic",
+    backgroundColor: "#0a0c12",
+    appendUserAgent: "KioskPOS-Native/1.0",
+    scrollEnabled: true,
+    scheme: "App",
   },
   plugins: {
     SplashScreen: {
@@ -38,6 +46,9 @@ const config: CapacitorConfig = {
       smallIcon: "ic_launcher_foreground",
       iconColor: "#6366f1",
       sound: "default",
+    },
+    Camera: {
+      permissions: ["camera"],
     },
   },
 };

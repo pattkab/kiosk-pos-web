@@ -93,7 +93,9 @@ async function prefetchReceiptSettings(organizationId: string) {
   try {
     const { data, error } = await supabase
       .from("organization_settings")
-      .select("receipt_header, receipt_footer, receipt_notes, tax_rate")
+      .select(
+        "receipt_header, receipt_footer, receipt_notes, tax_rate, loyalty_enabled, loyalty_earn_points_per_unit, loyalty_earn_spend_unit, loyalty_redeem_points_unit, loyalty_redeem_value_unit, loyalty_min_redeem_points, loyalty_max_redeem_percent",
+      )
       .eq("organization_id", organizationId)
       .maybeSingle();
 

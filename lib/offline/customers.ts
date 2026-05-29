@@ -18,12 +18,17 @@ export async function searchOfflineCustomers(
   }
 
   const term = query.trim().toLowerCase();
+  const { normalizeLoyaltyCardNumber } = await import("@/lib/loyalty/card");
+  const normalizedCard = normalizeLoyaltyCardNumber(query);
   return active
     .filter(
       (c) =>
         c.full_name.toLowerCase().includes(term) ||
         (c.phone && c.phone.toLowerCase().includes(term)) ||
-        (c.email && c.email.toLowerCase().includes(term)),
+        (c.email && c.email.toLowerCase().includes(term)) ||
+        (normalizedCard.length > 0 &&
+          normalizeLoyaltyCardNumber(c.loyalty_card_number ?? "") ===
+            normalizedCard),
     )
     .slice(0, limit);
 }
@@ -33,6 +38,23 @@ export async function getOfflineCustomerById(
 ): Promise<OfflineCustomer | null> {
   const customers = await getAllFromStore<OfflineCustomer>("customers");
   return customers.find((c) => c.id === id) ?? null;
+}
+
+export async function getOfflineCustomerByLoyaltyCard(
+  cardNumber: string,
+  organizationId: string,
+): Promise<OfflineCustomer | null> {
+  const { normalizeLoyaltyCardNumber } = await import("@/lib/loyalty/card");
+  const normalized = normalizeLoyaltyCardNumber(cardNumber);
+  const customers = await getAllFromStore<OfflineCustomer>("customers");
+  return (
+    customers.find(
+      (customer) =>
+        customer.organization_id === organizationId &&
+        normalizeLoyaltyCardNumber(customer.loyalty_card_number ?? "") ===
+          normalized,
+    ) ?? null
+  );
 }
 
 export async function cacheCustomersDelta(

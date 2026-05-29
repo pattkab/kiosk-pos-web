@@ -1,0 +1,76 @@
+PODS:
+  - Capacitor (7.6.5):
+    - CapacitorCordova
+  - CapacitorApp (7.1.2):
+    - Capacitor
+  - CapacitorCamera (7.0.5):
+    - Capacitor
+  - CapacitorCommunityKeepAwake (7.1.0):
+    - Capacitor
+  - CapacitorCordova (7.6.5)
+  - CapacitorHaptics (7.0.5):
+    - Capacitor
+  - CapacitorKeyboard (7.0.6):
+    - Capacitor
+  - CapacitorLocalNotifications (7.0.6):
+    - Capacitor
+  - CapacitorSplashScreen (7.0.5):
+    - Capacitor
+  - CapacitorStatusBar (7.0.6):
+    - Capacitor
+  - CapacitorThermalPrinter (0.2.5):
+    - Capacitor
+
+DEPENDENCIES:
+  - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
+  - "CapacitorCamera (from `../../node_modules/@capacitor/camera`)"
+  - "CapacitorCommunityKeepAwake (from `../../node_modules/@capacitor-community/keep-awake`)"
+  - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
+  - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
+  - "CapacitorLocalNotifications (from `../../node_modules/@capacitor/local-notifications`)"
+  - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
+  - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - CapacitorThermalPrinter (from `../../node_modules/capacitor-thermal-printer`)
+
+EXTERNAL SOURCES:
+  Capacitor:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../node_modules/@capacitor/app"
+  CapacitorCamera:
+    :path: "../../node_modules/@capacitor/camera"
+  CapacitorCommunityKeepAwake:
+    :path: "../../node_modules/@capacitor-community/keep-awake"
+  CapacitorCordova:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorHaptics:
+    :path: "../../node_modules/@capacitor/haptics"
+  CapacitorKeyboard:
+    :path: "../../node_modules/@capacitor/keyboard"
+  CapacitorLocalNotifications:
+    :path: "../../node_modules/@capacitor/local-notifications"
+  CapacitorSplashScreen:
+    :path: "../../node_modules/@capacitor/splash-screen"
+  CapacitorStatusBar:
+    :path: "../../node_modules/@capacitor/status-bar"
+  CapacitorThermalPrinter:
+    :path: "../../node_modules/capacitor-thermal-printer"
+
+SPEC CHECKSUMS:
+  Capacitor: e9708b186e71dc45f9b2ee72e826b7389fb79ff2
+  CapacitorApp: f01a913211780e0718dae9750442c3e23f96e106
+  CapacitorCamera: 9e952270be355797f769aa835bb7643a96c871fe
+  CapacitorCommunityKeepAwake: 05c75aab989f60e621870cf03b24a144a5544c30
+  CapacitorCordova: 2b36392a7292c3c451dcae154185ee8804d7b6b3
+  CapacitorHaptics: 1b145fa83c622e5383a3bac04ea81e2514f0b0f5
+  CapacitorKeyboard: a2e0869edd229490ce36aed2549c0d6b95e27ee8
+  CapacitorLocalNotifications: 2e3f5b717ec9cd2bd64d93c99a9470941e1c80be
+  CapacitorSplashScreen: 409eeaaeac603d264f209c0fcb718aa22fe1f7bb
+  CapacitorStatusBar: 416e9e53fd6397e668d4a181cd2131617d949bd6
+  CapacitorThermalPrinter: 37ba847a690c296fb94499c1b3c37fd696cc1f82
+
+PODFILE CHECKSUM: aa8a1f58a078189c442b3a6997cfd506bad8a413
+
+COCOAPODS: 1.16.2

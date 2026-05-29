@@ -27,6 +27,10 @@ import { canUseFeature } from "@/lib/billing/plans";
 import { getDeviceId } from "@/lib/offline/device-id";
 import { generateOfflineReceiptNumber } from "@/lib/offline/receipt-number";
 import { recordLocalInventoryMovement } from "@/lib/offline/inventory-movement";
+import {
+  applyLoyaltyRedemption,
+  parseLoyaltySettings,
+} from "@/lib/loyalty/calculations";
 
 export function useCurrentPosContext() {
   const supabase = createClient();
@@ -445,7 +449,11 @@ export function useCheckout() {
     mutationFn: async (payments: CheckoutPayment[]) => {
       const session = useSessionStore.getState().currentSession;
       const { items, getTotals, validateCart } = useCartStore.getState();
-      const { selectedCustomerId } = useCheckoutStore.getState();
+      const {
+        selectedCustomerId,
+        selectedCustomerPoints,
+        loyaltyPointsToRedeem,
+      } = useCheckoutStore.getState();
       const totals = getTotals();
       const errors = validateCart();
 
@@ -474,7 +482,9 @@ export function useCheckout() {
       if (isOnline) {
         const { data } = await supabase
           .from("organization_settings")
-          .select("receipt_header, receipt_footer, receipt_notes")
+          .select(
+            "receipt_header, receipt_footer, receipt_notes, loyalty_enabled, loyalty_earn_points_per_unit, loyalty_earn_spend_unit, loyalty_redeem_points_unit, loyalty_redeem_value_unit, loyalty_min_redeem_points, loyalty_max_redeem_percent",
+          )
           .eq("organization_id", activeContext.organizationId)
           .maybeSingle();
         if (data) {
@@ -482,6 +492,20 @@ export function useCheckout() {
           await saveMetadata(receiptCacheKey, data);
         }
       }
+
+      const loyaltySettings = parseLoyaltySettings(receiptSettingsRow);
+      const loyaltyCheckout = applyLoyaltyRedemption(
+        totals.total,
+        loyaltyPointsToRedeem,
+        selectedCustomerPoints,
+        loyaltySettings,
+      );
+      const payableTotal = loyaltyCheckout.payableTotal;
+      const loyaltyDiscount = loyaltyCheckout.loyaltyDiscount;
+      const pointsRedeemed = loyaltyCheckout.pointsRedeemed;
+      const discountAmount = Number(
+        (totals.discountTotal + loyaltyDiscount).toFixed(2),
+      );
 
       const receiptBranding = {
         receiptHeader: receiptSettingsRow?.receipt_header ?? null,
@@ -491,7 +515,7 @@ export function useCheckout() {
       };
 
       const paid = payments.reduce((sum, payment) => sum + payment.amount, 0);
-      if (paid + 0.01 < totals.total)
+      if (paid + 0.01 < payableTotal)
         throw new Error("Payment total is less than amount due.");
 
       const rpcItems = items.map((item) => {
@@ -574,13 +598,13 @@ export function useCheckout() {
           items,
           subtotal: totals.subtotal,
           taxAmount: totals.taxAmount,
-          discountAmount: totals.discountTotal,
-          totalAmount: totals.total,
+          discountAmount,
+          totalAmount: payableTotal,
           payments,
-          changeDue: Math.max(
-            0,
-            payments.reduce((sum, p) => sum + p.amount, 0) - totals.total,
-          ),
+          changeDue: Math.max(0, paid - payableTotal),
+          loyaltyPointsRedeemed: pointsRedeemed,
+          loyaltyPointsEarned: loyaltyCheckout.pointsEarnedPreview,
+          loyaltyDiscountAmount: loyaltyDiscount,
           ...receiptBranding,
         };
 
@@ -600,8 +624,9 @@ export function useCheckout() {
           sessionId: activeSession.id,
           subtotal: totals.subtotal,
           taxAmount: totals.taxAmount,
-          discountAmount: totals.discountTotal,
-          totalAmount: totals.total,
+          discountAmount,
+          totalAmount: payableTotal,
+          loyaltyPointsRedeemed: pointsRedeemed,
           items: rpcItems,
           payments: rpcPayments,
           createdAt: new Date().toISOString(),
@@ -622,11 +647,12 @@ export function useCheckout() {
         p_customer_id: selectedCustomerId,
         p_subtotal: totals.subtotal,
         p_tax_amount: totals.taxAmount,
-        p_discount_amount: totals.discountTotal,
-        p_total_amount: totals.total,
+        p_discount_amount: discountAmount,
+        p_total_amount: payableTotal,
         p_items: rpcItems,
         p_payments: rpcPayments,
-      });
+        p_loyalty_points_redeemed: pointsRedeemed,
+      } as never);
       if (error) throw error;
 
       const receipt: CompletedReceipt = {
@@ -639,14 +665,13 @@ export function useCheckout() {
         items,
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,
-        discountAmount: totals.discountTotal,
-        totalAmount: totals.total,
+        discountAmount,
+        totalAmount: payableTotal,
         payments,
-        changeDue: Math.max(
-          0,
-          payments.reduce((sum, payment) => sum + payment.amount, 0) -
-            totals.total,
-        ),
+        changeDue: Math.max(0, paid - payableTotal),
+        loyaltyPointsRedeemed: pointsRedeemed,
+        loyaltyPointsEarned: loyaltyCheckout.pointsEarnedPreview,
+        loyaltyDiscountAmount: loyaltyDiscount,
         ...receiptBranding,
       };
 
@@ -659,6 +684,8 @@ export function useCheckout() {
       queryClient.invalidateQueries({ queryKey: ["pos-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["customers-search"] });
     },
   });
 }

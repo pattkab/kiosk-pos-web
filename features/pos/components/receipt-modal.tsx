@@ -103,6 +103,12 @@ export function ReceiptModal() {
                   <span>-{formatCurrency(receipt.discountAmount)}</span>
                 </div>
               )}
+              {(receipt.loyaltyDiscountAmount ?? 0) > 0 && (
+                <div className="flex justify-between text-emerald-700">
+                  <span>Loyalty</span>
+                  <span>-{formatCurrency(receipt.loyaltyDiscountAmount ?? 0)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Tax</span>
                 <span>{formatCurrency(receipt.taxAmount)}</span>
@@ -129,6 +135,18 @@ export function ReceiptModal() {
                 <div className="flex justify-between font-bold">
                   <span>Change</span>
                   <span>{formatCurrency(receipt.changeDue)}</span>
+                </div>
+              )}
+              {(receipt.loyaltyPointsEarned ?? 0) > 0 && (
+                <div className="flex justify-between text-emerald-700">
+                  <span>Points earned</span>
+                  <span>+{receipt.loyaltyPointsEarned}</span>
+                </div>
+              )}
+              {(receipt.loyaltyPointsRedeemed ?? 0) > 0 && (
+                <div className="flex justify-between">
+                  <span>Points redeemed</span>
+                  <span>-{receipt.loyaltyPointsRedeemed}</span>
                 </div>
               )}
             </div>

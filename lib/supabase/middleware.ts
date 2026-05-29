@@ -84,6 +84,9 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === "/privacy" ||
     request.nextUrl.pathname === "/terms";
   const isInvitationPage = request.nextUrl.pathname.startsWith("/invite/");
+  const isCustomerWalletPage =
+    request.nextUrl.pathname.startsWith("/my-loyalty") ||
+    request.nextUrl.pathname.startsWith("/join/customer");
   const isPublicPage =
     isAuthPage ||
     request.nextUrl.pathname === "/" ||
@@ -126,6 +129,10 @@ export async function updateSession(request: NextRequest) {
       "has_active_organization_membership",
     );
     const member = Boolean(hasMembership);
+    const { data: hasCustomerMembership } = await supabase.rpc(
+      "has_customer_membership",
+    );
+    const customer = Boolean(hasCustomerMembership);
 
     if (
       !member &&
@@ -133,10 +140,11 @@ export async function updateSession(request: NextRequest) {
       !isPublicPage &&
       !isInvitationActivationApi &&
       !isOrganizationSelectionPage &&
-      !isExplorePage
+      !isExplorePage &&
+      !isCustomerWalletPage
     ) {
       const url = request.nextUrl.clone();
-      url.pathname = "/onboarding";
+      url.pathname = customer ? "/my-loyalty" : "/onboarding";
       return NextResponse.redirect(url);
     }
 
@@ -146,9 +154,25 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    if (
+      customer &&
+      !member &&
+      request.nextUrl.pathname === "/onboarding"
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/my-loyalty";
+      return NextResponse.redirect(url);
+    }
+
     if (isAuthPage) {
       const url = request.nextUrl.clone();
-      url.pathname = member ? "/select-organization" : "/onboarding";
+      if (member) {
+        url.pathname = "/select-organization";
+      } else if (customer) {
+        url.pathname = "/my-loyalty";
+      } else {
+        url.pathname = "/onboarding";
+      }
       return NextResponse.redirect(url);
     }
   }

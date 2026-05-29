@@ -1,11 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,18 +12,22 @@ import {
   useRegisterSession,
 } from "@/hooks/use-pos";
 import { useOrganizationSettings } from "@/hooks/use-organization";
+import { useLoyaltyCustomerLookup } from "@/hooks/use-customers";
 import { CartSidebar } from "@/features/pos/components/cart-sidebar";
+import {
+  PosProductCatalog,
+  PosProductCatalogSkeleton,
+} from "@/features/pos/components/pos-product-catalog";
 import { useCartStore } from "@/store/use-cart-store";
 import { useCheckoutStore } from "@/store/use-checkout-store";
 import { useProductSearchStore } from "@/store/use-product-search-store";
 import { useScannerStore } from "@/store/use-scanner-store";
 import { useInventoryStore } from "@/store/use-inventory-store";
 import { formatCurrency } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 import {
   Grid2X2,
   History,
-  Loader2,
+  LayoutList,
   PackageSearch,
   Plus,
   ScanBarcode,
@@ -43,6 +43,13 @@ import { CartRecoveryBanner } from "@/components/offline/cart-recovery-banner";
 import { CatalogStaleBanner } from "@/components/offline/catalog-stale-banner";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
 import { canUseFeature } from "@/lib/billing/plans";
+import {
+  getPosCatalogView,
+  setPosCatalogView,
+  type PosCatalogView,
+} from "@/lib/pos/catalog-view";
+import { isLoyaltyCardCode } from "@/lib/loyalty/card";
+import { customerToCheckoutSelection } from "@/lib/loyalty/attach-customer";
 
 // Performance: Lazy load the heavy barcode scanner only when needed
 const BarcodeScanner = dynamic(
@@ -57,6 +64,7 @@ const BarcodeScanner = dynamic(
 
 export default function PosPage() {
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
+  const [catalogView, setCatalogView] = useState<PosCatalogView>("grid");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const barcodeBufferRef = useRef("");
   const barcodeFirstKeyAtRef = useRef(0);
@@ -85,10 +93,11 @@ export default function PosPage() {
     lastAddedProductId,
     getTotals,
   } = useCartStore();
-  const { openPayment, isPaymentOpen } = useCheckoutStore();
+  const { openPayment, isPaymentOpen, setSelectedCustomer } = useCheckoutStore();
   const { openScanner } = useScannerStore();
   const { openProductModal } = useInventoryStore();
   const barcodeLookup = useBarcodeLookup();
+  const loyaltyCustomerLookup = useLoyaltyCustomerLookup();
   const productsQuery = usePosProducts({
     search: debouncedSearch,
     categoryId: activeCategoryId,
@@ -109,6 +118,11 @@ export default function PosPage() {
     if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
   }, []);
 
+  const canUseCustomers = canUseFeature(
+    organizationSettings.data,
+    "customerAccounts",
+  );
+
   const handleScannedBarcode = useCallback(
     (rawCode: string) => {
       if (!canUseBarcode) {
@@ -122,9 +136,36 @@ export default function PosPage() {
       scanQueueRef.current = scanQueueRef.current
         .catch(() => undefined)
         .then(async () => {
+          if (canUseCustomers && isLoyaltyCardCode(barcode)) {
+            try {
+              const customer = await loyaltyCustomerLookup.mutateAsync(barcode);
+              const selection = customerToCheckoutSelection(customer);
+              setSelectedCustomer(
+                selection.id,
+                selection.name,
+                selection.points,
+              );
+              void Haptics.notification({ type: "success" as any }).catch(
+                () => {},
+              );
+              toast.success(`${selection.name} attached for loyalty`);
+              return;
+            } catch (error) {
+              toast.error(
+                getUserErrorMessage(
+                  error,
+                  "Loyalty card not found. Check the code and try again.",
+                ),
+              );
+              return;
+            }
+          }
+
           try {
             const product = await barcodeLookup.mutateAsync(barcode);
-            void Haptics.notification({ type: "success" as any }).catch(() => {});
+            void Haptics.notification({ type: "success" as any }).catch(
+              () => {},
+            );
             addItem(product);
             rememberProduct(product);
             toast.success(`${product.name} added`);
@@ -138,13 +179,25 @@ export default function PosPage() {
           }
         });
     },
-    [addItem, barcodeLookup, canUseBarcode, rememberProduct],
+    [
+      addItem,
+      barcodeLookup,
+      canUseBarcode,
+      canUseCustomers,
+      loyaltyCustomerLookup,
+      rememberProduct,
+      setSelectedCustomer,
+    ],
   );
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 120);
     return () => clearTimeout(timer);
   }, [search, setDebouncedSearch]);
+
+  useEffect(() => {
+    setCatalogView(getPosCatalogView());
+  }, []);
 
   useEffect(() => {
     activeSession.refetch();
@@ -297,6 +350,11 @@ export default function PosPage() {
     rememberProduct(product);
   };
 
+  const handleCatalogViewChange = (view: PosCatalogView) => {
+    setCatalogView(view);
+    setPosCatalogView(view);
+  };
+
   return (
     <div className="flex h-[calc(100dvh-104px)] flex-col gap-3 overflow-hidden lg:h-[calc(100dvh-120px)]">
       <div className="shrink-0 space-y-2">
@@ -333,6 +391,34 @@ export default function PosPage() {
               <ScanBarcode className="h-5 w-5" />
               <span className="hidden sm:inline">Scan</span>
             </Button>
+            <div
+              className="flex shrink-0 rounded-lg border bg-muted/40 p-1"
+              role="group"
+              aria-label="Product catalog view"
+            >
+              <Button
+                type="button"
+                variant={catalogView === "grid" ? "default" : "ghost"}
+                size="icon"
+                className="h-12 w-12"
+                aria-label="Grid view"
+                aria-pressed={catalogView === "grid"}
+                onClick={() => handleCatalogViewChange("grid")}
+              >
+                <Grid2X2 className="h-5 w-5" />
+              </Button>
+              <Button
+                type="button"
+                variant={catalogView === "list" ? "default" : "ghost"}
+                size="icon"
+                className="h-12 w-12"
+                aria-label="List view"
+                aria-pressed={catalogView === "list"}
+                onClick={() => handleCatalogViewChange("list")}
+              >
+                <LayoutList className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
@@ -380,14 +466,7 @@ export default function PosPage() {
 
         <ScrollArea className="flex-1">
           {productsQuery.isLoading ? (
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {Array.from({ length: 15 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="aspect-[4/3] animate-pulse rounded-lg border bg-muted"
-                />
-              ))}
-            </div>
+            <PosProductCatalogSkeleton view={catalogView} />
           ) : products.length === 0 ? (
             <div className="flex h-full min-h-[420px] flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-3xl bg-muted/20">
               <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -428,82 +507,13 @@ export default function PosPage() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 pb-28 sm:grid-cols-3 lg:pb-8 xl:grid-cols-4 2xl:grid-cols-5">
-              {products.map((product, index) => {
-                const stock = Number(product.stock_quantity ?? 0);
-                const isSelected = index === selectedIndex;
-                const isOut = stock <= 0;
-
-                return (
-                  <Card
-                    key={product.id}
-                    className={cn(
-                      "group cursor-pointer overflow-hidden rounded-lg border-2 bg-card transition-all active:scale-[0.98]",
-                      isSelected
-                        ? "border-primary shadow-lg shadow-primary/10"
-                        : "border-transparent hover:border-primary/40",
-                      isOut && "cursor-not-allowed opacity-55 grayscale",
-                    )}
-                    onClick={() => addProduct(product)}
-                  >
-                    <div className="relative aspect-[4/3] bg-muted/50">
-                      {product.image_url ? (
-                        <Image
-                          fill
-                          src={product.image_url}
-                          alt={product.name}
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-6xl font-black uppercase text-muted-foreground/20">
-                          {product.name.charAt(0)}
-                        </div>
-                      )}
-                      {stock <= Number(product.low_stock_threshold ?? 0) &&
-                        stock > 0 && (
-                          <Badge
-                            variant="destructive"
-                            className="absolute right-2 top-2 text-[10px] uppercase"
-                          >
-                            {stock} left
-                          </Badge>
-                        )}
-                      {isOut && (
-                        <Badge
-                          variant="destructive"
-                          className="absolute left-2 top-2 uppercase"
-                        >
-                          Sold out
-                        </Badge>
-                      )}
-                      {barcodeLookup.isPending && (
-                        <Loader2 className="absolute bottom-2 right-2 h-4 w-4 animate-spin text-primary" />
-                      )}
-                    </div>
-                    <CardContent className="p-3">
-                      <div className="min-h-[44px]">
-                        <h4 className="line-clamp-2 text-sm font-bold leading-tight group-hover:text-primary">
-                          {product.name}
-                        </h4>
-                        <p className="mt-1 truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                          {product.categories?.name ??
-                            product.sku ??
-                            "Uncategorized"}
-                        </p>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between gap-2">
-                        <span className="text-lg font-black">
-                          {formatCurrency(Number(product.selling_price ?? 0))}
-                        </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground">
-                          <Plus className="h-5 w-5" />
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            <PosProductCatalog
+              products={products}
+              view={catalogView}
+              selectedIndex={selectedIndex}
+              isBarcodePending={barcodeLookup.isPending}
+              onAddProduct={addProduct}
+            />
           )}
         </ScrollArea>
       </div>

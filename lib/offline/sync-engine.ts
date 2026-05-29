@@ -163,6 +163,7 @@ export class SyncEngine {
         p_client_sale_id: idempotencyKey,
         p_receipt_number: receiptNumber ?? null,
         p_device_id: item.deviceId ?? getDeviceId(),
+        p_loyalty_points_redeemed: item.loyaltyPointsRedeemed ?? 0,
       } as never);
 
       if (error) {

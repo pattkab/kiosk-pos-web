@@ -66,6 +66,9 @@ export interface CompletedReceipt {
   totalAmount: number;
   payments: CheckoutPayment[];
   changeDue: number;
+  loyaltyPointsRedeemed?: number;
+  loyaltyPointsEarned?: number;
+  loyaltyDiscountAmount?: number;
   receiptHeader?: string | null;
   receiptFooter?: string | null;
   receiptLogoUrl?: string | null;

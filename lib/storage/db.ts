@@ -10,6 +10,7 @@ export interface QueueItem {
   registerId?: string;
   receiptNumber?: string;
   customerId?: string | null;
+  loyaltyPointsRedeemed?: number;
   organizationId: string;
   cashierId: string;
   sessionId: string;

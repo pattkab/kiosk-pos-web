@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
 import { YoCollectionPanel } from "@/features/pos/components/yo-collection-panel";
+import { useCheckoutPayableTotal } from "@/features/pos/components/loyalty-panel";
 import type { YoCollectionMethod } from "@/lib/payments/yo/types";
 
 type TenderMethod = CheckoutPayment["payment_method"] | YoCollectionMethod;
@@ -81,19 +82,21 @@ export function PaymentModal() {
   const currentSession = useSessionStore((state) => state.currentSession);
   const checkout = useCheckout();
   const totals = getTotals();
+  const checkoutTotals = useCheckoutPayableTotal(totals.total);
+  const amountDue = checkoutTotals.payableTotal;
   const [method, setMethod] = useState<TenderMethod>("cash");
   const [yoEnabled, setYoEnabled] = useState(false);
   const [amountText, setAmountText] = useState("");
   const [payments, setPayments] = useState<CheckoutPayment[]>([]);
   const paid = payments.reduce((sum, payment) => sum + payment.amount, 0);
-  const remaining = Math.max(0, totals.total - paid);
-  const changeDue = Math.max(0, paid - totals.total);
+  const remaining = Math.max(0, amountDue - paid);
+  const changeDue = Math.max(0, paid - amountDue);
   const tenderAmount = Number(amountText || 0);
-  const canComplete = paid + 0.01 >= totals.total && totals.total > 0;
+  const canComplete = paid + 0.01 >= amountDue && amountDue > 0;
   const suggestedCash = useMemo(() => {
-    const rounded = Math.ceil(totals.total / 5) * 5;
-    return Array.from(new Set([totals.total, rounded, rounded + 5, rounded + 10])).slice(0, 4);
-  }, [totals.total]);
+    const rounded = Math.ceil(amountDue / 5) * 5;
+    return Array.from(new Set([amountDue, rounded, rounded + 5, rounded + 10])).slice(0, 4);
+  }, [amountDue]);
 
   const methodOptions = useMemo(
     () =>
@@ -114,12 +117,12 @@ export function PaymentModal() {
   useEffect(() => {
     if (isPaymentOpen) {
       setPayments([]);
-      setAmountText(totals.total.toFixed(2));
+      setAmountText(amountDue.toFixed(2));
       setMethod("cash");
     }
-  }, [isPaymentOpen, totals.total]);
+  }, [amountDue, isPaymentOpen]);
 
-  const yoPanelAmount = Math.max(0, remaining > 0 ? remaining : totals.total);
+  const yoPanelAmount = Math.max(0, remaining > 0 ? remaining : amountDue);
 
   const appendDigit = (value: string) => {
     if (value === "clear") return setAmountText("");
@@ -172,7 +175,12 @@ export function PaymentModal() {
           <div className="space-y-6 bg-muted/20 p-6">
             <div>
               <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Amount due</p>
-              <div className="mt-2 text-5xl font-black tracking-tight text-primary">{formatCurrency(totals.total)}</div>
+              <div className="mt-2 text-5xl font-black tracking-tight text-primary">{formatCurrency(amountDue)}</div>
+              {checkoutTotals.loyaltyDiscount > 0 ? (
+                <p className="mt-2 text-sm text-emerald-600">
+                  Includes {formatCurrency(checkoutTotals.loyaltyDiscount)} loyalty discount
+                </p>
+              ) : null}
             </div>
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

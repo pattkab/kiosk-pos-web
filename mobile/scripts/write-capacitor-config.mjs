@@ -9,6 +9,7 @@ const urls = {
   production: "https://kioskpos.shop",
   development: "https://kioskpos.shop",
   local: "http://10.0.2.2:3000",
+  "local-ios": "http://localhost:3000",
 };
 
 const serverUrl = process.env.CAPACITOR_SERVER_URL ?? urls[mode] ?? urls.production;
@@ -35,6 +36,7 @@ const config: CapacitorConfig = {
   appId: "shop.kioskpos.app",
   appName: "Kiosk POS",
   webDir: "www",
+  backgroundColor: "#0a0c12",
   server: {
     url: "${serverUrl}",
     cleartext: ${isLocalDev},
@@ -47,6 +49,13 @@ const config: CapacitorConfig = {
     allowMixedContent: ${isLocalDev},
     backgroundColor: "#0a0c12",
     appendUserAgent: "KioskPOS-Native/1.0",
+  },
+  ios: {
+    contentInset: "automatic",
+    backgroundColor: "#0a0c12",
+    appendUserAgent: "KioskPOS-Native/1.0",
+    scrollEnabled: true,
+    scheme: "App",
   },
   plugins: {
     SplashScreen: {
@@ -68,6 +77,9 @@ const config: CapacitorConfig = {
       smallIcon: "ic_launcher_foreground",
       iconColor: "#6366f1",
       sound: "default",
+    },
+    Camera: {
+      permissions: ["camera"],
     },
   },
 };

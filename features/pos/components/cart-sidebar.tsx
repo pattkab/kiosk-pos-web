@@ -29,6 +29,10 @@ import { PaymentModal } from "./payment-modal";
 import { RegisterSession } from "./register-session";
 import { ReceiptModal } from "./receipt-modal";
 import { OfflineCustomerPicker } from "@/components/offline/customer-picker";
+import {
+  LoyaltyPanel,
+  useCheckoutPayableTotal,
+} from "@/features/pos/components/loyalty-panel";
 
 export function CartSidebar() {
   const {
@@ -46,6 +50,7 @@ export function CartSidebar() {
   const { openPayment } = useCheckoutStore();
   const [discountValue, setDiscountValue] = useState("");
   const totals = getTotals();
+  const checkoutTotals = useCheckoutPayableTotal(totals.total);
   const orderNumber = useMemo(() => Math.floor(100000 + Math.random() * 900000), []);
   const applyPercentageDiscount = (productId: string, value: string) => {
     const amount = Number(value);
@@ -87,6 +92,7 @@ export function CartSidebar() {
       </div>
 
       <OfflineCustomerPicker disabled={isLocked} />
+      <LoyaltyPanel cartTotal={totals.total} disabled={isLocked} />
 
       {items.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center p-8 text-center text-muted-foreground">
@@ -242,13 +248,21 @@ export function CartSidebar() {
             <span>Tax</span>
             <span>{formatCurrency(totals.taxAmount)}</span>
           </div>
+          {checkoutTotals.loyaltyDiscount > 0 ? (
+            <div className="flex justify-between text-emerald-600">
+              <span>Loyalty</span>
+              <span>-{formatCurrency(checkoutTotals.loyaltyDiscount)}</span>
+            </div>
+          ) : null}
         </div>
 
         <Separator className="my-3" />
 
         <div className="flex items-center justify-between text-2xl font-black">
           <span>Total</span>
-          <span className="text-primary">{formatCurrency(totals.total)}</span>
+          <span className="text-primary">
+            {formatCurrency(checkoutTotals.payableTotal)}
+          </span>
         </div>
 
         <Button

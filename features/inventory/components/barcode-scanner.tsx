@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { useMemo } from "react";
 import {
   Camera,
   CheckCircle2,
@@ -17,14 +16,12 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useHtml5BarcodeScanner } from "@/hooks/use-html5-barcode-scanner";
 import { useInventoryStore } from "@/store/use-inventory-store";
-import { normalizeScannedCode } from "@/lib/barcode";
 import { toast } from "sonner";
 
 export function BarcodeScanner() {
   const scannerId = useMemo(() => "inventory-barcode-scanner", []);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const lastScanAtRef = useRef(0);
   const {
     scannerOpen,
     scannerTarget,
@@ -32,72 +29,21 @@ export function BarcodeScanner() {
     setSearchQuery,
     setScannedBarcode,
   } = useInventoryStore();
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [lastScan, setLastScan] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!scannerOpen) return;
-
-    let mounted = true;
-    const scanner = new Html5Qrcode(scannerId);
-    scannerRef.current = scanner;
-    setScanError(null);
-    setLastScan(null);
-
-    scanner
-      .start(
-        { facingMode: "environment" },
-        { fps: 12, qrbox: { width: 280, height: 180 }, aspectRatio: 1.6 },
-        (decodedText) => {
-          const now = Date.now();
-          if (now - lastScanAtRef.current < 700) return;
-          lastScanAtRef.current = now;
-
-          const code = normalizeScannedCode(decodedText);
-          setLastScan(code);
-
-          if (scannerTarget === "product-form-barcode") {
-            setScannedBarcode(code);
-          } else {
-            setSearchQuery(code);
-            toast.success("Barcode found");
-          }
-          setScannerOpen(false);
-        },
-        () => undefined,
-      )
-      .then(() => mounted && setIsScanning(true))
-      .catch((error) => {
-        setScanError(
-          error instanceof Error
-            ? error.message
-            : "Camera scanner could not start.",
-        );
-        setIsScanning(false);
-      });
-
-    return () => {
-      mounted = false;
-      setIsScanning(false);
-      if (scannerRef.current?.isScanning) {
-        scannerRef.current.stop().catch(() => undefined);
+  const { isScanning, scanError } = useHtml5BarcodeScanner({
+    enabled: scannerOpen,
+    elementId: scannerId,
+    debounceMs: 700,
+    onScan: (code) => {
+      if (scannerTarget === "product-form-barcode") {
+        setScannedBarcode(code);
+      } else {
+        setSearchQuery(code);
+        toast.success("Barcode found");
       }
-      try {
-        scannerRef.current?.clear();
-      } catch {
-        // The scanner can already be cleared after camera permission failures.
-      }
-      scannerRef.current = null;
-    };
-  }, [
-    scannerId,
-    scannerOpen,
-    scannerTarget,
-    setScannerOpen,
-    setScannedBarcode,
-    setSearchQuery,
-  ]);
+      setScannerOpen(false);
+    },
+  });
 
   return (
     <Dialog open={scannerOpen} onOpenChange={setScannerOpen}>
@@ -126,11 +72,6 @@ export function BarcodeScanner() {
               )}
               {isScanning ? "Scanning" : "Starting camera"}
             </Badge>
-            {lastScan ? (
-              <span className="truncate text-sm text-muted-foreground">
-                Last scan: {lastScan}
-              </span>
-            ) : null}
           </div>
 
           {scanError ? (
