@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kiosk POS</string>
+    <string name="title_activity_main">Kiosk POS</string>
+    <string name="package_name">shop.kioskpos.app</string>
+    <string name="custom_url_scheme">kioskpos</string>
+    <string name="shortcut_pos_short">POS</string>
+    <string name="shortcut_pos_long">Open POS Register</string>
+    <string name="shortcut_dashboard_short">Dashboard</string>
+    <string name="shortcut_dashboard_long">View Dashboard</string>
+</resources>

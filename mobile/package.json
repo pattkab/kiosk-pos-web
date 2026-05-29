@@ -1,0 +1,33 @@
+{
+  "name": "kiosk-pos-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Capacitor shell for Kiosk POS Android and iOS apps",
+  "scripts": {
+    "sync": "cap sync",
+    "sync:android": "cap sync android",
+    "open:android": "cap open android",
+    "run:android": "cap run android",
+    "build:android": "cap build android",
+    "copy": "cap copy",
+    "config:prod": "node scripts/write-capacitor-config.mjs production",
+    "config:dev": "node scripts/write-capacitor-config.mjs development",
+    "config:local": "node scripts/write-capacitor-config.mjs local",
+    "install:debug": "node scripts/ensure-android-build.mjs",
+    "run:local": "npm run config:local && npm run sync:android && npm run install:debug",
+    "run:prod": "npm run config:prod && npm run sync:android && npm run install:debug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.2",
+    "@capacitor/app": "^7.0.1",
+    "@capacitor/core": "^7.4.2",
+    "@capacitor/haptics": "^7.0.5",
+    "@capacitor/keyboard": "^7.0.1",
+    "@capacitor/splash-screen": "^7.0.1",
+    "@capacitor/status-bar": "^7.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.2",
+    "typescript": "^5"
+  }
+}

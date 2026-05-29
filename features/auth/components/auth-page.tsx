@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 
 import { AuthShowcase } from "@/features/auth/components/auth-showcase";
+import { BrowserShellHint } from "@/components/native/browser-shell-hint";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -140,6 +141,7 @@ function AuthPageContent() {
 
         <div className="relative flex flex-1 flex-col justify-center px-4 py-8 sm:px-8 lg:px-10 xl:px-14">
           <div className="mx-auto w-full max-w-[420px]">
+            <BrowserShellHint />
             <Link
               href="/"
               className="mb-8 flex w-fit items-center gap-2.5 font-black text-foreground lg:hidden"

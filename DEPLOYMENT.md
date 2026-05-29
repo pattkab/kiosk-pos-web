@@ -49,7 +49,7 @@ The app ships with inline fallback pricing if Stripe Price IDs are not configure
 
 - [ ] Go to **Authentication > Providers** and disable "Confirm Email" if using Magic Links only, OR ensure SMTP is configured.
 - [ ] Set **Site URL** to `https://kioskpos.shop`.
-- [ ] Add `https://kioskpos.shop/**` and `http://localhost:3000/**` to **Redirect URLs**.
+- [ ] Add `https://kioskpos.shop/**`, `http://localhost:3000/**`, and `kioskpos://auth/callback` (Android native app) to **Redirect URLs**.
 
 ### Google sign-in (OAuth)
 

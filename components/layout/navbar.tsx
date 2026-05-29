@@ -22,9 +22,14 @@ import { OfflineBanner } from "./offline-banner";
 import { getProfileInitials } from "@/lib/avatar-presets";
 import { useCurrentProfile } from "@/hooks/use-profile";
 import { useThemePreference } from "@/hooks/use-theme-preference";
+import { useNativeShell } from "@/hooks/use-native-shell";
+import { usePathname } from "next/navigation";
+import { getNativePageTitle } from "@/lib/navigation/app-navigation";
 
 export function Navbar() {
   const { setThemePreference } = useThemePreference();
+  const { isNative } = useNativeShell();
+  const pathname = usePathname();
   const { toggleSidebar, setCommandPaletteOpen } = useAppStore();
   const { data: profile } = useCurrentProfile();
   const displayName = profile?.full_name || "Account";
@@ -35,12 +40,19 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <OfflineBanner />
       <div className="flex min-h-14 items-center justify-between gap-2 px-2 py-2 sm:min-h-16 sm:px-6">
-        <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
-          <Button variant="ghost" size="icon" onClick={toggleSidebar}>
-            <Menu className="h-5 w-5 md:hidden" />
-            <PanelLeft className="hidden h-5 w-5 md:block" />
-            <span className="sr-only">Toggle sidebar</span>
-          </Button>
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
+          {!isNative ? (
+            <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+              <Menu className="h-5 w-5 md:hidden" />
+              <PanelLeft className="hidden h-5 w-5 md:block" />
+              <span className="sr-only">Toggle sidebar</span>
+            </Button>
+          ) : null}
+          {isNative ? (
+            <p className="truncate text-base font-semibold leading-tight">
+              {getNativePageTitle(pathname)}
+            </p>
+          ) : null}
           <OrgSwitcher />
         </div>
 
@@ -62,7 +74,7 @@ export function Navbar() {
           <div className="hidden lg:block">
             <PresenceAvatars />
           </div>
-          <div className="hidden sm:block">
+          <div className={isNative ? "block" : "hidden sm:block"}>
             <SyncStatusBadge />
           </div>
           <Button

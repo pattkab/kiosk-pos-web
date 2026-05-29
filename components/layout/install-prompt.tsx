@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { isCapacitorNative } from "@/lib/utils/capacitor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, X } from "lucide-react";
@@ -19,6 +20,8 @@ export function InstallPrompt() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    if (isCapacitorNative()) return;
+
     const handleBeforeInstallPrompt = (e: Event) => {
       // Prevent Chrome 67 and earlier from automatically showing the prompt
       e.preventDefault();

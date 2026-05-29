@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { ProductForm } from "@/features/inventory/components/product-form";
 import { isLikelyScannerBurst, normalizeScannedCode } from "@/lib/barcode";
 import { CartRecoveryBanner } from "@/components/offline/cart-recovery-banner";
@@ -123,6 +124,7 @@ export default function PosPage() {
         .then(async () => {
           try {
             const product = await barcodeLookup.mutateAsync(barcode);
+            void Haptics.notification({ type: "success" as any }).catch(() => {});
             addItem(product);
             rememberProduct(product);
             toast.success(`${product.name} added`);
@@ -290,6 +292,7 @@ export default function PosPage() {
 
   const addProduct = (product: (typeof products)[number]) => {
     if ((product.stock_quantity ?? 0) <= 0) return;
+    void Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
     addItem(product);
     rememberProduct(product);
   };
@@ -508,7 +511,7 @@ export default function PosPage() {
       <div className="hidden w-[410px] shrink-0 lg:block xl:w-[440px]">
         <CartSidebar />
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 p-3 shadow-2xl backdrop-blur lg:hidden">
+      <div className="pos-mobile-cart-bar fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 p-3 shadow-2xl backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-screen-sm items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
             <ShoppingCart className="h-5 w-5" />

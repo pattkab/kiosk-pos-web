@@ -6,8 +6,10 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Kiosk POS",
     description:
       "Offline-first Point of Sale and inventory for shops, supermarkets, restaurants, and multi-branch teams.",
-    start_url: "/",
+    start_url: "/login",
+    scope: "/",
     display: "standalone",
+    orientation: "any",
     background_color: "#ffffff",
     theme_color: "#000000",
     icons: [

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "shop.kioskpos.app",
+      "sha256_cert_fingerprints": [
+        "DD:18:2E:AA:FC:ED:66:DA:94:0F:7D:A5:33:C8:B5:A4:B8:68:CA:C3:CB:E0:F1:21:5F:9C:1D:97:FF:5D:7F:65"
+      ]
+    }
+  }
+]

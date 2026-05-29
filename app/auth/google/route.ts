@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getOAuthCallbackUrl } from "@/lib/auth/oauth";
+import { getNativeOAuthCallbackUrl } from "@/lib/auth/native-oauth";
 import { resolveRequestAppUrl } from "@/lib/app-url";
 
 type CookieToSet = {
@@ -37,7 +38,10 @@ export async function GET(request: Request) {
     },
   );
 
-  const redirectTo = getOAuthCallbackUrl(safeNext);
+  const native = searchParams.get("native") === "1";
+  const redirectTo = native
+    ? getNativeOAuthCallbackUrl(safeNext)
+    : getOAuthCallbackUrl(safeNext);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",

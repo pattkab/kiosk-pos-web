@@ -6,6 +6,7 @@ import { AcknowledgementModal } from "@/features/notifications/components/acknow
 import { OAuthErrorHandler } from "@/components/auth/oauth-error-handler";
 import { GlobalProgressIndicator } from "@/components/ui/global-progress-indicator";
 import { rootMetadata } from "@/lib/seo/metadata";
+import { NativeShellBootstrap } from "@/components/native/native-shell-bootstrap";
 
 export const metadata = rootMetadata;
 
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <NativeShellBootstrap />
         <Providers>
           <OAuthErrorHandler />
           <GlobalProgressIndicator />

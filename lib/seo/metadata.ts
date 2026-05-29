@@ -95,4 +95,12 @@ export const rootMetadata: Metadata = {
     apple: "/icons/icon-192.png",
   },
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "black-translucent",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };

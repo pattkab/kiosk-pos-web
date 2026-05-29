@@ -7,21 +7,38 @@ import { Breadcrumbs } from "./breadcrumbs";
 import { ConnectivityBanner } from "./connectivity-banner";
 import { ConflictModal } from "../realtime/conflict-modal";
 import { SubscriptionGate } from "@/components/billing/subscription-gate";
+import { NativeBottomNav } from "./native-bottom-nav";
+import { NativeHeader } from "./native-header";
+import { useNativeShell } from "@/hooks/use-native-shell";
+import { cn } from "@/lib/utils";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
+  const { isNative } = useNativeShell();
+
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
-      <Sidebar />
+      {!isNative ? <Sidebar /> : null}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <ConnectivityBanner />
-        <Navbar />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-8">
-            <Breadcrumbs />
+        {isNative ? <NativeHeader /> : <Navbar />}
+        <main
+          className={cn(
+            "flex-1 overflow-y-auto overflow-x-hidden",
+            isNative && "pb-24 pt-2" // Extra padding for bottom nav and header
+          )}
+        >
+          <div
+            className={cn(
+              "mx-auto w-full max-w-screen-2xl",
+              isNative ? "px-4" : "px-3 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-8"
+            )}
+          >
+            {!isNative ? <Breadcrumbs /> : null}
             <SubscriptionGate>{children}</SubscriptionGate>
           </div>
         </main>
       </div>
+      {isNative ? <NativeBottomNav /> : null}
       <CommandPalette />
       <ConflictModal />
     </div>

@@ -34,8 +34,10 @@ export async function signIn(data: LoginFormValues) {
 
 export async function signInWithGoogle(next = "/select-organization") {
   const safeNext = next.startsWith("/") ? next : "/select-organization";
+  const { isCapacitorNative } = await import("@/lib/utils/capacitor");
+  const native = isCapacitorNative() ? "&native=1" : "";
   window.location.assign(
-    `/auth/google?next=${encodeURIComponent(safeNext)}`,
+    `/auth/google?next=${encodeURIComponent(safeNext)}${native}`,
   );
   return { success: true };
 }

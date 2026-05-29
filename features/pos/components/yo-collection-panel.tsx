@@ -13,6 +13,7 @@ import {
   yoMethodToPosPaymentMethod,
 } from "@/lib/payments/yo/labels";
 import type { YoCollectionMethod } from "@/lib/payments/yo/types";
+import { isCapacitorNative } from "@/lib/utils/capacitor";
 
 type YoCollectionPanelProps = {
   method: YoCollectionMethod;
@@ -194,11 +195,20 @@ export function YoCollectionPanel({
       )}
 
       {collection?.checkoutUrl && (
-        <Button asChild variant="outline" className="w-full">
-          <a href={collection.checkoutUrl} target="_blank" rel="noreferrer">
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Open {yoMethodLabel(method)} checkout
-          </a>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => {
+            if (isCapacitorNative()) {
+              window.location.assign(collection.checkoutUrl!);
+            } else {
+              window.open(collection.checkoutUrl!, "_blank", "noopener,noreferrer");
+            }
+          }}
+        >
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Open {yoMethodLabel(method)} checkout
         </Button>
       )}
 

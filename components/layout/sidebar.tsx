@@ -17,23 +17,30 @@ import {
 import { useAppStore } from "@/store/use-app-store";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { Permission } from "@/lib/auth/permissions";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useOrganizationStore } from "@/store/use-organization-store";
 import { toast } from "sonner";
+import {
+  APP_NAV_ITEMS,
+  canExploreWithoutOrganization,
+  hasModuleAccess,
+  isNavItemActive,
+} from "@/lib/navigation/app-navigation";
+import { useNativeShell } from "@/hooks/use-native-shell";
 
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, module: "dashboard" },
-  { name: "POS Checkout", href: "/pos", icon: ShoppingCart, module: "pos" },
-  { name: "Inventory", href: "/inventory", icon: Package, module: "inventory" },
-  { name: "Reports", href: "/reports", icon: BarChart3, module: "reports" },
-  { name: "Team", href: "/team", icon: Users, module: "team" },
-  { name: "Settings", href: "/settings", icon: Settings, module: "settings" },
-];
+const NAV_ICONS = {
+  dashboard: LayoutDashboard,
+  pos: ShoppingCart,
+  inventory: Package,
+  reports: BarChart3,
+  team: Users,
+  settings: Settings,
+} as const;
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { isNative } = useNativeShell();
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useAppStore();
   const { activeOrganization } = useActiveOrganization();
   const userRole = activeOrganization?.role;
@@ -42,22 +49,6 @@ export function Sidebar() {
   const [isHovered, setIsHovered] = useState(false);
 
   const isExpanded = sidebarOpen || (isDesktop && isHovered);
-  const canExploreWithoutOrganization = (module: string) => module === "dashboard";
-
-  const hasModuleAccess = (module: string) => {
-    if (!userRole) return true;
-    const modulePermission: Record<string, Permission | null> = {
-      dashboard: null,
-      pos: "pos.access",
-      inventory: "inventory.view",
-      reports: "reports.view",
-      notifications: null,
-      team: "team.manage",
-      settings: "settings.manage",
-    };
-    const required = modulePermission[module];
-    return required ? permissions.includes(required) : true;
-  };
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 768px)");
@@ -78,6 +69,8 @@ export function Sidebar() {
   useEffect(() => {
     if (!isDesktop) setSidebarOpen(false);
   }, [isDesktop, pathname, setSidebarOpen]);
+
+  if (isNative) return null;
 
   return (
     <>
@@ -131,50 +124,53 @@ export function Sidebar() {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden p-2">
-          {navigation
-            .filter((item) => hasModuleAccess(item.module))
-            .map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  title={!isExpanded ? item.name : undefined}
-                  className={cn(
-                    "group flex items-center rounded-lg py-2.5 text-sm font-medium transition-all",
-                    isExpanded ? "px-3" : "justify-center px-0 md:px-0",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                  onClick={(event) => {
-                    if (activeOrganization || canExploreWithoutOrganization(item.module)) {
-                      return;
-                    }
+          {APP_NAV_ITEMS.filter((item) =>
+            hasModuleAccess(item.module, permissions, userRole)
+          ).map((item) => {
+            const Icon = NAV_ICONS[item.module as keyof typeof NAV_ICONS];
+            const isActive = isNavItemActive(pathname, item.href);
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                title={!isExpanded ? item.name : undefined}
+                className={cn(
+                  "group flex items-center rounded-lg py-2.5 text-sm font-medium transition-all",
+                  isExpanded ? "px-3" : "justify-center px-0 md:px-0",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                )}
+                onClick={(event) => {
+                  if (
+                    activeOrganization ||
+                    canExploreWithoutOrganization(item.module)
+                  ) {
+                    return;
+                  }
 
-                    event.preventDefault();
-                    toast.info("Create an organization to use this feature.", {
-                      action: {
-                        label: "Create",
-                        onClick: () => router.push("/onboarding"),
-                      },
-                    });
-                  }}
-                >
-                  <item.icon
-                    className={cn(
-                      "h-5 w-5 shrink-0",
-                      isExpanded && "mr-3",
-                      isActive
-                        ? "text-primary-foreground"
-                        : "text-muted-foreground group-hover:text-accent-foreground"
-                    )}
-                  />
-                  {isExpanded ? <span className="truncate">{item.name}</span> : null}
-                </Link>
-              );
-            })}
+                  event.preventDefault();
+                  toast.info("Create an organization to use this feature.", {
+                    action: {
+                      label: "Create",
+                      onClick: () => router.push("/onboarding"),
+                    },
+                  });
+                }}
+              >
+                <Icon
+                  className={cn(
+                    "h-5 w-5 shrink-0",
+                    isExpanded && "mr-3",
+                    isActive
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground group-hover:text-accent-foreground"
+                  )}
+                />
+                {isExpanded ? <span className="truncate">{item.name}</span> : null}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="hidden shrink-0 border-t p-2 md:block">
