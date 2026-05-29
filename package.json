@@ -23,12 +23,12 @@
     "mobile:build:release": "npm run build:release --prefix mobile"
   },
   "dependencies": {
+    "@capacitor-community/keep-awake": "^7.1.0",
     "@capacitor/app": "^7.0.1",
     "@capacitor/core": "^7.4.2",
     "@capacitor/haptics": "^7.0.5",
-    "@capacitor/local-notifications": "^7.0.1",
-    "@capacitor-community/keep-awake": "^7.1.0",
     "@capacitor/keyboard": "^7.0.1",
+    "@capacitor/local-notifications": "^7.0.1",
     "@capacitor/splash-screen": "^7.0.1",
     "@capacitor/status-bar": "^7.0.1",
     "@hookform/resolvers": "^3.9.1",
@@ -54,6 +54,7 @@
     "@tanstack/react-query-devtools": "^5.60.5",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.26",
+    "capacitor-thermal-printer": "^0.2.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

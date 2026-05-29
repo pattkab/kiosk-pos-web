@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Smartphone, Bell, Sun, Share2 } from "lucide-react";
+import { Sun, Bell, Smartphone } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 import {
   ensureNativeNotificationPermission,
 } from "@/lib/native/native-notifications";
+import { PrinterSettingsCard } from "@/features/settings/components/printer-settings-card";
 import { toast } from "sonner";
 
 type AppInfo = {
@@ -178,20 +179,7 @@ export function DeviceSettings() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Share2 className="h-4 w-4" />
-            Receipt printing
-          </CardTitle>
-          <CardDescription>
-            Receipts use the native share sheet with thermal-formatted text. Pair a Bluetooth ESC/POS printer app from the share menu, or copy to clipboard.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Direct Bluetooth printer plugin (Sunmi / ESC-POS) is planned for phase D.
-        </CardContent>
-      </Card>
+      <PrinterSettingsCard />
     </div>
   );
 }

@@ -22,7 +22,9 @@ keytool -genkey -v \
   -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-Create `mobile/android/keystore.properties` (gitignored):
+See [PLAY_STORE.md](./PLAY_STORE.md) for closed testing steps.
+
+Copy `mobile/android/keystore.properties.example` → `keystore.properties` and fill in values.
 
 ```properties
 storeFile=../../kiosk-pos-release.keystore
@@ -122,8 +124,14 @@ Redirect URLs:
 - `kioskpos://**`
 - `https://kioskpos.shop/**`
 
-## Phase D (next)
+## Phase D (done in app)
 
-- Direct Bluetooth ESC/POS plugin (Sunmi / generic thermal)
+- Bluetooth ESC/POS via `capacitor-thermal-printer` (Settings → Device & app)
+- Release signing scaffold in `mobile/android/app/build.gradle`
+- App resume triggers offline sync retry
+
+## Phase E (next)
+
 - Firebase Cloud Messaging for push when app is killed
 - In-app update prompts via Play Core
+- Play Console closed testing walkthrough

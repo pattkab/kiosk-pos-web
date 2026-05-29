@@ -148,15 +148,25 @@ export function ReceiptModal() {
           <Button
             className="h-12 flex-1 gap-2"
             onClick={() => {
-              void printOrShareReceipt(receipt).then(() => {
-                if (isCapacitorNative()) {
-                  toast.success("Receipt ready — choose a printer app from the share menu.");
-                }
-              });
+              void printOrShareReceipt(receipt)
+                .then((result) => {
+                  if (result.method === "bluetooth") {
+                    toast.success("Receipt sent to printer.");
+                  } else if (result.method === "share") {
+                    toast.success("Choose a printer app from the share menu.");
+                  } else if (result.method === "clipboard") {
+                    toast.success("Receipt copied to clipboard.");
+                  }
+                })
+                .catch((error) => {
+                  if ((error as Error)?.name !== "AbortError") {
+                    toast.error("Could not print receipt.");
+                  }
+                });
             }}
           >
             <Printer className="h-4 w-4" />
-            {isCapacitorNative() ? "Share receipt" : "Print"}
+            {isCapacitorNative() ? "Print receipt" : "Print"}
           </Button>
           <Button
             className="h-12 flex-1"

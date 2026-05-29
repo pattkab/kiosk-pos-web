@@ -10,7 +10,8 @@ Native Android shell: full-screen **WebView** (no Chrome address bar). The web a
 | **B** | ✓ | Capacitor shell, App Links, native OAuth |
 | **B+** | ✓ | Bottom nav, compact header, splash |
 | **C** | ✓ | Keep-awake POS, sync notifications, thermal receipts, device settings, release docs |
-| **D** | Next | Play closed testing, Bluetooth ESC/POS, FCM push |
+| **D** | ✓ (partial) | Bluetooth ESC/POS printing, release signing scaffold, resume sync |
+| **E** | Next | Play closed testing, FCM push, in-app updates |
 
 See [ANDROID_RELEASE.md](./ANDROID_RELEASE.md) for Play Store signing.
 
@@ -138,6 +139,7 @@ Deploy to production so https links open in the app when installed.
 | `mobile/capacitor.config.ts` | WebView URL & plugins (generated) |
 | `mobile/scripts/write-capacitor-config.mjs` | `production` / `local` config |
 | `docs/ANDROID_RELEASE.md` | Play Store signing & release AAB |
+| `docs/PLAY_STORE.md` | Closed testing & store listing |
 
 ## Troubleshooting
 
@@ -151,9 +153,17 @@ Deploy to production so https links open in the app when installed.
 | No bottom nav | Deploy latest web to production (bottom nav is in the **web app**, not the APK alone), or use `npm run mobile:run:local` with `npm run dev` |
 | No bottom nav (deployed) | Force-close app and reopen; ensure you are on `/dashboard` or `/pos` (not `/login`). Bottom nav needs native detection (`KioskPOS-Native` user-agent). |
 | `invalid source release: 21` | Install JDK 21: `brew install openjdk@21` then `export JAVA_HOME="$(/usr/libexec/java_home -v 21)"` and re-run `npm run install:debug` |
+| Bluetooth scan finds nothing | Pair printer in Android Settings → Bluetooth first; grant Nearby devices / Location if prompted |
+| Play Store upload | See [PLAY_STORE.md](./PLAY_STORE.md) and [ANDROID_RELEASE.md](./ANDROID_RELEASE.md) |
 
-## Phase D (next)
+### Phase D (shop floor hardware)
+
+- **Bluetooth ESC/POS printer** — scan & connect in Settings → Device & app; auto-print on checkout
+- **Resume sync** — offline queue retries when app returns to foreground
+- **Release signing** — optional `keystore.properties` for signed AAB (see ANDROID_RELEASE.md)
+
+## Phase E (next)
 
 - Play Store closed testing track
-- Direct Bluetooth ESC/POS printer plugin (Sunmi / generic)
 - Firebase Cloud Messaging when app is backgrounded
+- In-app update prompts via Play Core
