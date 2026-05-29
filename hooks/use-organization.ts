@@ -26,10 +26,7 @@ import {
 } from "@/validators/organization";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import {
-  DEFAULT_APPEARANCE_COLORS,
-  normalizeHexColor,
-} from "@/lib/appearance";
+import { DEFAULT_APPEARANCE_COLORS, normalizeHexColor } from "@/lib/appearance";
 import { getUserErrorMessage } from "@/lib/errors/user-message";
 
 export type OrganizationWithRole = {
@@ -385,7 +382,10 @@ export function useUpdateMemberRole() {
     },
     onError: (error) =>
       toast.error(
-        getUserErrorMessage(error, "We could not update the role. Please try again."),
+        getUserErrorMessage(
+          error,
+          "We could not update the role. Please try again.",
+        ),
       ),
   });
 }
@@ -473,7 +473,7 @@ export function useOrganizationSettings() {
   });
 
   const updateSettings = useMutation({
-    mutationFn: async (values: OrganizationSettingsValues) => {
+    mutationFn: async (values: Partial<OrganizationSettingsValues>) => {
       if (!activeOrganization) throw new Error("No active organization.");
       const { error } = await supabase
         .from("organization_settings")

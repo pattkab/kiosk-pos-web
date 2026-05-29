@@ -69,6 +69,7 @@ export type Database = {
           acknowledged_by?: string | null
           action_url?: string | null
           archived_at?: string | null
+          due_at?: string | null
           id: string
           is_read: boolean | null
           message: string
@@ -89,6 +90,7 @@ export type Database = {
           acknowledged_by?: string | null
           action_url?: string | null
           archived_at?: string | null
+          due_at?: string | null
           id?: string
           is_read?: boolean | null
           message: string
@@ -109,6 +111,7 @@ export type Database = {
           acknowledged_by?: string | null
           action_url?: string | null
           archived_at?: string | null
+          due_at?: string | null
           id?: string
           is_read?: boolean | null
           message?: string
@@ -911,6 +914,7 @@ export type Database = {
         | "failed_sale"
         | "register_discrepancy"
         | "inventory_adjustment"
+        | "stock_take"
         | "user_activity"
         | "daily_summary"
         | "system"
@@ -1052,7 +1056,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      alert_type: ["low_stock", "expiry", "failed_transaction"],
+      alert_type: [
+        "low_stock",
+        "expiry",
+        "failed_transaction",
+        "expiring_soon",
+        "expired",
+        "failed_sale",
+        "register_discrepancy",
+        "inventory_adjustment",
+        "stock_take",
+        "user_activity",
+        "daily_summary",
+        "system",
+      ],
       payment_method: ["cash", "mobile_money", "card", "split"],
       payment_status: ["pending", "completed", "failed", "refunded"],
       sale_status: ["draft", "completed", "cancelled", "refunded"],

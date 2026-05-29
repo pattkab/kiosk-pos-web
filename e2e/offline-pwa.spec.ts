@@ -13,9 +13,12 @@ test.describe("offline PWA shell", () => {
     await expect(page.locator("body")).toContainText(/offline/i);
   });
 
-  test("registers service worker in production build", async ({ page, baseURL }) => {
+  test("registers service worker in production build", async ({
+    page,
+    baseURL,
+  }) => {
     test.skip(
-      !process.env.CI && baseURL?.includes("localhost:3000"),
+      Boolean(!process.env.CI && baseURL?.includes("localhost:3000")),
       "Service worker is disabled in default dev mode; run against production build in CI.",
     );
 

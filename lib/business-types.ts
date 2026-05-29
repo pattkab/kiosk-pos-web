@@ -2,8 +2,8 @@ export const businessTypes = [
   { value: "supermarket_or_shop", label: "Supermarket or shop" },
   { value: "pharmacy", label: "Pharmacy" },
   { value: "salon", label: "Salon" },
-  { value: "restaurant_or_hotel", label: "Restaurant or hotel" },
-  { value: "rental_accommodation", label: "Rental accommodation" },
+  { value: "restaurant_or_hotel", label: "Restaurant, cafe, or bar" },
+  { value: "rental_accommodation", label: "Hotel, BnB, or accommodation" },
   { value: "other", label: "Other" },
 ] as const;
 

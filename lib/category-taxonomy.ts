@@ -132,21 +132,40 @@ const salon: CategorySeed[] = [
 ];
 
 const rentalAccommodation: CategorySeed[] = [
-  { department: "Rent & Accommodation", name: "Room rent" },
-  { department: "Rent & Accommodation", name: "Apartment rent" },
-  { department: "Rent & Accommodation", name: "Short stay" },
-  { department: "Utilities", name: "Electricity" },
-  { department: "Utilities", name: "Water" },
-  { department: "Utilities", name: "Internet" },
-  { department: "Utilities", name: "Waste collection" },
-  { department: "Deposits & Fees", name: "Security deposit" },
-  { department: "Deposits & Fees", name: "Booking fee" },
-  { department: "Deposits & Fees", name: "Late payment fee" },
-  { department: "Maintenance", name: "Repairs" },
-  { department: "Maintenance", name: "Cleaning" },
-  { department: "Maintenance", name: "Laundry" },
-  { department: "Services", name: "Parking" },
-  { department: "Services", name: "Extra guest fee" },
+  {
+    department: "Accommodation Nightly Rates",
+    name: "Standard room nightly rate",
+  },
+  {
+    department: "Accommodation Nightly Rates",
+    name: "Deluxe room nightly rate",
+  },
+  { department: "Accommodation Nightly Rates", name: "Twin room nightly rate" },
+  {
+    department: "Accommodation Nightly Rates",
+    name: "Family room nightly rate",
+  },
+  { department: "Accommodation Nightly Rates", name: "Suite nightly rate" },
+  {
+    department: "Accommodation Nightly Rates",
+    name: "Cottage or cabin nightly rate",
+  },
+  { department: "Accommodation Nightly Rates", name: "Dorm bed nightly rate" },
+  {
+    department: "Accommodation Nightly Rates",
+    name: "Entire home nightly rate",
+  },
+  {
+    department: "Accommodation Nightly Rates",
+    name: "Weekend or holiday nightly rate",
+  },
+  { department: "Accommodation Nightly Rates", name: "Long-stay nightly rate" },
+  { department: "Guest Fees", name: "Extra guest nightly fee" },
+  { department: "Guest Fees", name: "Child guest nightly fee" },
+  { department: "Guest Services", name: "Breakfast add-on" },
+  { department: "Guest Services", name: "Late checkout" },
+  { department: "Guest Services", name: "Cleaning fee" },
+  { department: "Guest Services", name: "Airport transfer" },
 ];
 
 const general: CategorySeed[] = [

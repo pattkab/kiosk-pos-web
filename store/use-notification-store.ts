@@ -1,4 +1,8 @@
-import { AlertFilters, AlertPriority, OperationalAlertType } from "@/types/notifications";
+import {
+  AlertFilters,
+  AlertPriority,
+  OperationalAlertType,
+} from "@/types/notifications";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -13,7 +17,10 @@ interface NotificationUiState {
   setAcknowledgementAlertId: (id: string | null) => void;
   enqueueToast: (id: string) => void;
   dequeueToast: (id: string) => void;
-  setPreferenceDraft: (values: { enabledTypes: OperationalAlertType[]; minimumPriority: AlertPriority }) => void;
+  setPreferenceDraft: (values: {
+    enabledTypes: OperationalAlertType[];
+    minimumPriority: AlertPriority;
+  }) => void;
 }
 
 const defaultFilters: AlertFilters = {
@@ -36,21 +43,29 @@ export const useNotificationStore = create<NotificationUiState>()(
         "failed_sale",
         "register_discrepancy",
         "inventory_adjustment",
+        "stock_take",
         "user_activity",
         "daily_summary",
         "system",
       ],
       minimumPriority: "low",
-      setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
+      setFilters: (filters) =>
+        set((state) => ({ filters: { ...state.filters, ...filters } })),
       resetFilters: () => set({ filters: defaultFilters }),
-      setAcknowledgementAlertId: (acknowledgementAlertId) => set({ acknowledgementAlertId }),
+      setAcknowledgementAlertId: (acknowledgementAlertId) =>
+        set({ acknowledgementAlertId }),
       enqueueToast: (id) =>
         set((state) => ({
-          toastQueue: state.toastQueue.includes(id) ? state.toastQueue : [...state.toastQueue, id],
+          toastQueue: state.toastQueue.includes(id)
+            ? state.toastQueue
+            : [...state.toastQueue, id],
         })),
       dequeueToast: (id) =>
-        set((state) => ({ toastQueue: state.toastQueue.filter((entry) => entry !== id) })),
-      setPreferenceDraft: ({ enabledTypes, minimumPriority }) => set({ enabledTypes, minimumPriority }),
+        set((state) => ({
+          toastQueue: state.toastQueue.filter((entry) => entry !== id),
+        })),
+      setPreferenceDraft: ({ enabledTypes, minimumPriority }) =>
+        set({ enabledTypes, minimumPriority }),
     }),
     {
       name: "notification-ui-storage",
@@ -58,6 +73,6 @@ export const useNotificationStore = create<NotificationUiState>()(
         enabledTypes: state.enabledTypes,
         minimumPriority: state.minimumPriority,
       }),
-    }
-  )
+    },
+  ),
 );

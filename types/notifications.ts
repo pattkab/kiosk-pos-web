@@ -17,6 +17,7 @@ export interface OperationalAlert {
   acknowledged_at: string | null;
   resolved_at: string | null;
   archived_at: string | null;
+  due_at?: string | null;
   action_url: string | null;
   metadata: Json;
   created_at: string | null;

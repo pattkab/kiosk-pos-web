@@ -7,10 +7,10 @@ import {
   ShoppingCart,
   Package,
   AlertTriangle,
-  Clock
+  Clock,
+  WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { LiveActivityFeed } from "@/components/realtime/live-activity-feed";
 import dynamic from "next/dynamic";
@@ -20,24 +20,43 @@ import { useConnectivityStore } from "@/store/use-connectivity-store";
 import { useActiveOrganization } from "@/hooks/use-organization";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { EnterpriseOverview } from "@/components/dashboard/enterprise-overview";
+import { StockTakeReminder } from "@/components/dashboard/stock-take-reminder";
 
 // Performance: Lazy load heavy chart and product list components
-const RevenueChart = dynamic(() => import("@/components/dashboard/revenue-chart").then(mod => mod.RevenueChart), {
-  loading: () => <Skeleton className="h-[350px] w-full col-span-4 rounded-xl" />,
-  ssr: false
-});
+const RevenueChart = dynamic(
+  () =>
+    import("@/components/dashboard/revenue-chart").then(
+      (mod) => mod.RevenueChart,
+    ),
+  {
+    loading: () => (
+      <Skeleton className="h-[350px] w-full col-span-4 rounded-xl" />
+    ),
+    ssr: false,
+  },
+);
 
-const TopProducts = dynamic(() => import("@/components/dashboard/top-products").then(mod => mod.TopProducts), {
-  loading: () => <Skeleton className="h-[350px] w-full col-span-3 rounded-xl" />,
-  ssr: false
-});
+const TopProducts = dynamic(
+  () =>
+    import("@/components/dashboard/top-products").then(
+      (mod) => mod.TopProducts,
+    ),
+  {
+    loading: () => (
+      <Skeleton className="h-[350px] w-full col-span-3 rounded-xl" />
+    ),
+    ssr: false,
+  },
+);
 
 export default function DashboardPage() {
-  const { data, isLoading, access } = useAnalytics('month');
+  const { data, isLoading, access } = useAnalytics("month");
   const { activeOrganization } = useActiveOrganization();
   const router = useRouter();
   const connectivityStatus = useConnectivityStore((state) => state.status);
   const isOffline = connectivityStatus === "offline";
+  const businessName = activeOrganization?.name;
 
   // If we are still determining the organization context, show a consistent loading state
   if (access.isLoading) {
@@ -50,7 +69,9 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32 w-full rounded-xl" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          ))}
         </div>
       </div>
     );
@@ -62,7 +83,9 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Here's what's happening with your business today.
+            {businessName
+              ? `Here's what's happening with ${businessName} today.`
+              : "Set up an organization to see today's activity."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -98,7 +121,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <StockTakeReminder />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <StatCard
           title="Total Revenue"
           value={formatCurrency(data?.revenue.total || 0)}
@@ -113,6 +138,14 @@ export default function DashboardPage() {
           trend={data?.sales.change}
           description="transactions"
           icon={ShoppingCart}
+          loading={isLoading}
+        />
+        <StatCard
+          title="Gross Profit"
+          value={formatCurrency(data?.profit.gross || 0)}
+          trend={data?.profit.change}
+          description="after product cost"
+          icon={WalletCards}
           loading={isLoading}
         />
         <StatCard
@@ -131,6 +164,8 @@ export default function DashboardPage() {
           loading={isLoading}
         />
       </div>
+
+      <EnterpriseOverview />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <RevenueChart data={data?.revenue.chart || []} loading={isLoading} />

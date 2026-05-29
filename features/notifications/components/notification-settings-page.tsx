@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useNotificationPreferences } from "@/hooks/use-notifications";
 import { AlertPriority, OperationalAlertType } from "@/types/notifications";
@@ -17,12 +23,15 @@ const alertTypes: OperationalAlertType[] = [
   "failed_sale",
   "register_discrepancy",
   "inventory_adjustment",
+  "stock_take",
   "user_activity",
   "daily_summary",
   "system",
 ];
 
-const alertTypeCopy: Partial<Record<OperationalAlertType, { label: string; description: string }>> = {
+const alertTypeCopy: Partial<
+  Record<OperationalAlertType, { label: string; description: string }>
+> = {
   low_stock: {
     label: "Low stock",
     description: "Notify when stock reaches your reorder threshold.",
@@ -46,6 +55,10 @@ const alertTypeCopy: Partial<Record<OperationalAlertType, { label: string; descr
   inventory_adjustment: {
     label: "Inventory adjustment",
     description: "Notify on stock corrections and manual changes.",
+  },
+  stock_take: {
+    label: "Stock take",
+    description: "Remind the team to reconcile shelf counts with inventory.",
   },
   user_activity: {
     label: "User activity",
@@ -91,8 +104,10 @@ function ToggleButton({
       type="button"
       className={cn(
         "relative inline-flex h-7 w-12 items-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        checked ? "border-primary bg-primary" : "border-muted-foreground/20 bg-muted",
-        disabled && "cursor-not-allowed opacity-60"
+        checked
+          ? "border-primary bg-primary"
+          : "border-muted-foreground/20 bg-muted",
+        disabled && "cursor-not-allowed opacity-60",
       )}
       onClick={() => !disabled && onChange(!checked)}
       aria-pressed={checked}
@@ -102,7 +117,7 @@ function ToggleButton({
       <span
         className={cn(
           "absolute top-1 h-5 w-5 rounded-full bg-background shadow transition-transform",
-          checked ? "translate-x-5" : "translate-x-1"
+          checked ? "translate-x-5" : "translate-x-1",
         )}
       />
       <span className="sr-only">{checked ? "Enabled" : "Disabled"}</span>
@@ -113,7 +128,8 @@ function ToggleButton({
 export function NotificationSettingsPage() {
   const preferences = useNotificationPreferences();
   const [draft, setDraft] = useState<PreferenceDraft>(defaultDraft);
-  const [savedSnapshot, setSavedSnapshot] = useState<PreferenceDraft>(defaultDraft);
+  const [savedSnapshot, setSavedSnapshot] =
+    useState<PreferenceDraft>(defaultDraft);
 
   useEffect(() => {
     const next: PreferenceDraft = preferences.data
@@ -155,7 +171,9 @@ export function NotificationSettingsPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Notification settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Notification settings
+        </h1>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -190,7 +208,8 @@ export function NotificationSettingsPage() {
       </div>
 
       <p className="text-muted-foreground">
-        Configure how operational alerts are delivered, filtered, and grouped for your team.
+        Configure how operational alerts are delivered, filtered, and grouped
+        for your team.
       </p>
 
       <Card>
@@ -207,7 +226,9 @@ export function NotificationSettingsPage() {
             </div>
             <ToggleButton
               checked={draft.inAppEnabled}
-              onChange={(value) => setDraft((current) => ({ ...current, inAppEnabled: value }))}
+              onChange={(value) =>
+                setDraft((current) => ({ ...current, inAppEnabled: value }))
+              }
             />
           </div>
           <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
@@ -219,7 +240,9 @@ export function NotificationSettingsPage() {
             </div>
             <ToggleButton
               checked={draft.emailEnabled}
-              onChange={(value) => setDraft((current) => ({ ...current, emailEnabled: value }))}
+              onChange={(value) =>
+                setDraft((current) => ({ ...current, emailEnabled: value }))
+              }
             />
           </div>
           <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
@@ -231,7 +254,12 @@ export function NotificationSettingsPage() {
             </div>
             <ToggleButton
               checked={draft.dailySummaryEnabled}
-              onChange={(value) => setDraft((current) => ({ ...current, dailySummaryEnabled: value }))}
+              onChange={(value) =>
+                setDraft((current) => ({
+                  ...current,
+                  dailySummaryEnabled: value,
+                }))
+              }
             />
           </div>
         </CardContent>
@@ -269,11 +297,17 @@ export function NotificationSettingsPage() {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           {alertTypes.map((type) => (
-            <div key={type} className="flex items-center justify-between rounded-lg border p-3">
+            <div
+              key={type}
+              className="flex items-center justify-between rounded-lg border p-3"
+            >
               <div>
-                <Label>{alertTypeCopy[type]?.label ?? type.replaceAll("_", " ")}</Label>
+                <Label>
+                  {alertTypeCopy[type]?.label ?? type.replaceAll("_", " ")}
+                </Label>
                 <p className="text-xs text-muted-foreground">
-                  {alertTypeCopy[type]?.description ?? `Receive ${type.replaceAll("_", " ")} alerts.`}
+                  {alertTypeCopy[type]?.description ??
+                    `Receive ${type.replaceAll("_", " ")} alerts.`}
                 </p>
               </div>
               <ToggleButton

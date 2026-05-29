@@ -34,6 +34,9 @@ export const organizationSettingsSchema = z.object({
   receipt_logo_url: z.string().url().optional().or(z.literal("")).or(z.null()),
   receipt_notes: z.string().max(2000).optional().or(z.literal("")),
   low_stock_threshold_default: z.coerce.number().int().min(0),
+  stock_take_reminders_enabled: z.boolean().optional(),
+  stock_take_interval_days: z.coerce.number().int().min(1).max(365).optional(),
+  stock_take_last_completed_at: z.string().optional().nullable(),
   theme_primary_color: hexColorSchema.optional(),
   theme_accent_color: hexColorSchema.optional(),
   role_permissions: z
